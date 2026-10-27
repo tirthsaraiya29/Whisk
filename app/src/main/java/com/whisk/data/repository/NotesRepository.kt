@@ -121,7 +121,22 @@ class NotesRepository(
     }
 
     suspend fun toggleTaskStatus(taskId: String, isCompleted: Boolean) {
-        taskDao.updateTaskStatus(taskId, isCompleted)
+        val task = taskDao.getTaskById(taskId) ?: return
+        val newStatus = !isCompleted
+        taskDao.updateTaskStatus(taskId, newStatus)
+
+        // Sync Markdown body of note
+        val noteEntity = noteDao.getNoteById(task.noteId) ?: return
+        val lines = noteEntity.body.lines().toMutableList()
+        if (task.lineNumber in 1..lines.size) {
+            val lineIdx = task.lineNumber - 1
+            val line = lines[lineIdx]
+            val newCheck = if (newStatus) "- [x]" else "- [ ]"
+            val updatedLine = line.replace(Regex("^\\s*-\\s*\\[([ xX])\\]"), newCheck)
+            lines[lineIdx] = updatedLine
+            val updatedEntity = noteEntity.copy(body = lines.joinToString("\n"), updatedAt = System.currentTimeMillis())
+            noteDao.insertNote(updatedEntity)
+        }
     }
 
     private suspend fun syncTasksForNote(note: Note) {

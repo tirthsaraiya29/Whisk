@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,10 +21,12 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -59,6 +62,11 @@ fun MarkdownEditor(
 ) {
     var mode by remember { mutableStateOf(EditorMode.EDIT) }
 
+    val wordCount = remember(body) {
+        if (body.isBlank()) 0 else body.trim().split(Regex("\\s+")).size
+    }
+    val charCount = remember(body) { body.length }
+
     Column(modifier = modifier.fillMaxSize()) {
         // Toolbar Header
         Row(
@@ -70,7 +78,10 @@ fun MarkdownEditor(
         ) {
             // Formatting Quick Buttons (when in EDIT mode)
             if (mode == EditorMode.EDIT) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     IconButton(onClick = { onBodyChange("$body\n# ") }) {
                         Text("H1", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     }
@@ -85,6 +96,9 @@ fun MarkdownEditor(
                     }
                     IconButton(onClick = { onBodyChange("$body\n- ") }) {
                         Icon(Icons.Default.FormatListBulleted, contentDescription = "List")
+                    }
+                    IconButton(onClick = { onBodyChange("$body\n> ") }) {
+                        Icon(Icons.Default.FormatQuote, contentDescription = "Quote")
                     }
                     IconButton(onClick = { onBodyChange("$body\n```kotlin\n\n```") }) {
                         Icon(Icons.Default.Code, contentDescription = "Code block")
@@ -166,23 +180,40 @@ fun MarkdownEditor(
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Body Content (Edit mode vs Formatted Preview mode)
         if (mode == EditorMode.EDIT) {
-            OutlinedTextField(
-                value = body,
-                onValueChange = onBodyChange,
-                placeholder = { Text("Write notes in Markdown or code...", style = MaterialTheme.typography.bodyLarge) },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent
+            Column(modifier = Modifier.weight(1f)) {
+                OutlinedTextField(
+                    value = body,
+                    onValueChange = onBodyChange,
+                    placeholder = { Text("Write notes in Markdown or code...", style = MaterialTheme.typography.bodyLarge) },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
+                    )
                 )
-            )
+
+                // Word and Character counter footer
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "$wordCount words • $charCount characters",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         } else {
             // Rendered Markdown Preview
             Column(
@@ -247,6 +278,32 @@ fun RenderMarkdownPreview(
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+            line.startsWith("> ") -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .height(24.dp)
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = line.removePrefix("> "),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            line.trim() == "---" || line.trim() == "***" -> {
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                 )
             }
             line.startsWith("- [ ]") || line.startsWith("- [x]") || line.startsWith("- [X]") -> {

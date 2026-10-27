@@ -384,7 +384,13 @@ fun WhiskApp(
                             navController.navigate("note_detail/${newNote.id}")
                         }
                     },
-                    onExportBackup = onExportZip
+                    onExportBackup = onExportZip,
+                    onCreateTemplateNote = { templateNote ->
+                        scope.launch {
+                            notesRepository.saveNote(templateNote)
+                            navController.navigate("note_detail/${templateNote.id}")
+                        }
+                    }
                 )
             }
         }

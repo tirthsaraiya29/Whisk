@@ -34,6 +34,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Gavel
+import com.whisk.domain.model.DeveloperTemplates
+import com.whisk.domain.model.Note
+
 data class CommandItem(
     val id: String,
     val title: String,
@@ -47,7 +53,8 @@ fun CommandPalette(
     onDismiss: () -> Unit,
     onNavigate: (String) -> Unit,
     onNewNote: () -> Unit,
-    onExportBackup: () -> Unit
+    onExportBackup: () -> Unit,
+    onCreateTemplateNote: ((Note) -> Unit)? = null
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
@@ -55,6 +62,18 @@ fun CommandPalette(
         listOf(
             CommandItem("new_note", "Create New Note", "Start writing a new Markdown note", Icons.Default.Add) {
                 onNewNote()
+                onDismiss()
+            },
+            CommandItem("daily_note", "Daily Note", "Create today's developer journal", Icons.Default.CalendarToday) {
+                onCreateTemplateNote?.invoke(DeveloperTemplates.createDailyNote())
+                onDismiss()
+            },
+            CommandItem("adr_note", "Architecture Decision Record", "Document an architectural decision (ADR)", Icons.Default.Gavel) {
+                onCreateTemplateNote?.invoke(DeveloperTemplates.createADR())
+                onDismiss()
+            },
+            CommandItem("debug_journal", "Debugging Journal", "Document a bug investigation and fix", Icons.Default.BugReport) {
+                onCreateTemplateNote?.invoke(DeveloperTemplates.createDebuggingJournal())
                 onDismiss()
             },
             CommandItem("search", "Search Vault", "Full-text search across all notes", Icons.Default.Search) {

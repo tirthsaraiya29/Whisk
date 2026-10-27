@@ -65,11 +65,6 @@ Whisk is a local-first, developer-centric knowledge and productivity system buil
 
 ## 🚀 Building & Running
 
-### Prerequisites
-- Android Studio Ladybug / 2026.2.1 or newer
-- JDK 17
-- Android SDK 35 (Target API 35/37)
-
 ### Build Commands
 ```bash
 # Clean and assemble debug APK
@@ -96,4 +91,4 @@ Whisk follows an unbranded, quiet, professional design philosophy:
 
 ## 📄 License
 
-Licensed under the [MIT License](LICENSE).
+Licensed under the [GPL-3.0 License](LICENSE).

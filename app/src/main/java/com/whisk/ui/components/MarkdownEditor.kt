@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
@@ -43,6 +44,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -329,7 +332,9 @@ fun RenderMarkdownPreview(
             line.startsWith("- ") || line.startsWith("* ") -> {
                 Row(modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)) {
                     Text("• ", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
-                    RenderLineWithLinks(line.substring(2), onLinkClick)
+                    Box(modifier = Modifier.weight(1f)) {
+                        RenderLineWithLinks(line.substring(2), onLinkClick)
+                    }
                 }
             }
             line.isBlank() -> {
@@ -361,46 +366,55 @@ fun RenderLineWithLinks(
             color = MaterialTheme.colorScheme.onBackground
         )
     } else {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(vertical = 2.dp)
-        ) {
-            var lastIndex = 0
-            matches.forEach { match ->
-                val start = match.range.first
-                val end = match.range.last
-                if (start > lastIndex) {
-                    Text(
-                        text = text.substring(lastIndex, start),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground
+        val primaryColor = MaterialTheme.colorScheme.primary
+        val onBackgroundColor = MaterialTheme.colorScheme.onBackground
+
+        val annotatedString = remember(text, primaryColor, onBackgroundColor) {
+            buildAnnotatedString {
+                var lastIndex = 0
+                matches.forEach { match ->
+                    val start = match.range.first
+                    val end = match.range.last
+                    if (start > lastIndex) {
+                        append(text.substring(lastIndex, start))
+                    }
+                    val linkTitle = match.groupValues[1]
+                    val linkStart = length
+                    append(" [[ $linkTitle ]] ")
+                    val linkEnd = length
+
+                    addStyle(
+                        style = SpanStyle(
+                            color = primaryColor,
+                            fontWeight = FontWeight.SemiBold,
+                            background = primaryColor.copy(alpha = 0.15f)
+                        ),
+                        start = linkStart,
+                        end = linkEnd
                     )
-                }
-                val linkTitle = match.groupValues[1]
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 2.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                        .clickable { onLinkClick(linkTitle) }
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "[[ $linkTitle ]]",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
+                    addStringAnnotation(
+                        tag = "NOTE_LINK",
+                        annotation = linkTitle,
+                        start = linkStart,
+                        end = linkEnd
                     )
+                    lastIndex = end + 1
                 }
-                lastIndex = end + 1
-            }
-            if (lastIndex < text.length) {
-                Text(
-                    text = text.substring(lastIndex),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                if (lastIndex < text.length) {
+                    append(text.substring(lastIndex))
+                }
             }
         }
+
+        ClickableText(
+            text = annotatedString,
+            style = MaterialTheme.typography.bodyLarge.copy(color = onBackgroundColor),
+            onClick = { offset ->
+                annotatedString.getStringAnnotations(tag = "NOTE_LINK", start = offset, end = offset)
+                    .firstOrNull()?.let { annotation ->
+                        onLinkClick(annotation.item)
+                    }
+            }
+        )
     }
 }

@@ -13,7 +13,9 @@ data class Note(
     val isFavorite: Boolean = false,
     val isArchived: Boolean = false,
     val sourceMetadata: String? = null,
-    val repoRef: String? = null
+    val repoRef: String? = null,
+    val aliases: List<String> = emptyList(),
+    val status: String? = "DRAFT"
 )
 
 data class NoteLink(

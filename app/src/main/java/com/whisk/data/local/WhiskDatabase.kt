@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
@@ -12,7 +14,7 @@ import androidx.room.RoomDatabase
         CanvasEntity::class,
         TaskEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class WhiskDatabase : RoomDatabase() {
@@ -25,6 +27,13 @@ abstract class WhiskDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: WhiskDatabase? = null
 
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notes ADD COLUMN aliases TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE notes ADD COLUMN status TEXT DEFAULT 'DRAFT'")
+            }
+        }
+
         fun getDatabase(context: Context): WhiskDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -32,6 +41,7 @@ abstract class WhiskDatabase : RoomDatabase() {
                     WhiskDatabase::class.java,
                     "whisk_database"
                 )
+                    .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
                     .build()
                 INSTANCE = instance

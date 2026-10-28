@@ -11,32 +11,64 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val LightColorScheme = lightColorScheme(
-    primary = LightPrimary,
-    onPrimary = LightSurface,
-    primaryContainer = LightPrimaryContainer,
-    onPrimaryContainer = LightOnPrimaryContainer,
-    background = LightBackground,
-    onBackground = LightTextPrimary,
-    surface = LightSurface,
-    onSurface = LightTextPrimary,
-    surfaceVariant = LightSurfaceVariant,
-    onSurfaceVariant = LightTextSecondary,
-    outline = LightBorder
+private val ObsidianColorScheme = darkColorScheme(
+    primary = ObsidianPrimary,
+    onPrimary = ObsidianBackground,
+    background = ObsidianBackground,
+    onBackground = ObsidianTextPrimary,
+    surface = ObsidianSurface,
+    onSurface = ObsidianTextPrimary,
+    surfaceVariant = ObsidianSurfaceVariant,
+    onSurfaceVariant = ObsidianTextSecondary,
+    outline = ObsidianSurfaceVariant
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = DarkPrimary,
-    onPrimary = DarkBackground,
-    primaryContainer = DarkPrimaryContainer,
-    onPrimaryContainer = DarkOnPrimaryContainer,
-    background = DarkBackground,
-    onBackground = DarkTextPrimary,
-    surface = DarkSurface,
-    onSurface = DarkTextPrimary,
-    surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = DarkTextSecondary,
-    outline = DarkBorder
+private val CyberpunkColorScheme = darkColorScheme(
+    primary = CyberpunkPrimary,
+    onPrimary = CyberpunkBackground,
+    background = CyberpunkBackground,
+    onBackground = CyberpunkTextPrimary,
+    surface = CyberpunkSurface,
+    onSurface = CyberpunkTextPrimary,
+    surfaceVariant = CyberpunkSurfaceVariant,
+    onSurfaceVariant = CyberpunkTextSecondary,
+    outline = CyberpunkSurfaceVariant
+)
+
+private val SolarizedColorScheme = lightColorScheme(
+    primary = SolarizedPrimary,
+    onPrimary = SolarizedBackground,
+    background = SolarizedBackground,
+    onBackground = SolarizedTextPrimary,
+    surface = SolarizedSurface,
+    onSurface = SolarizedTextPrimary,
+    surfaceVariant = SolarizedSurfaceVariant,
+    onSurfaceVariant = SolarizedTextSecondary,
+    outline = SolarizedSurfaceVariant
+)
+
+private val MonokaiColorScheme = darkColorScheme(
+    primary = MonokaiPrimary,
+    onPrimary = MonokaiBackground,
+    background = MonokaiBackground,
+    onBackground = MonokaiTextPrimary,
+    surface = MonokaiSurface,
+    onSurface = MonokaiTextPrimary,
+    surfaceVariant = MonokaiSurfaceVariant,
+    onSurfaceVariant = MonokaiTextSecondary,
+    outline = MonokaiSurfaceVariant
+)
+
+private val NordicColorScheme = darkColorScheme(
+    primary = NordicPrimary,
+    onPrimary = NordicBackground,
+    background = NordicBackground,
+    onBackground = NordicTextPrimary,
+    surface = NordicSurface,
+    onSurface = NordicTextPrimary,
+    surfaceVariant = NordicSurfaceVariant,
+    onSurfaceVariant = NordicTextSecondary,
+    outline = NordicSurfaceVariant
 )
 
 @Composable
@@ -44,22 +76,30 @@ fun WhiskTheme(
     themeMode: String = "SYSTEM",
     content: @Composable () -> Unit
 ) {
-    val darkTheme = when (themeMode) {
-        "LIGHT" -> false
-        "DARK" -> true
-        else -> isSystemInDarkTheme()
+    val systemDark = isSystemInDarkTheme()
+    val colorScheme = when (themeMode) {
+        "CYBERPUNK" -> CyberpunkColorScheme
+        "SOLARIZED" -> SolarizedColorScheme
+        "MONOKAI" -> MonokaiColorScheme
+        "NORDIC" -> NordicColorScheme
+        "LIGHT" -> SolarizedColorScheme
+        "DARK" -> ObsidianColorScheme
+        else -> if (systemDark) ObsidianColorScheme else SolarizedColorScheme
     }
 
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    val view = LocalView.current
+    val isDark = colorScheme.background == ObsidianBackground ||
+            colorScheme.background == CyberpunkBackground ||
+            colorScheme.background == MonokaiBackground ||
+            colorScheme.background == NordicBackground
 
+    val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.background.toArgb()
             window.navigationBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !isDark
         }
     }
 

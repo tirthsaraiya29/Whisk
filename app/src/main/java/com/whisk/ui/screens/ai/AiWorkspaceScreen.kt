@@ -1,5 +1,6 @@
 package com.whisk.ui.screens.ai
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
@@ -24,10 +27,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
@@ -46,6 +51,7 @@ import com.whisk.domain.model.AiRole
 import com.whisk.ui.components.CodeBlockView
 import com.whisk.ui.components.WhiskTopBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiWorkspaceScreen(
     state: AiUiState,
@@ -157,38 +163,6 @@ fun AiWorkspaceScreen(
                             ) {
                                 Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
                                 Text("Download Gemma 2B from Hugging Face")
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Generated Code Edit Preview (if model suggested code block)
-            if (state.generatedEditPreview != null) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(
-                            text = "AI Suggested Code Edit",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        CodeBlockView(code = state.generatedEditPreview ?: "", language = "kotlin")
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            Button(onClick = onDismissEdit, modifier = Modifier.padding(end = 8.dp)) {
-                                Text("Dismiss")
-                            }
-                            Button(onClick = { onApplyEdit(state.generatedEditPreview ?: "") }) {
-                                Icon(Icons.Default.Check, contentDescription = null)
-                                Text("Apply to Note")
                             }
                         }
                     }
@@ -334,6 +308,56 @@ fun AiWorkspaceScreen(
                         contentDescription = "Send",
                         tint = MaterialTheme.colorScheme.primary
                     )
+                }
+            }
+        }
+    }
+
+    // AI Edit Preview Sheet
+    if (state.generatedEditPreview != null) {
+        val editContent = state.generatedEditPreview
+        ModalBottomSheet(onDismissRequest = onDismissEdit) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = "Review AI Proposed Edit",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Apply generated content to active note '${activeNote?.title ?: "Note"}'",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                )
+
+                CodeBlockView(code = editContent, language = "markdown")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onDismissEdit,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Text("Dismiss")
+                    }
+                    Button(
+                        onClick = { onApplyEdit(editContent) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
+                        Text("Apply Edit")
+                    }
                 }
             }
         }

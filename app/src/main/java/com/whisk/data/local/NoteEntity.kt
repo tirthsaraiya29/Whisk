@@ -16,7 +16,9 @@ data class NoteEntity(
     val isFavorite: Boolean,
     val isArchived: Boolean,
     val sourceMetadata: String?,
-    val repoRef: String?
+    val repoRef: String?,
+    val aliases: String = "",
+    val status: String? = "DRAFT"
 ) {
     fun toDomain(): Note {
         return Note(
@@ -30,7 +32,9 @@ data class NoteEntity(
             isFavorite = isFavorite,
             isArchived = isArchived,
             sourceMetadata = sourceMetadata,
-            repoRef = repoRef
+            repoRef = repoRef,
+            aliases = if (aliases.isBlank()) emptyList() else aliases.split(",").map { it.trim() }.filter { it.isNotEmpty() },
+            status = status
         )
     }
 
@@ -47,7 +51,9 @@ data class NoteEntity(
                 isFavorite = note.isFavorite,
                 isArchived = note.isArchived,
                 sourceMetadata = note.sourceMetadata,
-                repoRef = note.repoRef
+                repoRef = note.repoRef,
+                aliases = note.aliases.joinToString(","),
+                status = note.status
             )
         }
     }

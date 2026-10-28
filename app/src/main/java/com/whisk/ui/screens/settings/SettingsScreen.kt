@@ -101,7 +101,14 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    listOf("SYSTEM" to "System Default", "LIGHT" to "Minimal Light", "DARK" to "Charcoal Dark").forEach { (modeKey, label) ->
+                    listOf(
+                        "SYSTEM" to "System Default",
+                        "DARK" to "Dark Obsidian (OLED)",
+                        "CYBERPUNK" to "Midnight Cyberpunk",
+                        "SOLARIZED" to "Solarized Cream",
+                        "MONOKAI" to "Monokai Pro",
+                        "NORDIC" to "Nordic Frost"
+                    ).forEach { (modeKey, label) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()

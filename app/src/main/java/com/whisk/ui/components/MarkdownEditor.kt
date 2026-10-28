@@ -28,8 +28,13 @@ import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Hub
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.ViewColumn
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -58,7 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 enum class EditorMode {
-    EDIT, PREVIEW
+    EDIT, PREVIEW, SPLIT
 }
 
 @Composable
@@ -125,7 +130,7 @@ fun MarkdownEditor(
                             .clip(RoundedCornerShape(20.dp))
                             .background(if (mode == EditorMode.EDIT) MaterialTheme.colorScheme.primary else Color.Transparent)
                             .clickable { mode = EditorMode.EDIT }
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -144,9 +149,30 @@ fun MarkdownEditor(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
+                            .background(if (mode == EditorMode.SPLIT) MaterialTheme.colorScheme.primary else Color.Transparent)
+                            .clickable { mode = EditorMode.SPLIT }
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.ViewColumn,
+                                contentDescription = null,
+                                tint = if (mode == EditorMode.SPLIT) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                            Text(
+                                "Split",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (mode == EditorMode.SPLIT) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
                             .background(if (mode == EditorMode.PREVIEW) MaterialTheme.colorScheme.primary else Color.Transparent)
                             .clickable { mode = EditorMode.PREVIEW }
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -166,8 +192,8 @@ fun MarkdownEditor(
             }
         }
 
-        // Formatting Scrollable Toolbar (when in EDIT mode)
-        if (mode == EditorMode.EDIT) {
+        // Formatting Scrollable Toolbar (when in EDIT or SPLIT mode)
+        if (mode == EditorMode.EDIT || mode == EditorMode.SPLIT) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -190,8 +216,8 @@ fun MarkdownEditor(
                 IconButton(onClick = { applyFormatting("- ") }) {
                     Icon(Icons.Default.FormatListBulleted, contentDescription = "List")
                 }
-                IconButton(onClick = { applyFormatting("> ") }) {
-                    Icon(Icons.Default.FormatQuote, contentDescription = "Quote")
+                IconButton(onClick = { applyFormatting("> [!NOTE] ") }) {
+                    Icon(Icons.Default.FormatQuote, contentDescription = "Callout Note")
                 }
                 IconButton(onClick = { applyFormatting("```kotlin\n", "\n```") }) {
                     Icon(Icons.Default.Code, contentDescription = "Code block")
@@ -223,52 +249,86 @@ fun MarkdownEditor(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Body Content (Edit mode vs Formatted Preview mode)
-        if (mode == EditorMode.EDIT) {
-            Column(modifier = Modifier.weight(1f)) {
-                OutlinedTextField(
-                    value = textFieldValue,
-                    onValueChange = { newValue ->
-                        textFieldValue = newValue
-                        if (newValue.text != body) {
-                            onBodyChange(newValue.text)
-                        }
-                    },
-                    placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge) },
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f)
-                        .padding(horizontal = 16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent
-                    )
-                )
-
-                // Word and Character counter footer
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Text(
-                        text = "$wordCount words • $charCount characters",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+        // Body Content Rendering according to EditorMode
+        when (mode) {
+            EditorMode.EDIT -> {
+                Column(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = textFieldValue,
+                        onValueChange = { newValue ->
+                            textFieldValue = newValue
+                            if (newValue.text != body) {
+                                onBodyChange(newValue.text)
+                            }
+                        },
+                        placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge) },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
+                        )
                     )
                 }
             }
-        } else {
-            // Rendered Markdown Preview
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                RenderMarkdownPreview(body, onLinkClick, onBodyChange)
+            EditorMode.SPLIT -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                ) {
+                    // Left Editor Column
+                    OutlinedTextField(
+                        value = textFieldValue,
+                        onValueChange = { newValue ->
+                            textFieldValue = newValue
+                            if (newValue.text != body) {
+                                onBodyChange(newValue.text)
+                            }
+                        },
+                        placeholder = { Text("Write notes...", style = MaterialTheme.typography.bodyMedium) },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent
+                        )
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                    )
+
+                    // Right Preview Column
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 12.dp)
+                    ) {
+                        RenderMarkdownPreview(body, onLinkClick, onBodyChange)
+                    }
+                }
+            }
+            EditorMode.PREVIEW -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    RenderMarkdownPreview(body, onLinkClick, onBodyChange)
+                }
             }
         }
     }
@@ -292,12 +352,10 @@ fun RenderMarkdownPreview(
         when {
             line.startsWith("```") -> {
                 if (inCodeBlock) {
-                    // End code block
                     CodeBlockView(code = codeBuilder.toString().trimEnd(), language = codeLang)
                     codeBuilder.clear()
                     inCodeBlock = false
                 } else {
-                    // Start code block
                     inCodeBlock = true
                     codeLang = line.removePrefix("```").trim().ifBlank { "code" }
                 }
@@ -305,6 +363,54 @@ fun RenderMarkdownPreview(
             }
             inCodeBlock -> {
                 codeBuilder.append(line).append("\n")
+                i++
+            }
+            line.startsWith("> [!WARNING]") || line.startsWith("> [!IMPORTANT]") -> {
+                val calloutText = line.substringAfter("]").trim()
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0x22D97706))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = Color(0xFFD97706),
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        RenderFormattedMarkdownLine(text = calloutText, onLinkClick = onLinkClick)
+                    }
+                }
+                i++
+            }
+            line.startsWith("> [!NOTE]") || line.startsWith("> [!TIP]") -> {
+                val calloutText = line.substringAfter("]").trim()
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        RenderFormattedMarkdownLine(text = calloutText, onLinkClick = onLinkClick)
+                    }
+                }
                 i++
             }
             line.startsWith("# ") -> {
@@ -398,7 +504,6 @@ fun RenderMarkdownPreview(
                 i++
             }
             line.trim().startsWith("|") && line.trim().endsWith("|") -> {
-                // Collect table block
                 val tableBlock = mutableListOf<String>()
                 while (i < lines.size && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
                     tableBlock.add(lines[i])
@@ -485,7 +590,6 @@ fun RenderMarkdownTable(
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
             .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
     ) {
-        // Table Header
         if (headerRow != null) {
             Row(
                 modifier = Modifier
@@ -503,7 +607,6 @@ fun RenderMarkdownTable(
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
         }
 
-        // Table Rows
         dataRows.forEachIndexed { rowIndex, row ->
             Row(
                 modifier = Modifier

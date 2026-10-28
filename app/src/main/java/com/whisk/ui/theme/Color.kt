@@ -2,24 +2,42 @@ package com.whisk.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Luxury Glass Palette
-val LightBackground = Color(0xFFF8FAFC) // Crisp OLED Slate Background
-val LightSurface = Color(0xFFFFFFFF) // Pure White Surface
-val LightSurfaceVariant = Color(0xFFF1F5F9) // Frosted Surface
-val LightTextPrimary = Color(0xFF0F172A) // Deep Slate Text
-val LightTextSecondary = Color(0xFF475569) // Muted Slate Secondary Text
-val LightPrimary = Color(0xFF2563EB) // Electric Indigo Accent
-val LightPrimaryContainer = Color(0xFFEFF6FF)
-val LightOnPrimaryContainer = Color(0xFF1E40AF)
-val LightBorder = Color(0xFFE2E8F0) // Subtle Outline
+// 1. Dark Obsidian Preset (Default Dark)
+val ObsidianBackground = Color(0xFF090D16)
+val ObsidianSurface = Color(0xFF131C2E)
+val ObsidianSurfaceVariant = Color(0xFF1E293B)
+val ObsidianTextPrimary = Color(0xFFF8FAFC)
+val ObsidianTextSecondary = Color(0xFF94A3B8)
+val ObsidianPrimary = Color(0xFF38BDF8)
 
-// Dark Obsidian Glass Palette
-val DarkBackground = Color(0xFF090D16) // Deep Obsidian Night Canvas
-val DarkSurface = Color(0xFF131C2E) // Obsidian Glass Container
-val DarkSurfaceVariant = Color(0xFF1E293B) // Dark Surface Variant
-val DarkTextPrimary = Color(0xFFF8FAFC) // Crisp Arctic White Text
-val DarkTextSecondary = Color(0xFF94A3B8) // Muted Secondary Text
-val DarkPrimary = Color(0xFF38BDF8) // Electric Sky Cyan Accent
-val DarkPrimaryContainer = Color(0xFF0284C7)
-val DarkOnPrimaryContainer = Color(0xFFE0F2FE)
-val DarkBorder = Color(0xFF1E293B) // Subtle Dark Border
+// 2. Midnight Cyberpunk Preset
+val CyberpunkBackground = Color(0xFF0A0A12)
+val CyberpunkSurface = Color(0xFF141424)
+val CyberpunkSurfaceVariant = Color(0xFF1E1E36)
+val CyberpunkTextPrimary = Color(0xFFF4F4F5)
+val CyberpunkTextSecondary = Color(0xFFA1A1AA)
+val CyberpunkPrimary = Color(0xFF06B6D4)
+
+// 3. Solarized Light Preset
+val SolarizedBackground = Color(0xFFFDF6E3)
+val SolarizedSurface = Color(0xFFEEE8D5)
+val SolarizedSurfaceVariant = Color(0xFFE0DA86)
+val SolarizedTextPrimary = Color(0xFF073642)
+val SolarizedTextSecondary = Color(0xFF657B83)
+val SolarizedPrimary = Color(0xFF268BD2)
+
+// 4. Monokai Pro Preset
+val MonokaiBackground = Color(0xFF2D2A2E)
+val MonokaiSurface = Color(0xFF3A383C)
+val MonokaiSurfaceVariant = Color(0xFF4A474D)
+val MonokaiTextPrimary = Color(0xFFFCFCFA)
+val MonokaiTextSecondary = Color(0xFFC1C0C2)
+val MonokaiPrimary = Color(0xFFFF6188)
+
+// 5. Nordic Frost Preset
+val NordicBackground = Color(0xFF2E3440)
+val NordicSurface = Color(0xFF3B4252)
+val NordicSurfaceVariant = Color(0xFF434C5E)
+val NordicTextPrimary = Color(0xFFECEFF4)
+val NordicTextSecondary = Color(0xFFD8DEE9)
+val NordicPrimary = Color(0xFF88C0D0)

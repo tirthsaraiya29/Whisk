@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * High-performance, native Jetpack Compose Liquid Glass Material Specification.
- * Provides backdrop blur (RenderEffect on API 31+), optical rim lighting,
- * specular gloss gradient highlights, theme-adaptive glass tinting, and elevated drop shadow.
+ * Native Jetpack Compose Liquid Glass Material Specification.
+ * Provides backdrop blur (RenderEffect on API 31+), dual optical rim lighting,
+ * specular gloss gradient sheen, theme-adaptive glass tinting, and elevated drop shadow.
  */
 object LiquidGlassDefaults {
     val PillShape = CircleShape
@@ -41,23 +41,23 @@ object LiquidGlassDefaults {
 
     // Light Theme Glass Palette
     val LightGlassTint = Color(0xF2F8FAFC) // 95% translucent crisp slate white
-    val LightGlassBorderHighlight = Color(0xD9FFFFFF) // Bright top/left rim highlight
+    val LightGlassBorderHighlight = Color(0xE6FFFFFF) // Bright top/left rim highlight
     val LightGlassBorderShadow = Color(0x33000000) // Soft bottom/right rim shadow
-    val LightGlassSpecular = Color(0x66FFFFFF) // Specular gloss sheen
+    val LightGlassSpecular = Color(0x7FFFFFFF) // Specular gloss sheen
     val LightGlassShadowColor = Color(0x26000000)
 
     // Dark Theme Glass Palette
-    val DarkGlassTint = Color(0xE61E293B) // 90% translucent dark navy/slate
-    val DarkGlassBorderHighlight = Color(0x66FFFFFF) // Refractive top/left rim stroke
+    val DarkGlassTint = Color(0xEB0E1726) // 92% translucent dark obsidian
+    val DarkGlassBorderHighlight = Color(0x80FFFFFF) // Refractive top/left rim stroke
     val DarkGlassBorderShadow = Color(0x99000000) // Deep bottom/right rim shadow
-    val DarkGlassSpecular = Color(0x33FFFFFF) // Specular gloss sheen
-    val DarkGlassShadowColor = Color(0x66000000)
+    val DarkGlassSpecular = Color(0x40FFFFFF) // Specular gloss sheen
+    val DarkGlassShadowColor = Color(0x80000000)
 
     // Selected Lens Glass Palette
-    val LightLensTint = Color(0x330F172A) // Slate glass lens fill for selected state in light mode
-    val DarkLensTint = Color(0x6638BDF8) // Vibrant cyan glass lens fill for selected state in dark mode
+    val LightLensTint = Color(0x330F172A) // Slate glass lens fill in light mode
+    val DarkLensTint = Color(0x6638BDF8) // Vibrant sky cyan glass lens fill in dark mode
 
-    // High-Contrast Active & Inactive Text/Icon Colors
+    // High-Contrast Content Colors
     val LightActiveContent = Color(0xFF0F172A)
     val LightInactiveContent = Color(0x99334155)
     val DarkActiveContent = Color(0xFFFFFFFF)
@@ -66,7 +66,7 @@ object LiquidGlassDefaults {
 }
 
 /**
- * Modifier that applies the native iOS-inspired Liquid Glass material treatment to a background surface.
+ * Modifier applying the Liquid Glass material treatment to a background surface.
  */
 @Composable
 fun Modifier.liquidGlass(
@@ -156,8 +156,7 @@ fun Modifier.liquidGlass(
 }
 
 /**
- * Container composable that renders a blurred Liquid Glass material background
- * layer underneath crisp, un-blurred foreground content.
+ * Container composable rendering a blurred Liquid Glass background layer underneath un-blurred content.
  */
 @Composable
 fun LiquidGlassBox(
@@ -170,7 +169,6 @@ fun LiquidGlassBox(
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(modifier = modifier) {
-        // 1. Separate Blurred Glass Material Surface Layer
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -183,7 +181,6 @@ fun LiquidGlassBox(
                 )
         )
 
-        // 2. Crisp, Un-blurred Foreground Content Layer
         Box(
             modifier = Modifier.matchParentSize(),
             content = content

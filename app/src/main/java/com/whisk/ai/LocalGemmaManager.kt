@@ -32,7 +32,12 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     private var llmInference: LlmInference? = null
 
     // Disable automatic redirects so we can handle CDN redirects without sending HF Auth headers to S3/R2
+    private val certificatePinner = okhttp3.CertificatePinner.Builder()
+        .add("huggingface.co", "sha256/2MqLa/44pZTt+hMDJgp71yGHBqOjWTnulG4H5xsmyQk=")
+        .build()
+
     private val okHttpClient = OkHttpClient.Builder()
+        .certificatePinner(certificatePinner)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .followRedirects(false)

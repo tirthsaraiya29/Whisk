@@ -155,15 +155,18 @@ fun MermaidDiagramView(
                 AndroidView(
                     factory = { context ->
                         @SuppressLint("SetJavaScriptEnabled")
-                        val webView = WebView(context).apply {
-                            settings.javaScriptEnabled = true
-                            settings.allowContentAccess = false
-                            settings.allowFileAccess = false
-                            settings.domStorageEnabled = true
-                            settings.loadWithOverviewMode = true
-                            settings.useWideViewPort = true
-                            setBackgroundColor(0) // Transparent background layer
-                        }
+                        val webView = WebView(context)
+                        val webSettings = webView.settings
+                        @Suppress("UsePropertyAccessSyntax")
+                        webSettings.setJavaScriptEnabled(true)
+                        @Suppress("UsePropertyAccessSyntax")
+                        webSettings.setAllowContentAccess(false)
+                        @Suppress("UsePropertyAccessSyntax")
+                        webSettings.setAllowFileAccess(false)
+                        webSettings.domStorageEnabled = true
+                        webSettings.loadWithOverviewMode = true
+                        webSettings.useWideViewPort = true
+                        webView.setBackgroundColor(0) // Transparent background layer
                         webView
                     },
                     update = { webView ->

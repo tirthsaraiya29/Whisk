@@ -1,23 +1,15 @@
 package com.whisk.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
+import com.whisk.ui.components.glass.LiquidGlassBottomBar
 
 sealed class NavDestination(val route: String, val label: String, val icon: ImageVector) {
     object Notes : NavDestination("notes", "Notes", Icons.Default.Description)
@@ -31,45 +23,13 @@ sealed class NavDestination(val route: String, val label: String, val icon: Imag
 fun WhiskBottomBar(
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    onQuickAdd: () -> Unit
+    onQuickAdd: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val destinations = listOf(
-        NavDestination.Notes,
-        NavDestination.Search,
-        NavDestination.Graph,
-        NavDestination.AI,
-        NavDestination.Settings
+    LiquidGlassBottomBar(
+        currentRoute = currentRoute,
+        onNavigate = onNavigate,
+        onQuickAdd = onQuickAdd,
+        modifier = modifier
     )
-
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp
-    ) {
-        destinations.forEach { dest ->
-            val selected = currentRoute == dest.route
-            NavigationBarItem(
-                selected = selected,
-                onClick = { onNavigate(dest.route) },
-                icon = {
-                    Icon(
-                        imageVector = dest.icon,
-                        contentDescription = dest.label
-                    )
-                },
-                label = {
-                    Text(
-                        text = dest.label,
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            )
-        }
-    }
 }

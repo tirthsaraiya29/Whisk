@@ -168,197 +168,195 @@ fun WhiskApp(
 
     val hintsDismissed by preferencesManager.hintsDismissed.collectAsState(initial = emptyMap())
 
-    Scaffold(
-        bottomBar = {
-            if (currentRoute in listOf("notes", "search", "graph", "ai", "settings")) {
-                WhiskBottomBar(
-                    currentRoute = currentRoute,
-                    onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+    Box(modifier = Modifier.fillMaxSize()) {
+        NavHost(
+            navController = navController,
+            startDestination = "notes",
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // 1. Notes List Destination
+            composable("notes") {
+                val viewModel = remember { NotesViewModel(notesRepository) }
+                val state by viewModel.uiState.collectAsState()
+
+                NotesListScreen(
+                    state = state,
+                    onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") },
+                    onNewNoteClick = {
+                        scope.launch {
+                            val newId = viewModel.createNewNote()
+                            navController.navigate("note_detail/$newId")
                         }
                     },
-                    onQuickAdd = {
-                        scope.launch {
-                            val newNote = com.whisk.domain.model.Note(title = "Untitled Note", body = "")
-                            notesRepository.saveNote(newNote)
-                            navController.navigate("note_detail/${newNote.id}")
-                        }
+                    onFilterChange = { filter -> viewModel.setFilter(filter) },
+                    onSearchQueryChange = { query -> viewModel.setSearchQuery(query) },
+                    showHint = isFirstLaunch && !(hintsDismissed["links"] ?: false),
+                    onDismissHint = {
+                        scope.launch { preferencesManager.dismissHint("links") }
                     }
                 )
             }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            NavHost(navController = navController, startDestination = "notes") {
 
-                // 1. Notes List Destination
-                composable("notes") {
-                    val viewModel = remember { NotesViewModel(notesRepository) }
-                    val state by viewModel.uiState.collectAsState()
+            // 2. Note Detail / Editor Destination
+            composable(
+                route = "note_detail/{noteId}",
+                arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
+                val viewModel = remember(noteId) { NoteDetailViewModel(notesRepository, noteId) }
+                val state by viewModel.uiState.collectAsState()
 
-                    NotesListScreen(
-                        state = state,
-                        onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") },
-                        onNewNoteClick = {
-                            scope.launch {
-                                val newId = viewModel.createNewNote()
-                                navController.navigate("note_detail/$newId")
+                LaunchedEffect(state.isDeleted) {
+                    if (state.isDeleted) navController.popBackStack()
+                }
+
+                NoteDetailScreen(
+                    state = state,
+                    onTitleChange = { title, body -> viewModel.updateContent(title, body) },
+                    onBackClick = { navController.popBackStack() },
+                    onToggleFavorite = { viewModel.toggleFavorite() },
+                    onDeleteNote = { viewModel.deleteNote() },
+                    onOpenNote = { targetIdOrTitle ->
+                        scope.launch {
+                            val target = notesRepository.getNoteByTitle(targetIdOrTitle) ?: notesRepository.getNoteById(targetIdOrTitle)
+                            if (target != null) {
+                                navController.navigate("note_detail/${target.id}")
                             }
-                        },
-                        onFilterChange = { filter -> viewModel.setFilter(filter) },
-                        onSearchQueryChange = { query -> viewModel.setSearchQuery(query) },
-                        showHint = isFirstLaunch && !(hintsDismissed["links"] ?: false),
-                        onDismissHint = {
-                            scope.launch { preferencesManager.dismissHint("links") }
                         }
-                    )
-                }
-
-                // 2. Note Detail / Editor Destination
-                composable(
-                    route = "note_detail/{noteId}",
-                    arguments = listOf(navArgument("noteId") { type = NavType.StringType })
-                ) { backStackEntry ->
-                    val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
-                    val viewModel = remember(noteId) { NoteDetailViewModel(notesRepository, noteId) }
-                    val state by viewModel.uiState.collectAsState()
-
-                    LaunchedEffect(state.isDeleted) {
-                        if (state.isDeleted) navController.popBackStack()
-                    }
-
-                    NoteDetailScreen(
-                        state = state,
-                        onTitleChange = { title, body -> viewModel.updateContent(title, body) },
-                        onBackClick = { navController.popBackStack() },
-                        onToggleFavorite = { viewModel.toggleFavorite() },
-                        onDeleteNote = { viewModel.deleteNote() },
-                        onOpenNote = { targetIdOrTitle ->
-                            scope.launch {
-                                val target = notesRepository.getNoteByTitle(targetIdOrTitle) ?: notesRepository.getNoteById(targetIdOrTitle)
-                                if (target != null) {
-                                    navController.navigate("note_detail/${target.id}")
-                                }
-                            }
-                        },
-                        onOpenAiWithNote = { navController.navigate("ai") }
-                    )
-                }
-
-                // 3. Search Destination
-                composable("search") {
-                    val viewModel = remember { SearchViewModel(notesRepository) }
-                    val state by viewModel.uiState.collectAsState()
-
-                    SearchScreen(
-                        state = state,
-                        onQueryChange = { q -> viewModel.updateQuery(q) },
-                        onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") }
-                    )
-                }
-
-                // 4. Knowledge Graph Destination
-                composable("graph") {
-                    val viewModel = remember { GraphViewModel(graphRepository) }
-                    val state by viewModel.uiState.collectAsState()
-
-                    KnowledgeGraphScreen(
-                        state = state,
-                        onNodeSelect = { node -> viewModel.selectNode(node) },
-                        onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") },
-                        onResetGraph = { viewModel.loadGlobalGraph() },
-                        onToggleOrphans = { viewModel.toggleShowOrphans() }
-                    )
-                }
-
-                // 5. Spatial Canvas Destination
-                composable("canvas") {
-                    val viewModel = remember { CanvasViewModel(canvasRepository, notesRepository) }
-                    val state by viewModel.uiState.collectAsState()
-
-                    SpatialCanvasScreen(
-                        state = state,
-                        onAddTextCard = { viewModel.addTextCard("Idea Card", "Double tap or drag card around spatial canvas") },
-                        onAddNoteCard = { note -> viewModel.addNoteCard(note) },
-                        onUpdateCardPos = { id, x, y -> viewModel.updateCardPosition(id, x, y) },
-                        onDeleteCard = { id -> viewModel.deleteCard(id) },
-                        onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") }
-                    )
-                }
-
-                // 6. Tasks Checklist Destination
-                composable("tasks") {
-                    val viewModel = remember { TasksViewModel(notesRepository) }
-                    val tasks by viewModel.tasks.collectAsState()
-
-                    TasksScreen(
-                        tasks = tasks,
-                        onToggleTask = { taskId, status -> viewModel.toggleTask(taskId, status) },
-                        onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") }
-                    )
-                }
-
-                // 7. AI Workspace Destination
-                composable("ai") {
-                    val viewModel = remember { AiViewModel(localGemmaManager, remoteAiManager, preferencesManager) }
-                    val state by viewModel.uiState.collectAsState()
-
-                    AiWorkspaceScreen(
-                        state = state,
-                        onSendMessage = { text -> viewModel.sendMessage(text) },
-                        onStopGeneration = { viewModel.stopGeneration() },
-                        onDownloadModel = { viewModel.downloadLocalModel() },
-                        onApplyEdit = { edit ->
-                            scope.launch {
-                                val currentNote = state.contextPayload.activeNote
-                                if (currentNote != null) {
-                                    val updated = currentNote.copy(body = currentNote.body + "\n\n" + edit)
-                                    notesRepository.saveNote(updated)
-                                }
-                                viewModel.dismissEditPreview()
-                            }
-                        },
-                        onDismissEdit = { viewModel.dismissEditPreview() }
-                    )
-                }
-
-                // 8. GitHub & MCP Destination
-                composable("github") {
-                    val viewModel = remember { GitHubViewModel(gitHubRepository, mcpRepository, preferencesManager) }
-                    val state by viewModel.uiState.collectAsState()
-
-                    GitHubBrowserScreen(
-                        state = state,
-                        onSearchQueryChange = { q -> viewModel.searchRepositories(q) },
-                        onSelectRepo = { repo -> viewModel.selectRepository(repo) },
-                        onInvokeMcpTool = { name, args -> viewModel.invokeMcpTool(name, args) },
-                        onOpenGitDiagram = { _ -> viewModel.toggleGitDiagram(true) }
-                    )
-                }
-
-                // 9. Settings Destination
-                composable("settings") {
-                    val viewModel = remember { SettingsViewModel(preferencesManager, exportImportRepository) }
-                    val state by viewModel.uiState.collectAsState()
-
-                    SettingsScreen(
-                        state = state,
-                        onThemeChange = { mode -> viewModel.setThemeMode(mode) },
-                        onSaveAiConfig = { config -> viewModel.saveAiConfig(config) },
-                        onSaveGitHubToken = { token -> viewModel.saveGitHubToken(token) },
-                        onResetOnboarding = { viewModel.resetOnboarding() },
-                        onExportBackup = onExportZip,
-                        onImportBackup = onImportZip
-                    )
-                }
+                    },
+                    onOpenAiWithNote = { navController.navigate("ai") }
+                )
             }
+
+            // 3. Search Destination
+            composable("search") {
+                val viewModel = remember { SearchViewModel(notesRepository) }
+                val state by viewModel.uiState.collectAsState()
+
+                SearchScreen(
+                    state = state,
+                    onQueryChange = { q -> viewModel.updateQuery(q) },
+                    onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") }
+                )
+            }
+
+            // 4. Knowledge Graph Destination
+            composable("graph") {
+                val viewModel = remember { GraphViewModel(graphRepository) }
+                val state by viewModel.uiState.collectAsState()
+
+                KnowledgeGraphScreen(
+                    state = state,
+                    onNodeSelect = { node -> viewModel.selectNode(node) },
+                    onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") },
+                    onResetGraph = { viewModel.loadGlobalGraph() },
+                    onToggleOrphans = { viewModel.toggleShowOrphans() }
+                )
+            }
+
+            // 5. Spatial Canvas Destination
+            composable("canvas") {
+                val viewModel = remember { CanvasViewModel(canvasRepository, notesRepository) }
+                val state by viewModel.uiState.collectAsState()
+
+                SpatialCanvasScreen(
+                    state = state,
+                    onAddTextCard = { viewModel.addTextCard("Idea Card", "Double tap or drag card around spatial canvas") },
+                    onAddNoteCard = { note -> viewModel.addNoteCard(note) },
+                    onUpdateCardPos = { id, x, y -> viewModel.updateCardPosition(id, x, y) },
+                    onDeleteCard = { id -> viewModel.deleteCard(id) },
+                    onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") }
+                )
+            }
+
+            // 6. Tasks Checklist Destination
+            composable("tasks") {
+                val viewModel = remember { TasksViewModel(notesRepository) }
+                val tasks by viewModel.tasks.collectAsState()
+
+                TasksScreen(
+                    tasks = tasks,
+                    onToggleTask = { taskId, status -> viewModel.toggleTask(taskId, status) },
+                    onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") }
+                )
+            }
+
+            // 7. AI Workspace Destination
+            composable("ai") {
+                val viewModel = remember { AiViewModel(localGemmaManager, remoteAiManager, preferencesManager) }
+                val state by viewModel.uiState.collectAsState()
+
+                AiWorkspaceScreen(
+                    state = state,
+                    onSendMessage = { text -> viewModel.sendMessage(text) },
+                    onStopGeneration = { viewModel.stopGeneration() },
+                    onDownloadModel = { viewModel.downloadLocalModel() },
+                    onApplyEdit = { edit ->
+                        scope.launch {
+                            val currentNote = state.contextPayload.activeNote
+                            if (currentNote != null) {
+                                val updated = currentNote.copy(body = currentNote.body + "\n\n" + edit)
+                                notesRepository.saveNote(updated)
+                            }
+                            viewModel.dismissEditPreview()
+                        }
+                    },
+                    onDismissEdit = { viewModel.dismissEditPreview() }
+                )
+            }
+
+            // 8. GitHub & MCP Destination
+            composable("github") {
+                val viewModel = remember { GitHubViewModel(gitHubRepository, mcpRepository, preferencesManager) }
+                val state by viewModel.uiState.collectAsState()
+
+                GitHubBrowserScreen(
+                    state = state,
+                    onSearchQueryChange = { q -> viewModel.searchRepositories(q) },
+                    onSelectRepo = { repo -> viewModel.selectRepository(repo) },
+                    onInvokeMcpTool = { name, args -> viewModel.invokeMcpTool(name, args) },
+                    onOpenGitDiagram = { _ -> viewModel.toggleGitDiagram(true) }
+                )
+            }
+
+            // 9. Settings Destination
+            composable("settings") {
+                val viewModel = remember { SettingsViewModel(preferencesManager, exportImportRepository) }
+                val state by viewModel.uiState.collectAsState()
+
+                SettingsScreen(
+                    state = state,
+                    onThemeChange = { mode -> viewModel.setThemeMode(mode) },
+                    onSaveAiConfig = { config -> viewModel.saveAiConfig(config) },
+                    onSaveGitHubToken = { token -> viewModel.saveGitHubToken(token) },
+                    onResetOnboarding = { viewModel.resetOnboarding() },
+                    onExportBackup = onExportZip,
+                    onImportBackup = onImportZip
+                )
+            }
+        }
+
+        // Floating iOS Liquid Glass Navigation Capsule
+        if (currentRoute in listOf("notes", "search", "graph", "ai", "settings")) {
+            WhiskBottomBar(
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onQuickAdd = {
+                    scope.launch {
+                        val newNote = com.whisk.domain.model.Note(title = "Untitled Note", body = "")
+                        notesRepository.saveNote(newNote)
+                        navController.navigate("note_detail/${newNote.id}")
+                    }
+                },
+                modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter)
+            )
+        }
 
             // Command Palette Trigger Floating Icon
             IconButton(
@@ -397,4 +395,3 @@ fun WhiskApp(
             }
         }
     }
-}

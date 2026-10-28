@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit
 class McpRepository {
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
         .build()
 
     private val _isConnected = MutableStateFlow(false)
@@ -73,39 +73,15 @@ class McpRepository {
                 _isConnected.value = true
                 true
             } else {
-                // Fallback default GitHub MCP tools if server returns simulated list
-                provideFallbackTools()
-                _isConnected.value = true
-                true
+                _discoveredTools.value = emptyList()
+                _isConnected.value = false
+                false
             }
         } catch (e: Exception) {
-            provideFallbackTools()
-            _isConnected.value = true
-            true
+            _discoveredTools.value = emptyList()
+            _isConnected.value = false
+            false
         }
-    }
-
-    private fun provideFallbackTools() {
-        _discoveredTools.value = listOf(
-            McpTool(
-                name = "github_search_repositories",
-                description = "Search public and private GitHub repositories",
-                inputSchemaJson = """{"type":"object","properties":{"query":{"type":"string"}}}""",
-                requiresApproval = false
-            ),
-            McpTool(
-                name = "github_get_issue_comments",
-                description = "Retrieve discussion threads on issues and pull requests",
-                inputSchemaJson = """{"type":"object","properties":{"repo":{"type":"string"},"issue_number":{"type":"integer"}}}""",
-                requiresApproval = false
-            ),
-            McpTool(
-                name = "github_create_issue",
-                description = "Create a new issue in a GitHub repository",
-                inputSchemaJson = """{"type":"object","properties":{"repo":{"type":"string"},"title":{"type":"string"},"body":{"type":"string"}}}""",
-                requiresApproval = true
-            )
-        )
     }
 
     suspend fun invokeTool(
@@ -114,7 +90,6 @@ class McpRepository {
         argumentsJson: String
     ): String = withContext(Dispatchers.IO) {
         val requestId = UUID.randomUUID().toString()
-        val tool = _discoveredTools.value.find { it.name == toolName }
         val logId = UUID.randomUUID().toString()
 
         val payload = JSONObject().apply {
@@ -142,26 +117,39 @@ class McpRepository {
             val response = client.newCall(request).execute()
             val respStr = response.body?.string() ?: ""
 
-            val updatedLog = McpToolLog(
-                id = logId,
-                toolName = toolName,
-                arguments = argumentsJson,
-                status = "SUCCESS",
-                result = respStr.ifBlank { "Tool executed successfully." }
-            )
-            _executionLogs.value = _executionLogs.value.map { if (it.id == logId) updatedLog else it }
-            respStr.ifBlank { "Tool executed successfully." }
+            if (response.isSuccessful) {
+                val updatedLog = McpToolLog(
+                    id = logId,
+                    toolName = toolName,
+                    arguments = argumentsJson,
+                    status = "SUCCESS",
+                    result = respStr.ifBlank { "Tool executed successfully." }
+                )
+                _executionLogs.value = _executionLogs.value.map { if (it.id == logId) updatedLog else it }
+                respStr.ifBlank { "Tool executed successfully." }
+            } else {
+                val errorResult = "Tool call failed [HTTP ${response.code}]: $respStr"
+                val updatedLog = McpToolLog(
+                    id = logId,
+                    toolName = toolName,
+                    arguments = argumentsJson,
+                    status = "FAILED",
+                    result = errorResult
+                )
+                _executionLogs.value = _executionLogs.value.map { if (it.id == logId) updatedLog else it }
+                errorResult
+            }
         } catch (e: Exception) {
-            val simulatedResult = "Executed $toolName with arguments: $argumentsJson\nOutput: Tool call completed."
+            val errorResult = "Execution error: ${e.message}"
             val updatedLog = McpToolLog(
                 id = logId,
                 toolName = toolName,
                 arguments = argumentsJson,
-                status = "SUCCESS",
-                result = simulatedResult
+                status = "FAILED",
+                result = errorResult
             )
             _executionLogs.value = _executionLogs.value.map { if (it.id == logId) updatedLog else it }
-            simulatedResult
+            errorResult
         }
     }
 }

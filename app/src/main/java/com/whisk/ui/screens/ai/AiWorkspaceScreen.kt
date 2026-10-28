@@ -1,6 +1,5 @@
 package com.whisk.ui.screens.ai
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -88,7 +87,7 @@ fun AiWorkspaceScreen(
                                 modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
-                                text = "On-Device Google Gemma 4 E2B",
+                                text = "On-Device Google Gemma 2B LiteRT",
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -117,7 +116,7 @@ fun AiWorkspaceScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
                                 Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                                Text("Download Gemma 4 E2B (LiteRT-LM)")
+                                Text("Download Gemma 2B from Hugging Face")
                             }
                         }
                     }
@@ -139,7 +138,7 @@ fun AiWorkspaceScreen(
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        CodeBlockView(code = state.generatedEditPreview, language = "kotlin")
+                        CodeBlockView(code = state.generatedEditPreview ?: "", language = "kotlin")
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
@@ -147,7 +146,7 @@ fun AiWorkspaceScreen(
                             Button(onClick = onDismissEdit, modifier = Modifier.padding(end = 8.dp)) {
                                 Text("Dismiss")
                             }
-                            Button(onClick = { onApplyEdit(state.generatedEditPreview) }) {
+                            Button(onClick = { onApplyEdit(state.generatedEditPreview ?: "") }) {
                                 Icon(Icons.Default.Check, contentDescription = null)
                                 Text("Apply to Note")
                             }

@@ -63,7 +63,8 @@ class AiViewModel(
 
     fun downloadLocalModel() {
         viewModelScope.launch {
-            localGemmaManager.downloadModel { _ -> }
+            val config = uiState.value.config
+            localGemmaManager.downloadModel(config) { _ -> }
         }
     }
 
@@ -81,7 +82,7 @@ class AiViewModel(
 
         generationJob = viewModelScope.launch {
             val streamFlow = if (config.providerType == AiProviderType.LOCAL_GEMMA) {
-                localGemmaManager.generateStream(userText, contextText)
+                localGemmaManager.generateStream(userText, contextText, config)
             } else {
                 remoteAiManager.generateStream(userText, contextText, config)
             }
@@ -121,5 +122,10 @@ class AiViewModel(
 
     fun dismissEditPreview() {
         _generatedEditPreview.value = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        localGemmaManager.close()
     }
 }

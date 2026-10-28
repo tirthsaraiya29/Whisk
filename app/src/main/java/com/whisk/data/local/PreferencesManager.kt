@@ -29,6 +29,9 @@ class PreferencesManager(private val context: Context) {
         val KEY_AI_API_KEY = stringPreferencesKey("ai_api_key")
         val KEY_AI_CUSTOM_ENDPOINT = stringPreferencesKey("ai_custom_endpoint")
         val KEY_AI_MODEL = stringPreferencesKey("ai_model")
+        val KEY_AI_HF_MODEL_URL = stringPreferencesKey("ai_hf_model_url")
+        val KEY_AI_HF_API_TOKEN = stringPreferencesKey("ai_hf_api_token")
+        val KEY_AI_USE_GPU = booleanPreferencesKey("ai_use_gpu")
 
         val KEY_GITHUB_TOKEN = stringPreferencesKey("github_token")
         val KEY_GITHUB_DEFAULT_REPO = stringPreferencesKey("github_default_repo")
@@ -99,7 +102,10 @@ class PreferencesManager(private val context: Context) {
             providerType = providerType,
             apiKey = prefs[KEY_AI_API_KEY] ?: "",
             customEndpoint = prefs[KEY_AI_CUSTOM_ENDPOINT] ?: "",
-            selectedModel = prefs[KEY_AI_MODEL] ?: "gemma-4-e2b-it"
+            selectedModel = prefs[KEY_AI_MODEL] ?: "gemma-2b-it-gpu-int4",
+            hfModelUrl = prefs[KEY_AI_HF_MODEL_URL] ?: "https://huggingface.co/google/gemma-2b-it-gpu-int4/resolve/main/gemma-2b-it-gpu-int4.bin",
+            hfApiToken = prefs[KEY_AI_HF_API_TOKEN] ?: "",
+            useGpuAccelerator = prefs[KEY_AI_USE_GPU] ?: true
         )
     }
 
@@ -109,6 +115,9 @@ class PreferencesManager(private val context: Context) {
             prefs[KEY_AI_API_KEY] = config.apiKey
             prefs[KEY_AI_CUSTOM_ENDPOINT] = config.customEndpoint
             prefs[KEY_AI_MODEL] = config.selectedModel
+            prefs[KEY_AI_HF_MODEL_URL] = config.hfModelUrl
+            prefs[KEY_AI_HF_API_TOKEN] = config.hfApiToken
+            prefs[KEY_AI_USE_GPU] = config.useGpuAccelerator
         }
     }
 

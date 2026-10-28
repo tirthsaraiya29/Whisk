@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,6 +55,9 @@ fun SettingsScreen(
     var apiKeyText by remember(state.aiConfig) { mutableStateOf(state.aiConfig.apiKey) }
     var githubTokenText by remember(state.githubToken) { mutableStateOf(state.githubToken) }
     var selectedProvider by remember(state.aiConfig) { mutableStateOf(state.aiConfig.providerType) }
+    var hfModelUrlText by remember(state.aiConfig) { mutableStateOf(state.aiConfig.hfModelUrl) }
+    var hfTokenText by remember(state.aiConfig) { mutableStateOf(state.aiConfig.hfApiToken) }
+    var useGpu by remember(state.aiConfig) { mutableStateOf(state.aiConfig.useGpuAccelerator) }
 
     Scaffold(
         topBar = {
@@ -144,7 +148,45 @@ fun SettingsScreen(
                         }
                     }
 
-                    if (selectedProvider != AiProviderType.LOCAL_GEMMA) {
+                    if (selectedProvider == AiProviderType.LOCAL_GEMMA) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = hfModelUrlText,
+                            onValueChange = {
+                                hfModelUrlText = it
+                                onSaveAiConfig(state.aiConfig.copy(hfModelUrl = it))
+                            },
+                            label = { Text("Hugging Face Model Direct URL") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = hfTokenText,
+                            onValueChange = {
+                                hfTokenText = it
+                                onSaveAiConfig(state.aiConfig.copy(hfApiToken = it))
+                            },
+                            label = { Text("Hugging Face User Access Token (Optional)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("GPU Accelerator Delegate", style = MaterialTheme.typography.bodyMedium)
+                            Switch(
+                                checked = useGpu,
+                                onCheckedChange = {
+                                    useGpu = it
+                                    onSaveAiConfig(state.aiConfig.copy(useGpuAccelerator = it))
+                                }
+                            )
+                        }
+                    } else {
                         Spacer(modifier = Modifier.height(12.dp))
                         OutlinedTextField(
                             value = apiKeyText,

@@ -1,6 +1,5 @@
 package com.whisk.ui.components.glass
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,11 +16,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,7 +41,7 @@ fun LiquidGlassTopBar(
     onBackClick: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val titleColor = if (isDarkTheme) Color(0xFFF8FAFC) else Color(0xFF0F172A)
     val subtitleColor = if (isDarkTheme) Color(0xCCCBD5E1) else Color(0x99334155)
 
@@ -56,7 +57,8 @@ fun LiquidGlassTopBar(
                 .heightIn(min = 58.dp),
             shape = RoundedCornerShape(22.dp),
             blurRadius = 20.dp,
-            elevation = 6.dp
+            elevation = 6.dp,
+            isDarkTheme = isDarkTheme
         ) {
             Box(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),

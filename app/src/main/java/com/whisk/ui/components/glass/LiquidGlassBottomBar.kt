@@ -12,7 +12,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,6 +33,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -82,7 +83,7 @@ fun LiquidGlassBottomBar(
         if (index >= 0) index else 0
     }
 
-    val isDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     // Keyboard visibility detection via WindowInsets
     val density = LocalDensity.current
@@ -113,7 +114,8 @@ fun LiquidGlassBottomBar(
                         .height(64.dp),
                     shape = CircleShape,
                     blurRadius = 24.dp,
-                    elevation = 12.dp
+                    elevation = 12.dp,
+                    isDarkTheme = isDarkTheme
                 ) {
                     BoxWithConstraints(
                         modifier = Modifier
@@ -148,7 +150,8 @@ fun LiquidGlassBottomBar(
                             shape = CircleShape,
                             blurRadius = 12.dp,
                             elevation = 2.dp,
-                            tintColor = lensTint
+                            tintColor = lensTint,
+                            isDarkTheme = isDarkTheme
                         ) {}
 
                         // Crisp Foreground Navigation Items Row
@@ -225,7 +228,8 @@ fun LiquidGlassBottomBar(
                     shape = CircleShape,
                     blurRadius = 24.dp,
                     elevation = 12.dp,
-                    tintColor = addLensTint
+                    tintColor = addLensTint,
+                    isDarkTheme = isDarkTheme
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),

@@ -7,7 +7,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +33,18 @@ fun CodeBlockView(
     code: String,
     language: String = "code"
 ) {
+    val isMermaid = language.equals("mermaid", ignoreCase = true) ||
+            code.trimStart().startsWith("graph ") ||
+            code.trimStart().startsWith("flowchart ") ||
+            code.trimStart().startsWith("sequenceDiagram") ||
+            code.trimStart().startsWith("gantt") ||
+            code.trimStart().startsWith("classDiagram")
+
+    if (isMermaid) {
+        MermaidDiagramView(code = code)
+        return
+    }
+
     val context = LocalContext.current
 
     Column(

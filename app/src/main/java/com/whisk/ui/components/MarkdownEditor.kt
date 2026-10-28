@@ -1,6 +1,9 @@
 package com.whisk.ui.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +26,7 @@ import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Checkbox
@@ -44,8 +48,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -105,6 +109,9 @@ fun MarkdownEditor(
                     }
                     IconButton(onClick = { onBodyChange("$body\n```kotlin\n\n```") }) {
                         Icon(Icons.Default.Code, contentDescription = "Code block")
+                    }
+                    IconButton(onClick = { onBodyChange("$body\n```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }) {
+                        Icon(Icons.Default.Hub, contentDescription = "Mermaid diagram")
                     }
                     IconButton(onClick = { onBodyChange("$body[[Note Title]]") }) {
                         Icon(Icons.Default.Link, contentDescription = "Internal link")
@@ -191,7 +198,7 @@ fun MarkdownEditor(
                 OutlinedTextField(
                     value = body,
                     onValueChange = onBodyChange,
-                    placeholder = { Text("Write notes in Markdown or code...", style = MaterialTheme.typography.bodyLarge) },
+                    placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge) },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
                     modifier = Modifier
                         .fillMaxSize()
@@ -242,7 +249,10 @@ fun RenderMarkdownPreview(
     var codeLang = ""
     val codeBuilder = StringBuilder()
 
-    lines.forEachIndexed { index, line ->
+    var i = 0
+    while (i < lines.size) {
+        val line = lines[i]
+
         when {
             line.startsWith("```") -> {
                 if (inCodeBlock) {
@@ -255,33 +265,41 @@ fun RenderMarkdownPreview(
                     inCodeBlock = true
                     codeLang = line.removePrefix("```").trim().ifBlank { "code" }
                 }
+                i++
             }
             inCodeBlock -> {
                 codeBuilder.append(line).append("\n")
+                i++
             }
             line.startsWith("# ") -> {
-                Text(
+                RenderFormattedMarkdownLine(
                     text = line.removePrefix("# "),
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(vertical = 6.dp)
+                    onLinkClick = onLinkClick,
+                    textStyle = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.padding(vertical = 6.dp),
+                    isHeader = true
                 )
+                i++
             }
             line.startsWith("## ") -> {
-                Text(
+                RenderFormattedMarkdownLine(
                     text = line.removePrefix("## "),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    onLinkClick = onLinkClick,
+                    textStyle = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    isHeader = true
                 )
+                i++
             }
             line.startsWith("### ") -> {
-                Text(
+                RenderFormattedMarkdownLine(
                     text = line.removePrefix("### "),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    onLinkClick = onLinkClick,
+                    textStyle = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    isHeader = true
                 )
+                i++
             }
             line.startsWith("> ") -> {
                 Row(
@@ -296,20 +314,24 @@ fun RenderMarkdownPreview(
                             .background(MaterialTheme.colorScheme.primary)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
+                    RenderFormattedMarkdownLine(
                         text = line.removePrefix("> "),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        onLinkClick = onLinkClick,
+                        textStyle = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f)
                     )
                 }
+                i++
             }
             line.trim() == "---" || line.trim() == "***" -> {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                 )
+                i++
             }
             line.startsWith("- [ ]") || line.startsWith("- [x]") || line.startsWith("- [X]") -> {
+                val lineIndex = i
                 val isChecked = line.contains("[x]", ignoreCase = true)
                 val taskText = line.substringAfter("]").trim()
                 Row(
@@ -321,27 +343,40 @@ fun RenderMarkdownPreview(
                         onCheckedChange = { checked ->
                             val newCheckStr = if (checked) "- [x]" else "- [ ]"
                             val updatedLines = lines.toMutableList()
-                            updatedLines[index] = "$newCheckStr $taskText"
+                            updatedLines[lineIndex] = "$newCheckStr $taskText"
                             onBodyChange(updatedLines.joinToString("\n"))
                         },
                         colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
                     )
-                    RenderLineWithLinks(taskText, onLinkClick)
+                    RenderFormattedMarkdownLine(text = taskText, onLinkClick = onLinkClick)
                 }
+                i++
             }
             line.startsWith("- ") || line.startsWith("* ") -> {
                 Row(modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)) {
                     Text("• ", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
                     Box(modifier = Modifier.weight(1f)) {
-                        RenderLineWithLinks(line.substring(2), onLinkClick)
+                        RenderFormattedMarkdownLine(text = line.substring(2), onLinkClick = onLinkClick)
                     }
                 }
+                i++
+            }
+            line.trim().startsWith("|") && line.trim().endsWith("|") -> {
+                // Collect table block
+                val tableBlock = mutableListOf<String>()
+                while (i < lines.size && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+                    tableBlock.add(lines[i])
+                    i++
+                }
+                RenderMarkdownTable(tableLines = tableBlock, onLinkClick = onLinkClick)
             }
             line.isBlank() -> {
                 Spacer(modifier = Modifier.height(8.dp))
+                i++
             }
             else -> {
-                RenderLineWithLinks(line, onLinkClick)
+                RenderFormattedMarkdownLine(text = line, onLinkClick = onLinkClick)
+                i++
             }
         }
     }
@@ -352,69 +387,103 @@ fun RenderMarkdownPreview(
 }
 
 @Composable
-fun RenderLineWithLinks(
+fun RenderFormattedMarkdownLine(
     text: String,
+    onLinkClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
+    isHeader: Boolean = false
+) {
+    val context = LocalContext.current
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val onBackgroundColor = MaterialTheme.colorScheme.onBackground
+    val codeBgColor = MaterialTheme.colorScheme.surfaceVariant
+
+    val annotatedString = remember(text, primaryColor, onBackgroundColor, codeBgColor) {
+        MarkdownParser.parseInlineMarkdown(text, primaryColor, onBackgroundColor, codeBgColor)
+    }
+
+    val style = if (isHeader) textStyle.copy(fontWeight = FontWeight.Bold) else textStyle
+
+    ClickableText(
+        text = annotatedString,
+        style = style.copy(color = onBackgroundColor),
+        onClick = { offset ->
+            annotatedString.getStringAnnotations(tag = "NOTE_LINK", start = offset, end = offset)
+                .firstOrNull()?.let { annotation ->
+                    onLinkClick(annotation.item)
+                }
+            annotatedString.getStringAnnotations(tag = "URL_LINK", start = offset, end = offset)
+                .firstOrNull()?.let { annotation ->
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                        context.startActivity(intent)
+                    } catch (_: Exception) {}
+                }
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun RenderMarkdownTable(
+    tableLines: List<String>,
     onLinkClick: (String) -> Unit
 ) {
-    val linkRegex = Regex("\\[\\[(.*?)\\]\\]")
-    val matches = linkRegex.findAll(text).toList()
+    val rows = tableLines.map { line ->
+        line.trim().trim('|').split('|').map { it.trim() }
+    }.filter { row ->
+        !row.all { cell -> cell.all { char -> char == '-' || char == ':' || char == ' ' } }
+    }
 
-    if (matches.isEmpty()) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-    } else {
-        val primaryColor = MaterialTheme.colorScheme.primary
-        val onBackgroundColor = MaterialTheme.colorScheme.onBackground
+    if (rows.isEmpty()) return
 
-        val annotatedString = remember(text, primaryColor, onBackgroundColor) {
-            buildAnnotatedString {
-                var lastIndex = 0
-                matches.forEach { match ->
-                    val start = match.range.first
-                    val end = match.range.last
-                    if (start > lastIndex) {
-                        append(text.substring(lastIndex, start))
+    val headerRow = rows.firstOrNull()
+    val dataRows = if (rows.size > 1) rows.subList(1, rows.size) else emptyList()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+    ) {
+        // Table Header
+        if (headerRow != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                headerRow.forEach { cell ->
+                    Box(modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
+                        RenderFormattedMarkdownLine(cell, onLinkClick, isHeader = true)
                     }
-                    val linkTitle = match.groupValues[1]
-                    val linkStart = length
-                    append(" [[ $linkTitle ]] ")
-                    val linkEnd = length
-
-                    addStyle(
-                        style = SpanStyle(
-                            color = primaryColor,
-                            fontWeight = FontWeight.SemiBold,
-                            background = primaryColor.copy(alpha = 0.15f)
-                        ),
-                        start = linkStart,
-                        end = linkEnd
-                    )
-                    addStringAnnotation(
-                        tag = "NOTE_LINK",
-                        annotation = linkTitle,
-                        start = linkStart,
-                        end = linkEnd
-                    )
-                    lastIndex = end + 1
-                }
-                if (lastIndex < text.length) {
-                    append(text.substring(lastIndex))
                 }
             }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
         }
 
-        ClickableText(
-            text = annotatedString,
-            style = MaterialTheme.typography.bodyLarge.copy(color = onBackgroundColor),
-            onClick = { offset ->
-                annotatedString.getStringAnnotations(tag = "NOTE_LINK", start = offset, end = offset)
-                    .firstOrNull()?.let { annotation ->
-                        onLinkClick(annotation.item)
+        // Table Rows
+        dataRows.forEachIndexed { rowIndex, row ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                row.forEach { cell ->
+                    Box(modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
+                        RenderFormattedMarkdownLine(cell, onLinkClick)
                     }
+                }
             }
-        )
+            if (rowIndex < dataRows.size - 1) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+            }
+        }
     }
 }

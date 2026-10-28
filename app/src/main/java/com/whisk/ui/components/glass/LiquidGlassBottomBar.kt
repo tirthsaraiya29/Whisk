@@ -60,9 +60,9 @@ import com.whisk.ui.components.NavDestination
 import kotlinx.coroutines.launch
 
 /**
- * Native iOS-Inspired Liquid Glass Floating Bottom Navigation Capsule with Quick-Add Lens.
- * Features fluid animated selected lens indicator, optical depth, backdrop blur,
- * keyboard awareness, safe insets, and high-contrast theme adaptivity.
+ * Liquid Glass Floating Bottom Navigation Capsule with Quick-Add Action Jewel.
+ * Features fluid animated selected lens indicator, volume-preserving jelly physics,
+ * gesture drag traversal, keyboard awareness, and theme adaptivity.
  */
 @Composable
 fun LiquidGlassBottomBar(
@@ -89,7 +89,7 @@ fun LiquidGlassBottomBar(
     val scope = rememberCoroutineScope()
     val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
-    // Keyboard visibility detection via WindowInsets
+    // Soft keyboard visibility detection
     val density = LocalDensity.current
     val imeBottom = WindowInsets.ime.getBottom(density)
     val isKeyboardVisible = imeBottom > 0
@@ -131,7 +131,7 @@ fun LiquidGlassBottomBar(
                         val tabWidth = totalWidth / tabCount
                         val tabWidthPx = with(density) { tabWidth.toPx() }
 
-                        // iOS Liquid Jelly Physics State
+                        // Volume-preserving Jelly Physics State
                         val jellyState = rememberJellyLensState(
                             initialIndex = selectedIndex,
                             tabWidthPx = tabWidthPx
@@ -143,7 +143,7 @@ fun LiquidGlassBottomBar(
                             }
                         }
 
-                        // Sliding Inner Glass Lens Pill with Jelly Transform & Drag Gesture Traversal
+                        // Sliding Inner Glass Lens Pill with Jelly Transform & Drag Traversal
                         val lensTint = if (isDarkTheme) LiquidGlassDefaults.DarkLensTint else LiquidGlassDefaults.LightLensTint
                         LiquidGlassBox(
                             modifier = Modifier
@@ -158,7 +158,7 @@ fun LiquidGlassBottomBar(
                             isDarkTheme = isDarkTheme
                         ) {}
 
-                        // Crisp Foreground Navigation Items Row with Drag Support
+                        // Foreground Navigation Tabs Row
                         Row(
                             modifier = Modifier
                                 .fillMaxSize()

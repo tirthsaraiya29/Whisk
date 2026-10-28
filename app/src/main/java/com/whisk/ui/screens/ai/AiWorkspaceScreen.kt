@@ -1,6 +1,5 @@
 package com.whisk.ui.screens.ai
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +27,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -58,6 +58,7 @@ fun AiWorkspaceScreen(
     onSendMessage: (String) -> Unit,
     onStopGeneration: () -> Unit,
     onDownloadModel: () -> Unit,
+    onSwitchProvider: (AiProviderType) -> Unit,
     onApplyEdit: (String) -> Unit,
     onDismissEdit: () -> Unit
 ) {
@@ -68,7 +69,7 @@ fun AiWorkspaceScreen(
         topBar = {
             WhiskTopBar(
                 title = "Whisk AI Workspace",
-                subtitle = "Provider: ${state.config.providerType.name} • ${state.config.selectedModel}"
+                subtitle = "Active Engine: ${state.config.providerType.name}"
             )
         }
     ) { paddingValues ->
@@ -77,12 +78,28 @@ fun AiWorkspaceScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Provider Switcher Chip Row
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(AiProviderType.entries.toTypedArray()) { provider ->
+                    FilterChip(
+                        selected = state.config.providerType == provider,
+                        onClick = { onSwitchProvider(provider) },
+                        label = { Text(provider.name) }
+                    )
+                }
+            }
+
             // Active Note Context Chip Banner
             if (activeNote != null) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                 ) {

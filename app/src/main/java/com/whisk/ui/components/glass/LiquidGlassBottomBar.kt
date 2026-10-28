@@ -2,15 +2,14 @@ package com.whisk.ui.components.glass
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,13 +35,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -55,6 +57,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whisk.ui.components.NavDestination
+import kotlinx.coroutines.launch
 
 /**
  * Native iOS-Inspired Liquid Glass Floating Bottom Navigation Capsule with Quick-Add Lens.
@@ -83,6 +86,7 @@ fun LiquidGlassBottomBar(
         if (index >= 0) index else 0
     }
 
+    val scope = rememberCoroutineScope()
     val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
     // Keyboard visibility detection via WindowInsets
@@ -125,28 +129,28 @@ fun LiquidGlassBottomBar(
                         val totalWidth = maxWidth
                         val tabCount = destinations.size
                         val tabWidth = totalWidth / tabCount
+                        val tabWidthPx = with(density) { tabWidth.toPx() }
 
-                        // Fluid Animated Selected Lens Indicator Position
-                        val animatedIndexFraction by animateFloatAsState(
-                            targetValue = selectedIndex.toFloat(),
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                stiffness = Spring.StiffnessLow
-                            ),
-                            label = "SelectedLensAnimation"
+                        // iOS Liquid Jelly Physics State
+                        val jellyState = rememberJellyLensState(
+                            initialIndex = selectedIndex,
+                            tabWidthPx = tabWidthPx
                         )
 
-                        val lensOffsetPx = with(LocalDensity.current) {
-                            (animatedIndexFraction * tabWidth.toPx()).toInt()
+                        LaunchedEffect(selectedIndex, tabWidthPx) {
+                            if (tabWidthPx > 0f) {
+                                jellyState.animateToTab(selectedIndex, tabWidthPx)
+                            }
                         }
 
-                        // Sliding Inner Glass Lens Pill
+                        // Sliding Inner Glass Lens Pill with Jelly Transform & Drag Gesture Traversal
                         val lensTint = if (isDarkTheme) LiquidGlassDefaults.DarkLensTint else LiquidGlassDefaults.LightLensTint
                         LiquidGlassBox(
                             modifier = Modifier
-                                .offset { IntOffset(x = lensOffsetPx, y = 0) }
-                                .width(tabWidth)
-                                .fillMaxHeight(),
+                                .offset { IntOffset(x = jellyState.leftEdge.toInt(), y = 0) }
+                                .width(with(density) { jellyState.currentWidth.toDp() })
+                                .fillMaxHeight()
+                                .jellyTransform(jellyState),
                             shape = CircleShape,
                             blurRadius = 12.dp,
                             elevation = 2.dp,
@@ -154,9 +158,35 @@ fun LiquidGlassBottomBar(
                             isDarkTheme = isDarkTheme
                         ) {}
 
-                        // Crisp Foreground Navigation Items Row
+                        // Crisp Foreground Navigation Items Row with Drag Support
                         Row(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .pointerInput(destinations, tabWidthPx) {
+                                    detectHorizontalDragGestures(
+                                        onDragEnd = {
+                                            val center = (jellyState.leftEdge + jellyState.rightEdge) / 2f
+                                            val nearestIndex = (center / tabWidthPx)
+                                                .toInt()
+                                                .coerceIn(0, destinations.size - 1)
+                                            scope.launch {
+                                                jellyState.animateToTab(nearestIndex, tabWidthPx)
+                                                onNavigate(destinations[nearestIndex].route)
+                                            }
+                                        },
+                                        onDragCancel = {
+                                            scope.launch {
+                                                jellyState.animateToTab(selectedIndex, tabWidthPx)
+                                            }
+                                        },
+                                        onHorizontalDrag = { change, dragAmount ->
+                                            change.consume()
+                                            scope.launch {
+                                                jellyState.snapDrag(dragAmount, destinations.size - 1)
+                                            }
+                                        }
+                                    )
+                                },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             destinations.forEachIndexed { index, dest ->
@@ -217,10 +247,16 @@ fun LiquidGlassBottomBar(
 
                 // Quick Add Floating Glass Action Jewel
                 val addLensTint = if (isDarkTheme) Color(0xCC0284C7) else Color(0xCC2563EB)
+                val quickAddInteractionSource = remember { MutableInteractionSource() }
                 LiquidGlassBox(
                     modifier = Modifier
                         .size(56.dp)
-                        .clickable(onClick = onQuickAdd)
+                        .jellyPressEffect(quickAddInteractionSource)
+                        .clickable(
+                            interactionSource = quickAddInteractionSource,
+                            indication = null,
+                            onClick = onQuickAdd
+                        )
                         .semantics {
                             role = Role.Button
                             contentDescription = "Quick Add Note"

@@ -75,7 +75,10 @@ fun LiquidGlassTopBar(
                         modifier = Modifier.weight(1f)
                     ) {
                         if (onBackClick != null) {
-                            IconButton(onClick = onBackClick) {
+                            IconButton(
+                                onClick = onBackClick,
+                                modifier = Modifier.jellyPressEffect()
+                            ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "Back",

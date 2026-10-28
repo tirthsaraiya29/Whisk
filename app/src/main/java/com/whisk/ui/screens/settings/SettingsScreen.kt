@@ -321,7 +321,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(90.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }

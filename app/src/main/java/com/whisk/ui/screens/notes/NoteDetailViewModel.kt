@@ -94,4 +94,28 @@ class NoteDetailViewModel(
             _uiState.value = _uiState.value.copy(isDeleted = true)
         }
     }
+
+    fun flushPendingSave() {
+        autoSaveJob?.cancel()
+        val note = _uiState.value.note ?: return
+        if (_uiState.value.saveState == SaveState.SAVING) {
+            viewModelScope.launch {
+                try {
+                    notesRepository.saveNote(note)
+                    val backlinks = notesRepository.getBacklinksForNote(note.title, note.id)
+                    _uiState.value = _uiState.value.copy(
+                        backlinks = backlinks,
+                        saveState = SaveState.SAVED
+                    )
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(saveState = SaveState.ERROR)
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        flushPendingSave()
+        super.onCleared()
+    }
 }

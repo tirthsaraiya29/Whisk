@@ -1,7 +1,6 @@
 package com.whisk.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -13,8 +12,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = LightAccent,
-    onPrimary = LightBackground,
+    primary = LightPrimary,
+    onPrimary = LightSurface,
+    primaryContainer = LightPrimaryContainer,
+    onPrimaryContainer = LightOnPrimaryContainer,
     background = LightBackground,
     onBackground = LightTextPrimary,
     surface = LightSurface,
@@ -25,8 +26,10 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = DarkAccent,
+    primary = DarkPrimary,
     onPrimary = DarkBackground,
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = DarkOnPrimaryContainer,
     background = DarkBackground,
     onBackground = DarkTextPrimary,
     surface = DarkSurface,

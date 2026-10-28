@@ -49,8 +49,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -68,6 +70,27 @@ fun MarkdownEditor(
     modifier: Modifier = Modifier
 ) {
     var mode by remember { mutableStateOf(EditorMode.EDIT) }
+
+    var textFieldValue by remember(body) {
+        mutableStateOf(TextFieldValue(text = body, selection = TextRange(body.length)))
+    }
+
+    fun applyFormatting(prefix: String, suffix: String = "") {
+        val currentTfv = textFieldValue
+        val selection = currentTfv.selection
+        val text = currentTfv.text
+        val selectedText = if (selection.collapsed) "" else text.substring(selection.start, selection.end)
+        val inserted = prefix + selectedText + suffix
+        val newText = text.substring(0, selection.start) + inserted + text.substring(selection.end)
+        val newCursor = if (selection.collapsed && suffix.isNotEmpty()) {
+            selection.start + prefix.length
+        } else {
+            selection.start + inserted.length
+        }
+        val nextTfv = TextFieldValue(text = newText, selection = TextRange(newCursor))
+        textFieldValue = nextTfv
+        onBodyChange(newText)
+    }
 
     val wordCount = remember(body) {
         if (body.isBlank()) 0 else body.trim().split(Regex("\\s+")).size
@@ -89,31 +112,31 @@ fun MarkdownEditor(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    IconButton(onClick = { onBodyChange("$body\n# ") }) {
+                    IconButton(onClick = { applyFormatting("# ") }) {
                         Text("H1", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     }
-                    IconButton(onClick = { onBodyChange("$body\n## ") }) {
+                    IconButton(onClick = { applyFormatting("## ") }) {
                         Text("H2", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     }
-                    IconButton(onClick = { onBodyChange("$body**bold**") }) {
+                    IconButton(onClick = { applyFormatting("**", "**") }) {
                         Icon(Icons.Default.FormatBold, contentDescription = "Bold")
                     }
-                    IconButton(onClick = { onBodyChange("$body*italic*") }) {
+                    IconButton(onClick = { applyFormatting("*", "*") }) {
                         Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
                     }
-                    IconButton(onClick = { onBodyChange("$body\n- ") }) {
+                    IconButton(onClick = { applyFormatting("- ") }) {
                         Icon(Icons.Default.FormatListBulleted, contentDescription = "List")
                     }
-                    IconButton(onClick = { onBodyChange("$body\n> ") }) {
+                    IconButton(onClick = { applyFormatting("> ") }) {
                         Icon(Icons.Default.FormatQuote, contentDescription = "Quote")
                     }
-                    IconButton(onClick = { onBodyChange("$body\n```kotlin\n\n```") }) {
+                    IconButton(onClick = { applyFormatting("```kotlin\n", "\n```") }) {
                         Icon(Icons.Default.Code, contentDescription = "Code block")
                     }
-                    IconButton(onClick = { onBodyChange("$body\n```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }) {
+                    IconButton(onClick = { applyFormatting("```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }) {
                         Icon(Icons.Default.Hub, contentDescription = "Mermaid diagram")
                     }
-                    IconButton(onClick = { onBodyChange("$body[[Note Title]]") }) {
+                    IconButton(onClick = { applyFormatting("[[", "]]") }) {
                         Icon(Icons.Default.Link, contentDescription = "Internal link")
                     }
                 }
@@ -196,8 +219,13 @@ fun MarkdownEditor(
         if (mode == EditorMode.EDIT) {
             Column(modifier = Modifier.weight(1f)) {
                 OutlinedTextField(
-                    value = body,
-                    onValueChange = onBodyChange,
+                    value = textFieldValue,
+                    onValueChange = { newValue ->
+                        textFieldValue = newValue
+                        if (newValue.text != body) {
+                            onBodyChange(newValue.text)
+                        }
+                    },
                     placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge) },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
                     modifier = Modifier

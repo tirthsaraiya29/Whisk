@@ -33,7 +33,6 @@ class NotesViewModel(
 
     private val _activeFilter = MutableStateFlow<NoteFilter>(NoteFilter.All)
     private val _searchQuery = MutableStateFlow("")
-    private val _tags = MutableStateFlow<List<Tag>>(emptyList())
 
     val uiState: StateFlow<NotesUiState> = combine(
         notesRepository.allNotes,
@@ -41,6 +40,18 @@ class NotesViewModel(
         _activeFilter,
         _searchQuery
     ) { allNotes, folders, filter, query ->
+        // Extract tags dynamically from all vault notes
+        val tagCounts = mutableMapOf<String, Int>()
+        allNotes.forEach { note ->
+            note.tags.forEach { tag ->
+                if (tag.isNotBlank()) {
+                    tagCounts[tag] = (tagCounts[tag] ?: 0) + 1
+                }
+            }
+        }
+        val extractedTags = tagCounts.map { Tag(name = it.key, noteCount = it.value) }
+            .sortedByDescending { it.noteCount }
+
         val filtered = allNotes.filter { note ->
             val matchesFilter = when (filter) {
                 is NoteFilter.All -> true
@@ -59,7 +70,7 @@ class NotesViewModel(
         NotesUiState(
             notes = filtered,
             folders = folders,
-            tags = _tags.value,
+            tags = extractedTags,
             activeFilter = filter,
             searchQuery = query
         )

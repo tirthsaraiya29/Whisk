@@ -213,7 +213,10 @@ fun WhiskApp(
                 NoteDetailScreen(
                     state = state,
                     onTitleChange = { title, body -> viewModel.updateContent(title, body) },
-                    onBackClick = { navController.popBackStack() },
+                    onBackClick = {
+                        viewModel.flushPendingSave()
+                        navController.popBackStack()
+                    },
                     onToggleFavorite = { viewModel.toggleFavorite() },
                     onDeleteNote = { viewModel.deleteNote() },
                     onOpenNote = { targetIdOrTitle ->
@@ -224,7 +227,7 @@ fun WhiskApp(
                             }
                         }
                     },
-                    onOpenAiWithNote = { navController.navigate("ai") }
+                    onOpenAiWithNote = { navController.navigate("ai?noteId=$noteId") }
                 )
             }
 
@@ -282,8 +285,23 @@ fun WhiskApp(
             }
 
             // 7. AI Workspace Destination
-            composable("ai") {
-                val viewModel = remember { AiViewModel(localGemmaManager, remoteAiManager, preferencesManager) }
+            composable(
+                route = "ai?noteId={noteId}",
+                arguments = listOf(navArgument("noteId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                })
+            ) { backStackEntry ->
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val noteId = backStackEntry.arguments?.getString("noteId")
+                val viewModel = remember(noteId) {
+                    AiViewModel(localGemmaManager, remoteAiManager, preferencesManager).apply {
+                        if (!noteId.isNullOrBlank()) {
+                            loadNoteContext(notesRepository, noteId)
+                        }
+                    }
+                }
                 val state by viewModel.uiState.collectAsState()
 
                 AiWorkspaceScreen(
@@ -295,8 +313,14 @@ fun WhiskApp(
                         scope.launch {
                             val currentNote = state.contextPayload.activeNote
                             if (currentNote != null) {
-                                val updated = currentNote.copy(body = currentNote.body + "\n\n" + edit)
+                                val cleanEdit = edit.lines()
+                                    .filterNot { it.trim().startsWith("```") }
+                                    .joinToString("\n")
+                                    .trim()
+                                val updatedText = if (cleanEdit.isNotBlank()) cleanEdit else edit
+                                val updated = currentNote.copy(body = currentNote.body + "\n\n" + updatedText)
                                 notesRepository.saveNote(updated)
+                                Toast.makeText(context, "Applied edit to '${currentNote.title}'", Toast.LENGTH_SHORT).show()
                             }
                             viewModel.dismissEditPreview()
                         }
@@ -337,9 +361,11 @@ fun WhiskApp(
         }
 
         // Floating iOS Liquid Glass Navigation Capsule
-        if (currentRoute in listOf("notes", "search", "graph", "ai", "settings")) {
+        val isBottomBarVisible = currentRoute in listOf("notes", "search", "graph", "settings") || currentRoute.startsWith("ai")
+        if (isBottomBarVisible) {
+            val selectedRoute = if (currentRoute.startsWith("ai")) "ai" else currentRoute
             WhiskBottomBar(
-                currentRoute = currentRoute,
+                currentRoute = selectedRoute,
                 onNavigate = { route ->
                     navController.navigate(route) {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }

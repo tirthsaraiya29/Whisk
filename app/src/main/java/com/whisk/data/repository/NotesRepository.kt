@@ -120,9 +120,9 @@ class NotesRepository(
         folderDao.insertFolder(FolderEntity(id = java.util.UUID.randomUUID().toString(), name = name, parentId = null))
     }
 
-    suspend fun toggleTaskStatus(taskId: String, isCompleted: Boolean) {
+    suspend fun toggleTaskStatus(taskId: String, targetStatus: Boolean? = null) {
         val task = taskDao.getTaskById(taskId) ?: return
-        val newStatus = !isCompleted
+        val newStatus = targetStatus ?: !task.isCompleted
         taskDao.updateTaskStatus(taskId, newStatus)
 
         // Sync Markdown body of note

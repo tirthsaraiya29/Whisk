@@ -32,7 +32,7 @@ abstract class WhiskDatabase : RoomDatabase() {
                     WhiskDatabase::class.java,
                     "whisk_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
                     .build()
                 INSTANCE = instance
                 instance

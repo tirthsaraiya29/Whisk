@@ -59,7 +59,7 @@ fun TasksScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 90.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(tasks, key = { it.id }) { task ->

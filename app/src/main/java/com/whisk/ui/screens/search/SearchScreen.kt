@@ -65,7 +65,7 @@ fun SearchScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 90.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(state.results, key = { it.id }) { note ->

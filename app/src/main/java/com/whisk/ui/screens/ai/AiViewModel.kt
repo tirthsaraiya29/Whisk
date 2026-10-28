@@ -61,6 +61,15 @@ class AiViewModel(
         _contextPayload.value = _contextPayload.value.copy(activeNote = note)
     }
 
+    fun loadNoteContext(notesRepository: com.whisk.data.repository.NotesRepository, noteId: String) {
+        viewModelScope.launch {
+            val note = notesRepository.getNoteById(noteId)
+            if (note != null) {
+                setContextNote(note)
+            }
+        }
+    }
+
     fun downloadLocalModel() {
         viewModelScope.launch {
             val config = uiState.value.config

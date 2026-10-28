@@ -36,4 +36,15 @@ class TaskSyncTest {
 
         assertEquals("- [ ] Task completed", updatedLine)
     }
+
+    private fun resolveTaskStatus(targetStatus: Boolean?, currentStatus: Boolean): Boolean {
+        return targetStatus ?: !currentStatus
+    }
+
+    @Test
+    fun testTaskToggleTargetStatusCalculation() {
+        assertEquals(true, resolveTaskStatus(true, false))
+        assertEquals(false, resolveTaskStatus(false, true))
+        assertEquals(true, resolveTaskStatus(null, false))
+    }
 }

@@ -113,7 +113,7 @@ fun GitHubBrowserScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 90.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(state.repos, key = { it.fullName }) { repo ->
@@ -177,7 +177,7 @@ fun GitHubBrowserScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 90.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(state.issues, key = { it.number }) { issue ->
@@ -208,7 +208,7 @@ fun GitHubBrowserScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 90.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(state.pullRequests, key = { it.number }) { pr ->
@@ -239,7 +239,7 @@ fun GitHubBrowserScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 90.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(state.mcpTools, key = { it.name }) { tool ->

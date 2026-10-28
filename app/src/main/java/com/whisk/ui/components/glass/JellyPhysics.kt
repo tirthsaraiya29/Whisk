@@ -24,9 +24,9 @@ import kotlinx.coroutines.launch
 import kotlin.math.sqrt
 
 /**
- * State holder for iOS-inspired fluid jelly physics.
- * Manages dual leading/trailing edge spring animations for volume-preserving
- * stretch & squash deformation and gesture drag tracking.
+ * High-performance, volume-preserving fluid jelly physics engine.
+ * Features asymmetrical dual-spring edge tracking (leading edge overshoot + trailing edge drag),
+ * stretch/squash deformation maintaining constant surface area, and gesture velocity response.
  */
 @Stable
 class JellyLensState(
@@ -40,20 +40,17 @@ class JellyLensState(
     val leftEdgeAnim: Animatable<Float, AnimationVector1D> = Animatable(initialIndex * tabWidthPx)
     val rightEdgeAnim: Animatable<Float, AnimationVector1D> = Animatable((initialIndex + 1) * tabWidthPx)
 
-    // Current derived geometric state
+    // Derived geometric bounds
     val leftEdge: Float get() = leftEdgeAnim.value
     val rightEdge: Float get() = rightEdgeAnim.value
     val currentWidth: Float get() = (rightEdge - leftEdge).coerceAtLeast(10f)
 
-    // Center position offset for the lens container
-    val lensOffsetPx: Float get() = leftEdge
-
-    // Liquid volume preservation squash & stretch scaling
+    // Volume-preserving liquid scale factors
     val scaleX: Float
         get() {
             val nominal = if (tabWidthPx > 0f) tabWidthPx else 1f
             val rawScale = currentWidth / nominal
-            return rawScale.coerceIn(0.65f, 1.6f)
+            return rawScale.coerceIn(0.6f, 1.7f)
         }
 
     val scaleY: Float
@@ -61,12 +58,12 @@ class JellyLensState(
             val sx = scaleX
             if (sx <= 0f) return 1f
             val rawScale = 1.0f / sqrt(sx)
-            return rawScale.coerceIn(0.65f, 1.25f)
+            return rawScale.coerceIn(0.65f, 1.3f)
         }
 
     /**
-     * Animate to target index using asymmetrical spring physics.
-     * The leading edge springs fast while the trailing edge lags behind to elongate the jelly blob.
+     * Animate lens to target tab with asymmetrical dual-spring physics.
+     * Leading edge shoots out with low damping for liquid overshoot; trailing edge follows.
      */
     suspend fun animateToTab(newIndex: Int, widthPx: Float) {
         if (widthPx <= 0f) return
@@ -79,25 +76,22 @@ class JellyLensState(
 
         val movingRight = newIndex >= currentIndex
 
-        // Leading edge: Fast, bouncy spring for responsive travel & liquid overshoot
+        // Asymmetrical liquid spring specifications
         val leadingSpring = spring<Float>(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessMedium
         )
 
-        // Trailing edge: Snappy trailing spring for controlled liquid lag
         val trailingSpring = spring<Float>(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = 600f
+            stiffness = 550f
         )
 
         coroutineScope {
             if (movingRight) {
-                // Right edge is leading, Left edge is trailing
                 launch { rightEdgeAnim.animateTo(targetRight, animationSpec = leadingSpring) }
                 launch { leftEdgeAnim.animateTo(targetLeft, animationSpec = trailingSpring) }
             } else {
-                // Left edge is leading, Right edge is trailing
                 launch { leftEdgeAnim.animateTo(targetLeft, animationSpec = leadingSpring) }
                 launch { rightEdgeAnim.animateTo(targetRight, animationSpec = trailingSpring) }
             }
@@ -105,15 +99,15 @@ class JellyLensState(
     }
 
     /**
-     * Instantly snap during drag gesture, stretching according to drag velocity/delta.
+     * Instant gesture drag response with fluid elastic resistance.
      */
     suspend fun snapDrag(dragDeltaPx: Float, maxIndex: Int) {
         if (tabWidthPx <= 0f) return
         val currentLeft = leftEdgeAnim.value + dragDeltaPx
-        val currentRight = rightEdgeAnim.value + dragDeltaPx * 1.2f // Leading drag stretch
+        val currentRight = rightEdgeAnim.value + dragDeltaPx * 1.25f // Velocity leading stretch
 
-        val minBound = -tabWidthPx * 0.1f
-        val maxBound = (maxIndex + 1.1f) * tabWidthPx
+        val minBound = -tabWidthPx * 0.15f
+        val maxBound = (maxIndex + 1.15f) * tabWidthPx
 
         val clampedLeft = currentLeft.coerceIn(minBound, maxBound)
         val clampedRight = currentRight.coerceIn(minBound + 20f, maxBound + tabWidthPx)
@@ -140,7 +134,7 @@ fun rememberJellyLensState(
 }
 
 /**
- * Applies fluid jelly volume stretch & squash transformation to a composable.
+ * Applies fluid jelly volume stretch & squash transformation.
  */
 fun Modifier.jellyTransform(state: JellyLensState): Modifier = this.graphicsLayer {
     scaleX = state.scaleX
@@ -149,7 +143,7 @@ fun Modifier.jellyTransform(state: JellyLensState): Modifier = this.graphicsLaye
 }
 
 /**
- * Applies fluid jelly press reaction (elastic scale down and spring recoil).
+ * Applies fluid elastic press reaction with spring recoil.
  */
 @Composable
 fun Modifier.jellyPressEffect(
@@ -157,7 +151,7 @@ fun Modifier.jellyPressEffect(
 ): Modifier {
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1.0f,
+        targetValue = if (isPressed) 0.90f else 1.0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
@@ -169,5 +163,3 @@ fun Modifier.jellyPressEffect(
         scaleY = scale
     }
 }
-
-

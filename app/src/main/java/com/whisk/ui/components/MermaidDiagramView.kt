@@ -1,5 +1,6 @@
 package com.whisk.ui.components
 
+import android.annotation.SuppressLint
 import android.webkit.WebView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -153,13 +154,17 @@ fun MermaidDiagramView(
             ) {
                 AndroidView(
                     factory = { context ->
-                        WebView(context).apply {
+                        @SuppressLint("SetJavaScriptEnabled")
+                        val webView = WebView(context).apply {
                             settings.javaScriptEnabled = true
+                            settings.allowContentAccess = false
+                            settings.allowFileAccess = false
                             settings.domStorageEnabled = true
                             settings.loadWithOverviewMode = true
                             settings.useWideViewPort = true
                             setBackgroundColor(0) // Transparent background layer
                         }
+                        webView
                     },
                     update = { webView ->
                         webView.loadDataWithBaseURL("https://mermaid.js.org", htmlContent, "text/html", "UTF-8", null)

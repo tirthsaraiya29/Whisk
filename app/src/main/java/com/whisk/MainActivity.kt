@@ -386,20 +386,6 @@ fun WhiskApp(
             )
         }
 
-            // Command Palette Trigger Floating Icon
-            IconButton(
-                onClick = { showCommandPalette = true },
-                modifier = Modifier
-                    .align(androidx.compose.ui.Alignment.TopEnd)
-                    .padding(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Terminal,
-                    contentDescription = "Command Palette",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-
             // Command Palette Modal
             if (showCommandPalette) {
                 CommandPalette(

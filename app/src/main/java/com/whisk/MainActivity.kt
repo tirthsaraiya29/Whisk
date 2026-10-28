@@ -310,6 +310,7 @@ fun WhiskApp(
                     onStopGeneration = { viewModel.stopGeneration() },
                     onDownloadModel = { viewModel.downloadLocalModel() },
                     onSwitchProvider = { provider -> viewModel.switchProvider(provider) },
+                    onClearHistory = { viewModel.clearHistory() },
                     onApplyEdit = { edit ->
                         scope.launch {
                             val currentNote = state.contextPayload.activeNote

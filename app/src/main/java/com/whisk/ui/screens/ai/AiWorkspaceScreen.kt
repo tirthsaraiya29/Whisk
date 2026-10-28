@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Send
@@ -38,6 +40,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,17 +62,37 @@ fun AiWorkspaceScreen(
     onStopGeneration: () -> Unit,
     onDownloadModel: () -> Unit,
     onSwitchProvider: (AiProviderType) -> Unit,
+    onClearHistory: () -> Unit,
     onApplyEdit: (String) -> Unit,
     onDismissEdit: () -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
     val activeNote = state.contextPayload.activeNote
+    val listState = rememberLazyListState()
+
+    // Auto scroll chat list to latest message
+    LaunchedEffect(state.messages.size) {
+        if (state.messages.isNotEmpty()) {
+            listState.animateScrollToItem(state.messages.size - 1)
+        }
+    }
 
     Scaffold(
         topBar = {
             WhiskTopBar(
                 title = "Whisk AI Workspace",
-                subtitle = "Active Engine: ${state.config.providerType.name}"
+                subtitle = "Active Engine: ${state.config.providerType.name}",
+                actions = {
+                    if (state.messages.isNotEmpty()) {
+                        IconButton(onClick = onClearHistory) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteSweep,
+                                contentDescription = "Clear Chat",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -254,6 +277,7 @@ fun AiWorkspaceScreen(
                 }
             } else {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()

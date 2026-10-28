@@ -158,7 +158,7 @@ fun MermaidDiagramView(
                         val webView = WebView(context)
                         val webSettings = webView.settings
                         @Suppress("UsePropertyAccessSyntax")
-                        webSettings.setJavaScriptEnabled(true)
+                        webSettings.setJavaScriptEnabled(false)
                         @Suppress("UsePropertyAccessSyntax")
                         webSettings.setAllowContentAccess(false)
                         @Suppress("UsePropertyAccessSyntax")

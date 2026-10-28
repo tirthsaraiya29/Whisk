@@ -170,7 +170,8 @@ class NotesRepository(
     }
 
     suspend fun seedWelcomeNoteIfEmpty() {
-        if (noteDao.getNoteCount() == 0) {
+        val existing = getNoteById("welcome_note_001")
+        if (existing == null || !existing.body.contains("```mermaid")) {
             val welcomeNote = Note(
                 id = "welcome_note_001",
                 title = "Welcome to Whisk",
@@ -186,6 +187,15 @@ Whisk is your modern, minimalist developer knowledge workspace.
 - **Spatial Canvas**: Drag, arrange, and link cards freely.
 - **Local AI & Remote Providers**: Leverage Google Gemma on-device or connect remote LLMs.
 - **GitHub Integration**: Reference issues, PRs, commits, and MCP tool execution.
+
+## System Architecture Diagram
+```mermaid
+graph TD
+    A[Whisk Client] --> B[Notes & Vault Engine]
+    A --> C[Local Gemma AI Model]
+    A --> D[GitHub & MCP Services]
+    B --> E[SQLite Local Database]
+```
 
 ```kotlin
 fun main() {

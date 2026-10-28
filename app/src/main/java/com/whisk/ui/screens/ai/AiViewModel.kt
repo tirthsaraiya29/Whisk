@@ -101,7 +101,8 @@ class AiViewModel(
         val activeNote = _contextPayload.value.activeNote
 
         generationJob = viewModelScope.launch {
-            val isLocalGemmaNotReady = config.providerType == AiProviderType.LOCAL_GEMMA && !localStatus.isDownloaded
+            val isLocalGemmaNotReady = config.providerType == AiProviderType.LOCAL_GEMMA &&
+                    (!localStatus.isDownloaded || !localGemmaManager.getModelFile().exists() || localGemmaManager.getModelFile().length() < 50_000_000L)
             val isCloudMissingKey = config.providerType != AiProviderType.LOCAL_GEMMA &&
                     config.providerType != AiProviderType.CUSTOM_HTTPS &&
                     config.apiKey.isBlank()

@@ -288,6 +288,13 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     }
 
     fun generateStream(prompt: String, contextText: String = "", config: AiConfig = AiConfig()): Flow<String> = callbackFlow {
+        val file = getModelFile()
+        if (!file.exists() || file.length() < 50_000_000L) {
+            trySend("Local Gemma 2B model is not downloaded yet. Please tap 'Download Gemma 2B' above or switch to a Cloud Provider / Developer Copilot Mode.")
+            close()
+            return@callbackFlow
+        }
+
         val fullPrompt = if (contextText.isNotBlank()) {
             "Context:\n$contextText\n\nUser Question:\n$prompt\n\nAnswer concisely as a senior developer:"
         } else {

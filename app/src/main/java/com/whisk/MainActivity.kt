@@ -309,6 +309,7 @@ fun WhiskApp(
                     onSendMessage = { text -> viewModel.sendMessage(text) },
                     onStopGeneration = { viewModel.stopGeneration() },
                     onDownloadModel = { viewModel.downloadLocalModel() },
+                    onSwitchProvider = { provider -> viewModel.switchProvider(provider) },
                     onApplyEdit = { edit ->
                         scope.launch {
                             val currentNote = state.contextPayload.activeNote

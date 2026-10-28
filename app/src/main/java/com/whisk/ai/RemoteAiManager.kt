@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import okhttp3.CertificatePinner
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -18,7 +19,15 @@ import java.util.concurrent.TimeUnit
 
 class RemoteAiManager {
 
+    private val certificatePinner = CertificatePinner.Builder()
+        .add("api.openai.com", "sha256/Cua12II7MZbEHsOwMvD0/MXnQ+Y8Et2v/oxvYK50vFk=")
+        .add("openrouter.ai", "sha256/ELd2CUy1xHluSJlrnpGlGuYoGXcCzktGV+lXdRX4Ovk=")
+        .add("generativelanguage.googleapis.com", "sha256/4Ate169FdgaRIIYrIEqsJtDCzMmgxovjQrGl8jRHzd0=")
+        .add("api.anthropic.com", "sha256/QpqHLpYF7aGBvIWS0uXh4JZJImXrKQsT0I+2Iz9Li/c=")
+        .build()
+
     private val client = OkHttpClient.Builder()
+        .certificatePinner(certificatePinner)
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .build()

@@ -6,6 +6,7 @@ import com.whisk.domain.model.GitHubPullRequest
 import com.whisk.domain.model.GitHubRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
@@ -14,7 +15,13 @@ import java.util.concurrent.TimeUnit
 
 class GitHubRepository {
 
+    private val certificatePinner = CertificatePinner.Builder()
+        .add("api.github.com", "sha256/nTvjJtN51Jp5ounTgUohZxRsHH5DUHgGorVUZyBxrAM=")
+        // Backup pins could be added here for root or intermediate CAs
+        .build()
+
     private val client = OkHttpClient.Builder()
+        .certificatePinner(certificatePinner)
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .build()

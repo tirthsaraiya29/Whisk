@@ -20,7 +20,7 @@ data class LocalModelStatus(
     val isDownloaded: Boolean = false,
     val downloadProgress: Float = 0f,
     val statusText: String = "Not downloaded",
-    val modelSizeBytes: Long = 1_800_000_000L,
+    val modelSizeBytes: Long = 2_010_000_000L,
     val downloadedBytes: Long = 0L,
     val totalBytes: Long = 0L,
     val downloadSpeedKbps: Float = 0f,
@@ -32,10 +32,10 @@ data class AiConfig(
     val providerType: AiProviderType = AiProviderType.LOCAL_GEMMA,
     val apiKey: String = "",
     val customEndpoint: String = "",
-    val selectedModel: String = "gemma-2b-it-gpu-int4",
+    val selectedModel: String = "gemma-4-E2B-it-gpu.litertlm",
     val maxTokens: Int = 2048,
     val temperature: Float = 0.7f,
-    val hfModelUrl: String = "https://huggingface.co/google/gemma-2b-it/resolve/main/gemma-2b-it-gpu-int4.bin",
+    val hfModelUrl: String = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm",
     val hfApiToken: String = "",
     val useGpuAccelerator: Boolean = true
 )

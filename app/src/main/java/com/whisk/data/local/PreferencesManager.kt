@@ -16,6 +16,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 class PreferencesManager(private val context: Context) {
 
+    private val secureStorage = SecureStorageManager(context)
+
     companion object {
         val KEY_THEME = stringPreferencesKey("theme_mode") // "SYSTEM", "LIGHT", "DARK"
         val KEY_HINT_LINKS_DISMISSED = booleanPreferencesKey("hint_links_dismissed")
@@ -26,16 +28,17 @@ class PreferencesManager(private val context: Context) {
         val KEY_FIRST_LAUNCH_DONE = booleanPreferencesKey("first_launch_done")
 
         val KEY_AI_PROVIDER = stringPreferencesKey("ai_provider")
-        val KEY_AI_API_KEY = stringPreferencesKey("ai_api_key")
         val KEY_AI_CUSTOM_ENDPOINT = stringPreferencesKey("ai_custom_endpoint")
         val KEY_AI_MODEL = stringPreferencesKey("ai_model")
         val KEY_AI_HF_MODEL_URL = stringPreferencesKey("ai_hf_model_url")
-        val KEY_AI_HF_API_TOKEN = stringPreferencesKey("ai_hf_api_token")
         val KEY_AI_USE_GPU = booleanPreferencesKey("ai_use_gpu")
 
-        val KEY_GITHUB_TOKEN = stringPreferencesKey("github_token")
         val KEY_GITHUB_DEFAULT_REPO = stringPreferencesKey("github_default_repo")
         val KEY_MCP_ENDPOINT = stringPreferencesKey("mcp_endpoint")
+
+        private const val SECRET_AI_API_KEY = "secret_ai_api_key"
+        private const val SECRET_HF_API_TOKEN = "secret_hf_api_token"
+        private const val SECRET_GITHUB_TOKEN = "secret_github_token"
     }
 
     val themeMode: Flow<String> = context.dataStore.data.map { prefs ->
@@ -98,31 +101,35 @@ class PreferencesManager(private val context: Context) {
         } catch (e: Exception) {
             AiProviderType.LOCAL_GEMMA
         }
+        val secretApiKey = secureStorage.getSecret(SECRET_AI_API_KEY)
+        val secretHfToken = secureStorage.getSecret(SECRET_HF_API_TOKEN)
+
         AiConfig(
             providerType = providerType,
-            apiKey = prefs[KEY_AI_API_KEY] ?: "",
+            apiKey = secretApiKey,
             customEndpoint = prefs[KEY_AI_CUSTOM_ENDPOINT] ?: "",
-            selectedModel = prefs[KEY_AI_MODEL] ?: "gemma-2b-it-gpu-int4",
-            hfModelUrl = prefs[KEY_AI_HF_MODEL_URL] ?: "https://huggingface.co/google/gemma-2b-it-gpu-int4/resolve/main/gemma-2b-it-gpu-int4.bin",
-            hfApiToken = prefs[KEY_AI_HF_API_TOKEN] ?: "",
+            selectedModel = prefs[KEY_AI_MODEL] ?: "gemma-4-E2B-it-gpu.litertlm",
+            hfModelUrl = prefs[KEY_AI_HF_MODEL_URL] ?: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm",
+            hfApiToken = secretHfToken,
             useGpuAccelerator = prefs[KEY_AI_USE_GPU] ?: true
         )
     }
 
     suspend fun saveAiConfig(config: AiConfig) {
+        secureStorage.saveSecret(SECRET_AI_API_KEY, config.apiKey)
+        secureStorage.saveSecret(SECRET_HF_API_TOKEN, config.hfApiToken)
+
         context.dataStore.edit { prefs ->
             prefs[KEY_AI_PROVIDER] = config.providerType.name
-            prefs[KEY_AI_API_KEY] = config.apiKey
             prefs[KEY_AI_CUSTOM_ENDPOINT] = config.customEndpoint
             prefs[KEY_AI_MODEL] = config.selectedModel
             prefs[KEY_AI_HF_MODEL_URL] = config.hfModelUrl
-            prefs[KEY_AI_HF_API_TOKEN] = config.hfApiToken
             prefs[KEY_AI_USE_GPU] = config.useGpuAccelerator
         }
     }
 
-    val githubToken: Flow<String> = context.dataStore.data.map { prefs ->
-        prefs[KEY_GITHUB_TOKEN] ?: ""
+    val githubToken: Flow<String> = context.dataStore.data.map { _ ->
+        secureStorage.getSecret(SECRET_GITHUB_TOKEN)
     }
 
     val githubDefaultRepo: Flow<String> = context.dataStore.data.map { prefs ->
@@ -130,8 +137,8 @@ class PreferencesManager(private val context: Context) {
     }
 
     suspend fun saveGitHubConfig(token: String, defaultRepo: String) {
+        secureStorage.saveSecret(SECRET_GITHUB_TOKEN, token)
         context.dataStore.edit { prefs ->
-            prefs[KEY_GITHUB_TOKEN] = token
             prefs[KEY_GITHUB_DEFAULT_REPO] = defaultRepo
         }
     }

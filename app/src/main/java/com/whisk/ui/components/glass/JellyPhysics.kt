@@ -79,16 +79,16 @@ class JellyLensState(
 
         val movingRight = newIndex >= currentIndex
 
-        // Leading edge: Bouncy spring for overshoot & speed
+        // Leading edge: Fast, bouncy spring for responsive travel & liquid overshoot
         val leadingSpring = spring<Float>(
             dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
+            stiffness = Spring.StiffnessMedium
         )
 
-        // Trailing edge: Slower spring to create liquid drag / stretch
+        // Trailing edge: Snappy trailing spring for controlled liquid lag
         val trailingSpring = spring<Float>(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+            stiffness = 600f
         )
 
         coroutineScope {
@@ -110,10 +110,10 @@ class JellyLensState(
     suspend fun snapDrag(dragDeltaPx: Float, maxIndex: Int) {
         if (tabWidthPx <= 0f) return
         val currentLeft = leftEdgeAnim.value + dragDeltaPx
-        val currentRight = rightEdgeAnim.value + dragDeltaPx * 1.25f // Leading drag stretch
+        val currentRight = rightEdgeAnim.value + dragDeltaPx * 1.2f // Leading drag stretch
 
-        val minBound = -tabWidthPx * 0.2f
-        val maxBound = (maxIndex + 1.2f) * tabWidthPx
+        val minBound = -tabWidthPx * 0.1f
+        val maxBound = (maxIndex + 1.1f) * tabWidthPx
 
         val clampedLeft = currentLeft.coerceIn(minBound, maxBound)
         val clampedRight = currentRight.coerceIn(minBound + 20f, maxBound + tabWidthPx)

@@ -169,9 +169,9 @@ fun LiquidGlassBottomBar(
                                             val nearestIndex = (center / tabWidthPx)
                                                 .toInt()
                                                 .coerceIn(0, destinations.size - 1)
+                                            onNavigate(destinations[nearestIndex].route)
                                             scope.launch {
                                                 jellyState.animateToTab(nearestIndex, tabWidthPx)
-                                                onNavigate(destinations[nearestIndex].route)
                                             }
                                         },
                                         onDragCancel = {

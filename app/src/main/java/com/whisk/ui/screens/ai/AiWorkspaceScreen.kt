@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Stop
@@ -55,6 +56,7 @@ fun AiWorkspaceScreen(
     onDismissEdit: () -> Unit
 ) {
     var inputText by remember { mutableStateOf("") }
+    val activeNote = state.contextPayload.activeNote
 
     Scaffold(
         topBar = {
@@ -69,6 +71,44 @@ fun AiWorkspaceScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Active Note Context Chip Banner
+            if (activeNote != null) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Active Context Note: ${activeNote.title}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "${activeNote.body.length} chars • ~${state.contextPayload.estimateTokenCount()} tokens",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
             // Local Model Banner (when Local Gemma selected)
             if (state.config.providerType == AiProviderType.LOCAL_GEMMA && !state.localStatus.isDownloaded) {
                 Card(
@@ -164,13 +204,13 @@ fun AiWorkspaceScreen(
             ) {
                 item {
                     SuggestionChip(
-                        onClick = { onSendMessage("Summarize current note into key points") },
+                        onClick = { onSendMessage("Summarize active note into key bullet points") },
                         label = { Text("Summarize Note") }
                     )
                 }
                 item {
                     SuggestionChip(
-                        onClick = { onSendMessage("Explain selected code snippet and fix potential bugs") },
+                        onClick = { onSendMessage("Explain code snippets in active note and suggest optimizations") },
                         label = { Text("Explain Code") }
                     )
                 }
@@ -189,38 +229,72 @@ fun AiWorkspaceScreen(
             }
 
             // Chat Messages History
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(state.messages, key = { it.id }) { msg ->
-                    val isUser = msg.role == AiRole.USER
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-                    ) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(0.88f),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
-                            )
+            if (state.messages.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        Text(
+                            text = "Whisk AI Assistant",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (activeNote != null) {
+                                "Grounded in '${activeNote.title}'. Ask questions, generate code, or request edits."
+                            } else {
+                                "Select a note or ask a general technical question."
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(state.messages, key = { it.id }) { msg ->
+                        val isUser = msg.role == AiRole.USER
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = if (isUser) "You" else "Whisk AI",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            Card(
+                                modifier = Modifier.fillMaxWidth(0.88f),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = msg.content.ifBlank { "..." },
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = if (isUser) "You" else "Whisk AI",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = msg.content.ifBlank { "..." },
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
@@ -231,7 +305,7 @@ fun AiWorkspaceScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 85.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 100.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(

@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Favorite
@@ -66,15 +67,6 @@ fun NotesListScreen(
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNewNoteClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "New Note")
-            }
         }
     ) { paddingValues ->
         Column(
@@ -137,7 +129,7 @@ fun NotesListScreen(
                         selected = (state.activeFilter as? NoteFilter.ByTag)?.tagName == tag.name,
                         onClick = { onFilterChange(NoteFilter.ByTag(tag.name)) },
                         label = { Text("#${tag.name}") },
-                        leadingIcon = { Icon(Icons.Default.Label, contentDescription = null) }
+                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null) }
                     )
                 }
             }

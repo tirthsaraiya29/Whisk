@@ -137,7 +137,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    AiProviderType.values().forEach { provider ->
+                    AiProviderType.entries.forEach { provider ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()

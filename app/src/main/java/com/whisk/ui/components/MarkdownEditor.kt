@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -98,7 +99,7 @@ fun MarkdownEditor(
     val charCount = remember(body) { body.length }
 
     Column(modifier = modifier.fillMaxSize()) {
-        // Toolbar Header
+        // Mode Toggle Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,43 +107,11 @@ fun MarkdownEditor(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Formatting Quick Buttons (when in EDIT mode)
-            if (mode == EditorMode.EDIT) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    IconButton(onClick = { applyFormatting("# ") }) {
-                        Text("H1", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                    }
-                    IconButton(onClick = { applyFormatting("## ") }) {
-                        Text("H2", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                    }
-                    IconButton(onClick = { applyFormatting("**", "**") }) {
-                        Icon(Icons.Default.FormatBold, contentDescription = "Bold")
-                    }
-                    IconButton(onClick = { applyFormatting("*", "*") }) {
-                        Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
-                    }
-                    IconButton(onClick = { applyFormatting("- ") }) {
-                        Icon(Icons.Default.FormatListBulleted, contentDescription = "List")
-                    }
-                    IconButton(onClick = { applyFormatting("> ") }) {
-                        Icon(Icons.Default.FormatQuote, contentDescription = "Quote")
-                    }
-                    IconButton(onClick = { applyFormatting("```kotlin\n", "\n```") }) {
-                        Icon(Icons.Default.Code, contentDescription = "Code block")
-                    }
-                    IconButton(onClick = { applyFormatting("```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }) {
-                        Icon(Icons.Default.Hub, contentDescription = "Mermaid diagram")
-                    }
-                    IconButton(onClick = { applyFormatting("[[", "]]") }) {
-                        Icon(Icons.Default.Link, contentDescription = "Internal link")
-                    }
-                }
-            } else {
-                Spacer(modifier = Modifier.weight(1f))
-            }
+            Text(
+                text = "$wordCount words • $charCount chars",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             // Mode Toggle Switcher
             Surface(
@@ -193,6 +162,45 @@ fun MarkdownEditor(
                             )
                         }
                     }
+                }
+            }
+        }
+
+        // Formatting Scrollable Toolbar (when in EDIT mode)
+        if (mode == EditorMode.EDIT) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { applyFormatting("# ") }) {
+                    Text("H1", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                }
+                IconButton(onClick = { applyFormatting("## ") }) {
+                    Text("H2", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                }
+                IconButton(onClick = { applyFormatting("**", "**") }) {
+                    Icon(Icons.Default.FormatBold, contentDescription = "Bold")
+                }
+                IconButton(onClick = { applyFormatting("*", "*") }) {
+                    Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
+                }
+                IconButton(onClick = { applyFormatting("- ") }) {
+                    Icon(Icons.Default.FormatListBulleted, contentDescription = "List")
+                }
+                IconButton(onClick = { applyFormatting("> ") }) {
+                    Icon(Icons.Default.FormatQuote, contentDescription = "Quote")
+                }
+                IconButton(onClick = { applyFormatting("```kotlin\n", "\n```") }) {
+                    Icon(Icons.Default.Code, contentDescription = "Code block")
+                }
+                IconButton(onClick = { applyFormatting("```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }) {
+                    Icon(Icons.Default.Hub, contentDescription = "Mermaid diagram")
+                }
+                IconButton(onClick = { applyFormatting("[[", "]]") }) {
+                    Icon(Icons.Default.Link, contentDescription = "Internal link")
                 }
             }
         }

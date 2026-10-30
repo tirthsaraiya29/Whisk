@@ -32,6 +32,7 @@ class PreferencesManager(private val context: Context) {
         val KEY_AI_MODEL = stringPreferencesKey("ai_model")
         val KEY_AI_HF_MODEL_URL = stringPreferencesKey("ai_hf_model_url")
         val KEY_AI_USE_GPU = booleanPreferencesKey("ai_use_gpu")
+        val KEY_SAVED_AI_SESSIONS = stringPreferencesKey("saved_ai_sessions")
 
         val KEY_GITHUB_DEFAULT_REPO = stringPreferencesKey("github_default_repo")
         val KEY_MCP_ENDPOINT = stringPreferencesKey("mcp_endpoint")
@@ -150,6 +151,16 @@ class PreferencesManager(private val context: Context) {
     suspend fun saveMcpEndpoint(endpoint: String) {
         context.dataStore.edit { prefs ->
             prefs[KEY_MCP_ENDPOINT] = endpoint
+        }
+    }
+
+    val savedAiSessionsJson: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_SAVED_AI_SESSIONS] ?: "[]"
+    }
+
+    suspend fun saveAiSessionsJson(jsonStr: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SAVED_AI_SESSIONS] = jsonStr
         }
     }
 }

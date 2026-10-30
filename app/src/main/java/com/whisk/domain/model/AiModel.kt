@@ -1,13 +1,17 @@
 package com.whisk.domain.model
 
+import kotlinx.serialization.Serializable
+
 enum class AiProviderType {
     LOCAL_GEMMA, OPENAI, GEMINI, ANTHROPIC, OPENROUTER, CUSTOM_HTTPS
 }
 
+@Serializable
 enum class AiRole {
     USER, ASSISTANT, SYSTEM
 }
 
+@Serializable
 data class AiMessage(
     val id: String = java.util.UUID.randomUUID().toString(),
     val role: AiRole,

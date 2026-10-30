@@ -1,8 +1,12 @@
 package com.whisk.ui.screens.graph
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,22 +14,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +43,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
@@ -47,6 +54,8 @@ import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.GraphNode
 import com.whisk.domain.model.NodeType
 import com.whisk.ui.components.WhiskTopBar
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -57,16 +66,18 @@ fun KnowledgeGraphScreen(
     onNodeSelect: (GraphNode?) -> Unit,
     onOpenNote: (String) -> Unit,
     onResetGraph: () -> Unit,
-    onToggleOrphans: () -> Unit
+    onToggleOrphans: () -> Unit,
+    onMenuClick: (() -> Unit)? = null
 ) {
+    val haptic = LocalHapticFeedback.current
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var nodeSearchQuery by remember { mutableStateOf("") }
 
     val primaryColor = MaterialTheme.colorScheme.primary
     val nodeColorNote = MaterialTheme.colorScheme.primary
-    val nodeColorTag = Color(0xFFD97706) // Amber Tag
-    val edgeColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+    val nodeColorTag = Color(0xFFD97706)
+    val edgeColor = MaterialTheme.colorScheme.outline
     val textColor = MaterialTheme.colorScheme.onBackground
 
     val textMeasurer = rememberTextMeasurer()
@@ -120,70 +131,61 @@ fun KnowledgeGraphScreen(
                     val v = nodes[j]
                     val pV = posMap[v.id] ?: continue
                     val delta = pU - pV
-                    val dist = delta.getDistance().coerceAtLeast(1f)
-                    val force = (kRepulsion / (dist * dist)).coerceAtMost(60f)
-                    val dir = delta / dist
-                    disp[u.id] = (disp[u.id] ?: Offset.Zero) + dir * force
-                    disp[v.id] = (disp[v.id] ?: Offset.Zero) - dir * force
+                    val dist = delta.getDistance().coerceAtLeast(10f)
+                    val force = (delta / dist) * (kRepulsion / (dist * dist))
+                    disp[u.id] = (disp[u.id] ?: Offset.Zero) + force
+                    disp[v.id] = (disp[v.id] ?: Offset.Zero) - force
                 }
             }
 
-            for (edge in edgeList) {
-                val pU = posMap[edge.sourceId] ?: continue
-                val pV = posMap[edge.targetId] ?: continue
-                val delta = pU - pV
+            edgeList.forEach { edge ->
+                val pSrc = posMap[edge.sourceId] ?: return@forEach
+                val pTgt = posMap[edge.targetId] ?: return@forEach
+                val delta = pSrc - pTgt
                 val dist = delta.getDistance().coerceAtLeast(1f)
-                val force = dist * kAttraction
-                val dir = delta / dist
-                disp[edge.sourceId] = (disp[edge.sourceId] ?: Offset.Zero) - dir * force
-                disp[edge.targetId] = (disp[edge.targetId] ?: Offset.Zero) + dir * force
+                val force = (delta / dist) * (kAttraction * dist)
+                disp[edge.sourceId] = (disp[edge.sourceId] ?: Offset.Zero) - force
+                disp[edge.targetId] = (disp[edge.targetId] ?: Offset.Zero) + force
             }
 
             nodes.forEach { node ->
+                val curr = posMap[node.id] ?: Offset.Zero
                 val d = disp[node.id] ?: Offset.Zero
-                val currentPos = posMap[node.id] ?: Offset.Zero
-                val maxStep = 35f
-                val clampedDisp = if (d.getDistance() > maxStep) d / d.getDistance() * maxStep else d
-                posMap[node.id] = currentPos + clampedDisp
+                val limitedD = Offset(d.x.coerceIn(-25f, 25f), d.y.coerceIn(-25f, 25f))
+                posMap[node.id] = curr + limitedD
             }
         }
-
         posMap
-    }
-
-    // Memoize pre-measured text layouts outside the Canvas draw loop
-    val labelLayouts = remember(nodes, textColor, textMeasurer) {
-        nodes.associate { node ->
-            node.id to textMeasurer.measure(
-                text = node.label,
-                style = androidx.compose.ui.text.TextStyle(
-                    color = textColor,
-                    fontSize = 11.sp
-                )
-            )
-        }
     }
 
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = if (state.isLocalGraph) "Local Graph" else "Knowledge Graph",
-                subtitle = "${nodes.size} nodes • ${state.graph.edges.size} connections",
+                title = "KNOWLEDGE GRAPH",
+                subtitle = "${nodes.size} NODES • ${state.graph.edges.size} CONNECTIONS",
+                onMenuClick = onMenuClick,
                 actions = {
-                    IconButton(onClick = onToggleOrphans) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onToggleOrphans()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.FilterList,
                             contentDescription = "Toggle Orphans",
-                            tint = if (state.showOrphans) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (state.showOrphans) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     }
                     IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         scale = 1f
                         offset = Offset.Zero
-                        nodeSearchQuery = ""
                         onResetGraph()
                     }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Recenter Graph")
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Recenter Graph",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             )
@@ -193,21 +195,81 @@ fun KnowledgeGraphScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            // Realtime Node Filter Field
+            // Node Filter Search Bar
             OutlinedTextField(
                 value = nodeSearchQuery,
                 onValueChange = { nodeSearchQuery = it },
-                placeholder = { Text("Filter graph nodes...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                placeholder = {
+                    Text(
+                        "> FILTER GRAPH NODES...",
+                        fontFamily = DotMatrixFontFamily,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                ),
+                shape = RoundedCornerShape(0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
                 singleLine = true
             )
 
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                // Interactive Graph Canvas with Pan & Zoom
+            // Legend Status Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(nodeColorNote)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "NOTE",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(nodeColorTag)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "TAG",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+
+            // Interactive Canvas Viewport
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
@@ -217,131 +279,121 @@ fun KnowledgeGraphScreen(
                                 offset += pan
                             }
                         }
-                        .pointerInput(nodes) {
+                        .pointerInput(nodes, nodePositions, scale, offset) {
                             detectTapGestures { tapOffset ->
-                                val transformedTap = (tapOffset - offset) / scale
-                                val tappedNode = nodes.find { node ->
-                                    val pos = nodePositions[node.id] ?: Offset.Zero
-                                    (pos - transformedTap).getDistance() <= 35f
+                                var clickedNode: GraphNode? = null
+                                nodes.forEach { node ->
+                                    val rawPos = nodePositions[node.id] ?: return@forEach
+                                    val canvasPos = (rawPos * scale) + offset
+                                    if ((canvasPos - tapOffset).getDistance() < 30f * scale) {
+                                        clickedNode = node
+                                    }
                                 }
-                                onNodeSelect(tappedNode)
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onNodeSelect(clickedNode)
                             }
                         }
                 ) {
-                    // 1. Draw Edges
                     state.graph.edges.forEach { edge ->
-                        val fromPos = nodePositions[edge.sourceId]
-                        val toPos = nodePositions[edge.targetId]
-                        if (fromPos != null && toPos != null) {
-                            val start = fromPos * scale + offset
-                            val end = toPos * scale + offset
+                        val srcPos = nodePositions[edge.sourceId]
+                        val tgtPos = nodePositions[edge.targetId]
+                        if (srcPos != null && tgtPos != null) {
+                            val p1 = (srcPos * scale) + offset
+                            val p2 = (tgtPos * scale) + offset
                             drawLine(
                                 color = edgeColor,
-                                start = start,
-                                end = end,
-                                strokeWidth = 2f * scale,
+                                start = p1,
+                                end = p2,
+                                strokeWidth = 1.5f * scale,
                                 cap = StrokeCap.Round
                             )
                         }
                     }
 
-                    // 2. Draw Nodes
                     nodes.forEach { node ->
-                        val basePos = nodePositions[node.id] ?: Offset.Zero
-                        val drawPos = basePos * scale + offset
-                        val isSelected = state.selectedNode?.id == node.id
-                        val color = if (node.type == NodeType.TAG) nodeColorTag else nodeColorNote
+                        val rawPos = nodePositions[node.id] ?: return@forEach
+                        val center = (rawPos * scale) + offset
+                        val degree = nodeDegrees[node.id] ?: 1
+                        val radius = (12f + (degree * 3f)).coerceIn(10f, 26f) * scale
+                        val color = if (node.type == NodeType.NOTE) nodeColorNote else nodeColorTag
 
-                        val degree = nodeDegrees[node.id] ?: 0
-                        val nodeRadius = (12f + (degree * 3f)).coerceAtMost(28f)
-
-                        // Outer highlight ring
-                        if (isSelected) {
-                            drawCircle(
-                                color = primaryColor.copy(alpha = 0.3f),
-                                radius = (nodeRadius + 12f) * scale,
-                                center = drawPos
-                            )
-                        }
-
-                        // Node Circle
                         drawCircle(
                             color = color,
-                            radius = nodeRadius * scale,
-                            center = drawPos
+                            radius = radius,
+                            center = center
                         )
 
-                        // Label Text using pre-measured layout
-                        val measuredText = labelLayouts[node.id]
-                        if (measuredText != null) {
-                            drawText(
-                                textLayoutResult = measuredText,
-                                topLeft = Offset(drawPos.x - measuredText.size.width / 2, drawPos.y + (nodeRadius + 4f) * scale)
+                        val textLayout = textMeasurer.measure(
+                            text = node.label,
+                            style = androidx.compose.ui.text.TextStyle(
+                                fontSize = (11.sp.value * scale.coerceIn(0.8f, 1.4f)).sp,
+                                color = textColor,
+                                fontFamily = VercelMonoFontFamily,
+                                fontWeight = FontWeight.Bold
                             )
-                        }
-                    }
-                }
-
-                // Legend Overlay
-                Card(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.TopStart),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Canvas(modifier = Modifier.padding(end = 4.dp)) {
-                            drawCircle(color = nodeColorNote, radius = 5f)
-                        }
-                        Text("Note", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(end = 12.dp))
-                        Canvas(modifier = Modifier.padding(end = 4.dp)) {
-                            drawCircle(color = nodeColorTag, radius = 5f)
-                        }
-                        Text("Tag", style = MaterialTheme.typography.labelSmall)
+                        )
+                        drawText(
+                            textLayoutResult = textLayout,
+                            topLeft = Offset(
+                                center.x - (textLayout.size.width / 2f),
+                                center.y + radius + 4f
+                            )
+                        )
                     }
                 }
             }
         }
     }
 
-    // Node Inspector Sheet
+    // Selected Node Details Inspector Sheet
     if (state.selectedNode != null) {
-        val selected = state.selectedNode
-        ModalBottomSheet(onDismissRequest = { onNodeSelect(null) }) {
+        val selNode = state.selectedNode
+        ModalBottomSheet(
+            onDismissRequest = { onNodeSelect(null) },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(0.dp)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(20.dp)
             ) {
                 Text(
-                    text = selected.label,
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "NODE // ${selNode.label.uppercase()}",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontFamily = DotMatrixFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Type: ${selected.type.name} • ${if (selected.isOrphan) "Orphan Note" else "Linked Node"}",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "TYPE: ${selNode.type.name} • CONNECTIONS: ${nodeDegrees[selNode.id] ?: 0}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = DotMatrixFontFamily,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (selected.noteId != null) {
-                    Button(
-                        onClick = {
-                            val id = selected.noteId
-                            onNodeSelect(null)
-                            onOpenNote(id)
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                if (selNode.type == NodeType.NOTE) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.primary)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onNodeSelect(null)
+                                onOpenNote(selNode.id)
+                            }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text("Open Note")
+                        Text(
+                            text = "OPEN NOTE FILE",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             }

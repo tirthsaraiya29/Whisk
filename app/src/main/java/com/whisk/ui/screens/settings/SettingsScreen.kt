@@ -1,14 +1,19 @@
 package com.whisk.ui.screens.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,35 +26,38 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.AiConfig
 import com.whisk.domain.model.AiProviderType
 import com.whisk.ui.components.WhiskTopBar
-
-import androidx.compose.runtime.saveable.rememberSaveable
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
 
 @Composable
 fun SettingsScreen(
@@ -59,8 +67,10 @@ fun SettingsScreen(
     onSaveGitHubToken: (String) -> Unit,
     onResetOnboarding: () -> Unit,
     onExportBackup: () -> Unit,
-    onImportBackup: () -> Unit
+    onImportBackup: () -> Unit,
+    onMenuClick: (() -> Unit)? = null
 ) {
+    val haptic = LocalHapticFeedback.current
     var apiKeyText by rememberSaveable { mutableStateOf(state.aiConfig.apiKey) }
     var githubTokenText by rememberSaveable { mutableStateOf(state.githubToken) }
     var selectedProvider by rememberSaveable { mutableStateOf(state.aiConfig.providerType) }
@@ -74,263 +84,377 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = {
-            WhiskTopBar(title = "Settings", subtitle = "Preferences, AI keys, themes & backups")
+            WhiskTopBar(
+                title = "WHISK // SETTINGS",
+                subtitle = "THEME, AI ENGINES & VAULT BACKUPS",
+                onMenuClick = onMenuClick
+            )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Theme Mode Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            // Theme Mode Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                    .padding(16.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = "THEME // APPEARANCE",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                listOf(
+                    "SYSTEM" to "SYSTEM DEFAULT",
+                    "DARK" to "DARK OBSIDIAN (OLED)",
+                    "LIGHT" to "LIGHT MONOCHROME"
+                ).forEach { (modeKey, label) ->
+                    val isSelected = state.themeMode == modeKey
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onThemeChange(modeKey)
+                            }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "Appearance & Theme",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(start = 8.dp)
+                            text = if (isSelected) "[X] " else "[ ] ",
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
                         )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    listOf(
-                        "SYSTEM" to "System Default",
-                        "DARK" to "Dark Obsidian (OLED)",
-                        "CYBERPUNK" to "Midnight Cyberpunk",
-                        "SOLARIZED" to "Solarized Cream",
-                        "MONOKAI" to "Monokai Pro",
-                        "NORDIC" to "Nordic Frost"
-                    ).forEach { (modeKey, label) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onThemeChange(modeKey) }
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = state.themeMode == modeKey,
-                                onClick = { onThemeChange(modeKey) }
-                            )
-                            Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
-                        }
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
 
-            // AI Provider Configuration Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            // AI Configuration Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                    .padding(16.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text(
-                            text = "AI Model & Provider",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = "AI ENGINE CONFIGURATION",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
+                Text(
+                    text = "SELECT ACTIVE PROVIDER:",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = DotMatrixFontFamily,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Column(
+                    modifier = Modifier.padding(vertical = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     AiProviderType.entries.forEach { provider ->
+                        val isSelected = selectedProvider == provider
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     selectedProvider = provider
-                                    onSaveAiConfig(state.aiConfig.copy(providerType = provider))
                                 }
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            RadioButton(
-                                selected = selectedProvider == provider,
-                                onClick = {
-                                    selectedProvider = provider
-                                    onSaveAiConfig(state.aiConfig.copy(providerType = provider))
-                                }
+                            Text(
+                                text = if (isSelected) "[*] " else "[ ] ",
+                                fontFamily = DotMatrixFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
                             )
-                            Text(text = provider.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
-                        }
-                    }
-
-                    if (selectedProvider == AiProviderType.LOCAL_GEMMA) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        OutlinedTextField(
-                            value = hfModelUrlText,
-                            onValueChange = {
-                                hfModelUrlText = it
-                                onSaveAiConfig(state.aiConfig.copy(hfModelUrl = it))
-                            },
-                            label = { Text("Hugging Face Model Direct URL") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = hfTokenText,
-                            onValueChange = {
-                                hfTokenText = it
-                                onSaveAiConfig(state.aiConfig.copy(hfApiToken = it))
-                            },
-                            label = { Text("Hugging Face User Access Token (Encrypted Secret)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            visualTransformation = if (showHfTokenSecret) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                IconButton(onClick = { showHfTokenSecret = !showHfTokenSecret }) {
-                                    Icon(
-                                        imageVector = if (showHfTokenSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "Toggle HF Token Secret Visibility"
-                                    )
-                                }
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("GPU Accelerator Delegate", style = MaterialTheme.typography.bodyMedium)
-                            Switch(
-                                checked = useGpu,
-                                onCheckedChange = {
-                                    useGpu = it
-                                    onSaveAiConfig(state.aiConfig.copy(useGpuAccelerator = it))
-                                }
+                            Text(
+                                text = provider.name,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                    } else {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        OutlinedTextField(
-                            value = apiKeyText,
-                            onValueChange = {
-                                apiKeyText = it
-                                onSaveAiConfig(state.aiConfig.copy(providerType = selectedProvider, apiKey = it))
-                            },
-                            label = { Text("API Key for ${selectedProvider.name} (Encrypted Secret)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            visualTransformation = if (showApiKeySecret) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                IconButton(onClick = { showApiKeySecret = !showApiKeySecret }) {
-                                    Icon(
-                                        imageVector = if (showApiKeySecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "Toggle API Key Secret Visibility"
-                                    )
-                                }
-                            }
-                        )
                     }
                 }
-            }
 
-            // GitHub Access Token Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Code, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (selectedProvider == AiProviderType.LOCAL_GEMMA) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "GitHub Credentials",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(start = 8.dp)
+                            text = "USE OPENCL GPU ACCELERATOR",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Switch(
+                            checked = useGpu,
+                            onCheckedChange = { useGpu = it },
+                            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     OutlinedTextField(
-                        value = githubTokenText,
-                        onValueChange = {
-                            githubTokenText = it
-                            onSaveGitHubToken(it)
-                        },
-                        label = { Text("GitHub Fine-Grained Access Token (Encrypted Secret)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        visualTransformation = if (showGithubTokenSecret) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        value = hfTokenText,
+                        onValueChange = { hfTokenText = it },
+                        placeholder = { Text("HUGGING FACE TOKEN (OPTIONAL)...", fontFamily = DotMatrixFontFamily) },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = VercelMonoFontFamily),
+                        visualTransformation = if (showHfTokenSecret) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
-                            IconButton(onClick = { showGithubTokenSecret = !showGithubTokenSecret }) {
+                            IconButton(onClick = { showHfTokenSecret = !showHfTokenSecret }) {
                                 Icon(
-                                    imageVector = if (showGithubTokenSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = "Toggle GitHub Token Secret Visibility"
+                                    imageVector = if (showHfTokenSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = "Toggle Token Visibility"
                                 )
                             }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        ),
+                        shape = RoundedCornerShape(0.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        singleLine = true
+                    )
+                } else {
+                    OutlinedTextField(
+                        value = apiKeyText,
+                        onValueChange = { apiKeyText = it },
+                        placeholder = { Text("API KEY FOR ${selectedProvider.name}...", fontFamily = DotMatrixFontFamily) },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = VercelMonoFontFamily),
+                        visualTransformation = if (showApiKeySecret) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            IconButton(onClick = { showApiKeySecret = !showApiKeySecret }) {
+                                Icon(
+                                    imageVector = if (showApiKeySecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = "Toggle Secret Visibility"
+                                )
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        ),
+                        shape = RoundedCornerShape(0.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        singleLine = true
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onSaveAiConfig(
+                                state.aiConfig.copy(
+                                    providerType = selectedProvider,
+                                    apiKey = apiKeyText,
+                                    hfModelUrl = hfModelUrlText,
+                                    hfApiToken = hfTokenText,
+                                    useGpuAccelerator = useGpu
+                                )
+                            )
                         }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "SAVE AI CONFIGURATION",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
 
-            // Backup, Restore & FTUE Onboarding Reset
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            // GitHub MCP Token Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                    .padding(16.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Backup, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text(
-                            text = "Data Vault & Reset",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Code, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = "GITHUB PERSONAL ACCESS TOKEN",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = onExportBackup,
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text("Export ZIP Backup")
+                OutlinedTextField(
+                    value = githubTokenText,
+                    onValueChange = { githubTokenText = it },
+                    placeholder = { Text("ghp_...", fontFamily = DotMatrixFontFamily) },
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = VercelMonoFontFamily),
+                    visualTransformation = if (showGithubTokenSecret) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        IconButton(onClick = { showGithubTokenSecret = !showGithubTokenSecret }) {
+                            Icon(
+                                imageVector = if (showGithubTokenSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = "Toggle GitHub Token Visibility"
+                            )
                         }
-                        Button(
-                            onClick = onImportBackup,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Import Notes")
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onSaveGitHubToken(githubTokenText)
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = onResetOnboarding,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface)
-                    ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                        Text("Reset First-Launch Tips")
-                    }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "SAVE GITHUB TOKEN",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(100.dp))
+            // Backup & Export Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                    .padding(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Backup, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = "VAULT BACKUP & EXPORT",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onExportBackup()
+                            }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "EXPORT ZIP",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onImportBackup()
+                            }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "IMPORT ZIP",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
         }
     }
 }

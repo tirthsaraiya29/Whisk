@@ -216,6 +216,7 @@ fun WhiskApp(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        scrimColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.85f),
         drawerContent = {
             SidebarDrawer(
                 notes = allNotes,
@@ -325,6 +326,7 @@ fun WhiskApp(
 
                 SearchScreen(
                     state = state,
+                    onMenuClick = { scope.launch { drawerState.open() } },
                     onQueryChange = { q -> viewModel.updateQuery(q) },
                     onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") }
                 )
@@ -339,6 +341,7 @@ fun WhiskApp(
 
                 KnowledgeGraphScreen(
                     state = state,
+                    onMenuClick = { scope.launch { drawerState.open() } },
                     onNodeSelect = { node -> viewModel.selectNode(node) },
                     onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") },
                     onResetGraph = { viewModel.loadGlobalGraph() },
@@ -372,6 +375,7 @@ fun WhiskApp(
 
                 TasksScreen(
                     tasks = tasks,
+                    onMenuClick = { scope.launch { drawerState.open() } },
                     onToggleTask = { taskId, status -> viewModel.toggleTask(taskId, status) },
                     onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") }
                 )
@@ -402,6 +406,7 @@ fun WhiskApp(
 
                 AiWorkspaceScreen(
                     state = state,
+                    onMenuClick = { scope.launch { drawerState.open() } },
                     onSendMessage = { text -> viewModel.sendMessage(text) },
                     onStopGeneration = { viewModel.stopGeneration() },
                     onDownloadModel = { viewModel.downloadLocalModel() },
@@ -452,6 +457,7 @@ fun WhiskApp(
 
                 SettingsScreen(
                     state = state,
+                    onMenuClick = { scope.launch { drawerState.open() } },
                     onThemeChange = { mode -> viewModel.setThemeMode(mode) },
                     onSaveAiConfig = { config -> viewModel.saveAiConfig(config) },
                     onSaveGitHubToken = { token -> viewModel.saveGitHubToken(token) },
@@ -463,7 +469,7 @@ fun WhiskApp(
         }
 
         // Brutalist Bottom Navigation Bar
-        val isBottomBarVisible = currentRoute in listOf("notes", "search", "graph", "settings") || currentRoute.startsWith("ai")
+        val isBottomBarVisible = (currentRoute in listOf("notes", "search", "graph", "settings") || currentRoute.startsWith("ai")) && drawerState.isClosed
         if (isBottomBarVisible) {
             val selectedRoute = if (currentRoute.startsWith("ai")) "ai" else currentRoute
             WhiskBottomBar(

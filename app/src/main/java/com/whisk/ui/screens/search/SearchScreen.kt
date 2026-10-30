@@ -43,7 +43,8 @@ import com.whisk.ui.theme.DotMatrixFontFamily
 fun SearchScreen(
     state: SearchUiState,
     onQueryChange: (String) -> Unit,
-    onNoteClick: (String) -> Unit
+    onNoteClick: (String) -> Unit,
+    onMenuClick: (() -> Unit)? = null
 ) {
     val haptic = LocalHapticFeedback.current
     val resultCount = state.results.size
@@ -56,7 +57,8 @@ fun SearchScreen(
                     "$resultCount ${if (resultCount == 1) "MATCH" else "MATCHES"} FOR '${state.query.uppercase()}'"
                 } else {
                     "OFFLINE FULL-TEXT SEARCH ENGINE"
-                }
+                },
+                onMenuClick = onMenuClick
             )
         }
     ) { paddingValues ->

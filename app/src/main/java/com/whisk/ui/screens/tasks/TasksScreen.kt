@@ -54,7 +54,8 @@ enum class TaskFilter {
 fun TasksScreen(
     tasks: List<TaskItem>,
     onToggleTask: (String, Boolean) -> Unit,
-    onOpenNote: (String) -> Unit
+    onOpenNote: (String) -> Unit,
+    onMenuClick: (() -> Unit)? = null
 ) {
     val haptic = LocalHapticFeedback.current
     var activeFilter by remember { mutableStateOf(TaskFilter.ALL) }
@@ -76,7 +77,8 @@ fun TasksScreen(
         topBar = {
             WhiskTopBar(
                 title = "VAULT // CHECKLIST",
-                subtitle = "$pendingCount PENDING • $completedCount COMPLETED OF $totalCount TASKS"
+                subtitle = "$pendingCount PENDING • $completedCount COMPLETED OF $totalCount TASKS",
+                onMenuClick = onMenuClick
             )
         }
     ) { paddingValues ->

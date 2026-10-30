@@ -66,8 +66,12 @@ import com.whisk.ui.screens.settings.SettingsViewModel
 import com.whisk.ui.screens.tasks.TasksScreen
 import com.whisk.ui.screens.tasks.TasksViewModel
 import com.whisk.ui.theme.WhiskTheme
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import com.whisk.ui.components.SidebarDrawer
 import kotlinx.coroutines.launch
 
 @Suppress("UNCHECKED_CAST")
@@ -198,7 +202,8 @@ fun WhiskApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: "notes"
 
-    val hazeState = remember { HazeState() }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val allNotes by notesRepository.allNotes.collectAsStateWithLifecycle(initialValue = emptyList())
 
     // Seed Welcome Note on First Launch
     LaunchedEffect(isFirstLaunch) {
@@ -209,18 +214,45 @@ fun WhiskApp(
 
     val hintsDismissed by preferencesManager.hintsDismissed.collectAsStateWithLifecycle(initialValue = emptyMap())
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        NavHost(
-            navController = navController,
-            startDestination = "notes",
-            modifier = Modifier
-                .fillMaxSize()
-                .hazeSource(state = hazeState),
-            enterTransition = { slideInHorizontally(initialOffsetX = { it / 4 }) + fadeIn() },
-            exitTransition = { fadeOut() },
-            popEnterTransition = { fadeIn() },
-            popExitTransition = { slideOutHorizontally(targetOffsetX = { it / 4 }) + fadeOut() }
-        ) {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            SidebarDrawer(
+                notes = allNotes,
+                currentNoteId = navBackStackEntry?.arguments?.getString("noteId"),
+                onSelectNote = { noteId -> navController.navigate("note_detail/$noteId") },
+                onNewNote = {
+                    scope.launch {
+                        val newNote = Note(title = "Untitled Note", body = "")
+                        notesRepository.saveNote(newNote)
+                        navController.navigate("note_detail/${newNote.id}")
+                    }
+                },
+                onNavigate = { route -> navController.navigate(route) },
+                onCloseDrawer = { scope.launch { drawerState.close() } }
+            )
+        }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            NavHost(
+                navController = navController,
+                startDestination = "notes",
+                modifier = Modifier.fillMaxSize(),
+                enterTransition = {
+                    slideInHorizontally(
+                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        initialOffsetX = { it / 4 }
+                    ) + fadeIn()
+                },
+                exitTransition = { fadeOut() },
+                popEnterTransition = { fadeIn() },
+                popExitTransition = {
+                    slideOutHorizontally(
+                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        targetOffsetX = { it / 4 }
+                    ) + fadeOut()
+                }
+            ) {
             // 1. Notes List Destination
             composable("notes") {
                 val viewModel: NotesViewModel = viewModel(
@@ -230,6 +262,7 @@ fun WhiskApp(
 
                 NotesListScreen(
                     state = state,
+                    onMenuClick = { scope.launch { drawerState.open() } },
                     onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") },
                     onNewNoteClick = {
                         scope.launch {
@@ -429,7 +462,7 @@ fun WhiskApp(
             }
         }
 
-        // Floating iOS Liquid Glass Navigation Capsule
+        // Brutalist Bottom Navigation Bar
         val isBottomBarVisible = currentRoute in listOf("notes", "search", "graph", "settings") || currentRoute.startsWith("ai")
         if (isBottomBarVisible) {
             val selectedRoute = if (currentRoute.startsWith("ai")) "ai" else currentRoute
@@ -449,8 +482,7 @@ fun WhiskApp(
                         navController.navigate("note_detail/${newNote.id}")
                     }
                 },
-                modifier = Modifier.align(Alignment.BottomCenter),
-                hazeState = hazeState
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
 
@@ -476,4 +508,5 @@ fun WhiskApp(
             )
         }
     }
+}
 }

@@ -1,12 +1,14 @@
 package com.whisk
 
 import com.whisk.ui.components.NavDestination
-import com.whisk.ui.components.glass.LiquidGlassDefaults
+import com.whisk.ui.theme.DarkHairline
+import com.whisk.ui.theme.TrueBlack
+import com.whisk.ui.theme.TrueWhite
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
-class LiquidGlassNavigationTest {
+class BrutalistNavigationTest {
 
     @Test
     fun navDestinations_areConfiguredCorrectly() {
@@ -25,23 +27,18 @@ class LiquidGlassNavigationTest {
         assertEquals("ai", NavDestination.AI.route)
         assertEquals("settings", NavDestination.Settings.route)
 
-        assertEquals("Notes", NavDestination.Notes.label)
-        assertEquals("Search", NavDestination.Search.label)
-        assertEquals("Graph", NavDestination.Graph.label)
+        assertEquals("NOTES", NavDestination.Notes.label)
+        assertEquals("SEARCH", NavDestination.Search.label)
+        assertEquals("GRAPH", NavDestination.Graph.label)
         assertEquals("AI", NavDestination.AI.label)
-        assertEquals("Settings", NavDestination.Settings.label)
+        assertEquals("SETTINGS", NavDestination.Settings.label)
     }
 
     @Test
-    fun liquidGlassDefaults_paletteConfiguredForThemeAdaptivity() {
-        assertNotNull(LiquidGlassDefaults.PillShape)
-        assertNotNull(LiquidGlassDefaults.CardShape)
-        assertNotNull(LiquidGlassDefaults.LightGlassTint)
-        assertNotNull(LiquidGlassDefaults.DarkGlassTint)
-        assertNotNull(LiquidGlassDefaults.LightGlassBorderHighlight)
-        assertNotNull(LiquidGlassDefaults.DarkGlassBorderHighlight)
-        assertNotNull(LiquidGlassDefaults.LightLensTint)
-        assertNotNull(LiquidGlassDefaults.DarkLensTint)
+    fun brutalistTheme_paletteConfiguredForHighContrast() {
+        assertNotNull(TrueBlack)
+        assertNotNull(TrueWhite)
+        assertNotNull(DarkHairline)
     }
 
     @Test

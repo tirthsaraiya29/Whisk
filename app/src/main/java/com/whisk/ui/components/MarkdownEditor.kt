@@ -190,100 +190,67 @@ fun MarkdownEditor(
         onBodyChange(newText)
     }
 
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
     val wordCount = remember(body) {
         if (body.isBlank()) 0 else body.trim().split(Regex("\\s+")).size
     }
     val charCount = remember(body) { body.length }
     val lineCount = remember(body) { body.lines().size }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    fun applyFormattingWithHaptic(prefix: String, suffix: String = "") {
+        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+        applyFormatting(prefix, suffix)
+    }
+
+    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Mode Toggle Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "$wordCount words • $charCount chars • $lineCount lines",
+                text = "${wordCount}W // ${charCount}C // ${lineCount}L",
                 style = MaterialTheme.typography.labelSmall,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Mode Toggle Switcher
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.padding(2.dp)
-            ) {
-                Row {
+            // Brutalist Mode Toggle Switcher
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOf(
+                    EditorMode.EDIT to "EDIT",
+                    EditorMode.SPLIT to "SPLIT",
+                    EditorMode.PREVIEW to "PREVIEW"
+                ).forEach { (targetMode, label) ->
+                    val isSelected = mode == targetMode
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (mode == EditorMode.EDIT) MaterialTheme.colorScheme.primary else Color.Transparent)
-                            .clickable { mode = EditorMode.EDIT }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                mode = targetMode
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = null,
-                                tint = if (mode == EditorMode.EDIT) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(end = 4.dp)
-                            )
-                            Text(
-                                "Edit",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (mode == EditorMode.EDIT) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (mode == EditorMode.SPLIT) MaterialTheme.colorScheme.primary else Color.Transparent)
-                            .clickable { mode = EditorMode.SPLIT }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.ViewColumn,
-                                contentDescription = null,
-                                tint = if (mode == EditorMode.SPLIT) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(end = 4.dp)
-                            )
-                            Text(
-                                "Split",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (mode == EditorMode.SPLIT) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(if (mode == EditorMode.PREVIEW) MaterialTheme.colorScheme.primary else Color.Transparent)
-                            .clickable { mode = EditorMode.PREVIEW }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Visibility,
-                                contentDescription = null,
-                                tint = if (mode == EditorMode.PREVIEW) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(end = 4.dp)
-                            )
-                            Text(
-                                "Preview",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (mode == EditorMode.PREVIEW) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
         }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
         // Formatting Scrollable Toolbar
         if (mode == EditorMode.EDIT || mode == EditorMode.SPLIT) {
@@ -291,37 +258,39 @@ fun MarkdownEditor(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                IconButton(onClick = { applyFormatting("# ") }) {
-                    Text("H1", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { applyFormattingWithHaptic("# ") }) {
+                    Text("H1", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
-                IconButton(onClick = { applyFormatting("## ") }) {
-                    Text("H2", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { applyFormattingWithHaptic("## ") }) {
+                    Text("H2", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
-                IconButton(onClick = { applyFormatting("**", "**") }) {
+                IconButton(onClick = { applyFormattingWithHaptic("**", "**") }) {
                     Icon(Icons.Default.FormatBold, contentDescription = "Bold")
                 }
-                IconButton(onClick = { applyFormatting("*", "*") }) {
+                IconButton(onClick = { applyFormattingWithHaptic("*", "*") }) {
                     Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
                 }
-                IconButton(onClick = { applyFormatting("- ") }) {
+                IconButton(onClick = { applyFormattingWithHaptic("- ") }) {
                     Icon(Icons.Default.FormatListBulleted, contentDescription = "List")
                 }
-                IconButton(onClick = { applyFormatting("> [!NOTE] ") }) {
+                IconButton(onClick = { applyFormattingWithHaptic("> [!NOTE] ") }) {
                     Icon(Icons.Default.FormatQuote, contentDescription = "Callout Note")
                 }
-                IconButton(onClick = { applyFormatting("```kotlin\n", "\n```") }) {
+                IconButton(onClick = { applyFormattingWithHaptic("```kotlin\n", "\n```") }) {
                     Icon(Icons.Default.Code, contentDescription = "Code block")
                 }
-                IconButton(onClick = { applyFormatting("```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }) {
+                IconButton(onClick = { applyFormattingWithHaptic("```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }) {
                     Icon(Icons.Default.Hub, contentDescription = "Mermaid diagram")
                 }
-                IconButton(onClick = { applyFormatting("[[", "]]") }) {
+                IconButton(onClick = { applyFormattingWithHaptic("[[", "]]") }) {
                     Icon(Icons.Default.Link, contentDescription = "Internal link")
                 }
             }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
         }
 
         // Title Field

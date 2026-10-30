@@ -1,5 +1,7 @@
 package com.whisk.ui.screens.notes
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,8 +20,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Hub
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +34,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.whisk.domain.model.Backlink
 import com.whisk.ui.components.MarkdownEditor
@@ -51,46 +56,67 @@ fun NoteDetailScreen(
     onOpenAiWithNote: () -> Unit
 ) {
     val note = state.note ?: return
+    val haptic = LocalHapticFeedback.current
     var showBacklinksSheet by remember { mutableStateOf(false) }
+
+    val folderName = (note.folder ?: "VAULT").ifBlank { "VAULT" }.uppercase()
+    val breadcrumbTitle = "$folderName / ${note.title.ifBlank { "UNTITLED.MD" }.uppercase()}"
+    val saveText = when (state.saveState) {
+        SaveState.SAVING -> "Saving..."
+        SaveState.SAVED -> "Saved"
+        SaveState.ERROR -> "Error"
+        else -> "Saved"
+    }
 
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = note.title.ifBlank { "Editing Note" },
-                subtitle = when (state.saveState) {
-                    SaveState.SAVING -> "Saving..."
-                    SaveState.SAVED -> "Saved"
-                    SaveState.ERROR -> "Save Error"
-                    else -> "Autosaved"
+                title = breadcrumbTitle,
+                subtitle = saveText.uppercase(),
+                saveStateText = saveText,
+                onBackClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onBackClick()
                 },
-                onBackClick = onBackClick,
                 actions = {
-                    IconButton(onClick = onToggleFavorite) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onToggleFavorite()
+                    }) {
                         Icon(
                             imageVector = if (note.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = "Favorite",
-                            tint = if (note.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (note.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    IconButton(onClick = { showBacklinksSheet = true }) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        showBacklinksSheet = true
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Hub,
                             contentDescription = "Backlinks (${state.backlinks.size})",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    IconButton(onClick = onOpenAiWithNote) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onOpenAiWithNote()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = "AI Copilot",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    IconButton(onClick = onDeleteNote) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDeleteNote()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete note",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -101,6 +127,7 @@ fun NoteDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             MarkdownEditor(
                 title = note.title,
@@ -113,60 +140,69 @@ fun NoteDetailScreen(
         }
     }
 
-    // Backlinks Bottom Sheet Inspector
+    // Brutalist Backlinks Inspector Bottom Sheet
     if (showBacklinksSheet) {
-        ModalBottomSheet(onDismissRequest = { showBacklinksSheet = false }) {
+        ModalBottomSheet(
+            onDismissRequest = { showBacklinksSheet = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(0.dp)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(20.dp)
             ) {
                 Text(
-                    text = "Backlinks (${state.backlinks.size})",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "BACKLINKS // [${state.backlinks.size}]",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Notes mentioning '${note.title}'",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "OBJECTS LINKING TO '${note.title.uppercase()}'",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
                 if (state.backlinks.isEmpty()) {
                     Text(
-                        text = "No other notes link to this note yet. Use [[${note.title}]] in another note to create a link.",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "NO INBOUND BACKLINKS DETECTED. USE [[${note.title}]] IN OTHER NOTES TO CREATE LINKS.",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(vertical = 16.dp)
                     )
                 } else {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(state.backlinks) { backlink ->
-                            Card(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
                                     .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         showBacklinksSheet = false
                                         onOpenNote(backlink.sourceNoteId)
-                                    },
-                                shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text(
-                                        text = backlink.sourceNoteTitle,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    if (backlink.snippet.isNotBlank()) {
-                                        Text(
-                                            text = backlink.snippet,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(top = 2.dp)
-                                        )
                                     }
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = backlink.sourceNoteTitle.uppercase(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                if (backlink.snippet.isNotBlank()) {
+                                    Text(
+                                        text = backlink.snippet,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
                                 }
                             }
                         }

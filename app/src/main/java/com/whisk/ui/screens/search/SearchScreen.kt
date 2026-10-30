@@ -1,30 +1,39 @@
 package com.whisk.ui.screens.search
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.whisk.ui.components.WhiskTopBar
 import com.whisk.ui.screens.notes.NoteRowCard
 
@@ -34,16 +43,17 @@ fun SearchScreen(
     onQueryChange: (String) -> Unit,
     onNoteClick: (String) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val resultCount = state.results.size
 
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "Search Vault",
+                title = "TERMINAL // SEARCH",
                 subtitle = if (state.query.isNotBlank()) {
-                    "$resultCount ${if (resultCount == 1) "result" else "results"} for '${state.query}'"
+                    "$resultCount ${if (resultCount == 1) "MATCH" else "MATCHES"} FOR '${state.query.uppercase()}'"
                 } else {
-                    "Instant offline FTS search across notes & tags"
+                    "OFFLINE FULL-TEXT SEARCH ENGINE"
                 }
             )
         }
@@ -52,67 +62,85 @@ fun SearchScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            // Search Input
+            // Terminal Input Field
             OutlinedTextField(
                 value = state.query,
                 onValueChange = onQueryChange,
-                placeholder = { Text("Search titles, body, code, or tags...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                placeholder = {
+                    Text(
+                        "> TYPE QUERY OR TAG...",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Monospace),
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
                 trailingIcon = {
                     if (state.query.isNotEmpty()) {
-                        IconButton(onClick = { onQueryChange("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onQueryChange("")
+                        }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear query")
                         }
                     }
                 },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                ),
+                shape = RoundedCornerShape(0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
                 singleLine = true
             )
 
-            // Quick Search Suggestion Chips
+            // Monospaced Quick Suggestion Chips
             if (state.query.isBlank()) {
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    item {
-                        SuggestionChip(
-                            onClick = { onQueryChange("welcome") },
-                            label = { Text("welcome") }
-                        )
-                    }
-                    item {
-                        SuggestionChip(
-                            onClick = { onQueryChange("architecture") },
-                            label = { Text("architecture") }
-                        )
-                    }
-                    item {
-                        SuggestionChip(
-                            onClick = { onQueryChange("mermaid") },
-                            label = { Text("mermaid") }
-                        )
-                    }
-                    item {
-                        SuggestionChip(
-                            onClick = { onQueryChange("kotlin") },
-                            label = { Text("kotlin") }
-                        )
-                    }
-                    item {
-                        SuggestionChip(
-                            onClick = { onQueryChange("TODO") },
-                            label = { Text("TODO") }
-                        )
+                    listOf("WELCOME", "ARCHITECTURE", "MERMAID", "KOTLIN", "TODO").forEach { keyword ->
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onQueryChange(keyword)
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = "> $keyword",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
                 }
             }
 
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+
+            // Results Edge-to-Edge List
             if (state.results.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -128,17 +156,20 @@ fun SearchScreen(
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                         Text(
-                            text = if (state.query.isBlank()) "Search Vault" else "No matching notes found",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            text = if (state.query.isBlank()) "SEARCH VAULT" else "ZERO SEARCH MATCHES",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = if (state.query.isBlank()) {
-                                "Type keywords, tags, or code snippets above"
+                                "ENTER KEYWORDS, TAGS, OR REGEX PATTERNS ABOVE"
                             } else {
-                                "Try searching for a different term or tag"
+                                "MODIFY QUERY PARAMETERS OR FILTER CRITERIA"
                             },
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -146,14 +177,12 @@ fun SearchScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp)
                 ) {
                     items(state.results, key = { it.id }) { note ->
                         NoteRowCard(note = note, onClick = { onNoteClick(note.id) })
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
                     }
                 }
             }

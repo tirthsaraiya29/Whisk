@@ -31,24 +31,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
 /**
  * Native Jetpack Compose Mermaid Diagram Renderer.
- * Embeds a lightweight WebView loading Mermaid.js with theme adaptivity (Dark/Light),
- * error resiliency, and code toggle capability.
+ * Securely embeds Mermaid.js inside a sandboxed WebView with disabled file and content access,
+ * loading script directly into isolation with brutalist 1px styling.
  */
 @Composable
 fun MermaidDiagramView(
     code: String,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val themeName = if (isDarkTheme) "dark" else "default"
 
-    val htmlContent = remember(code, themeName) {
+    val mermaidJs = remember(context) {
+        try {
+            context.assets.open("mermaid.min.js").bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    val htmlContent = remember(code, themeName, mermaidJs) {
         val sanitizedCode = code.trim().replace("`", "\\`").replace("$", "\\$")
         """
         <!DOCTYPE html>
@@ -64,7 +75,7 @@ fun MermaidDiagramView(
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    font-family: system-ui, -apple-system, sans-serif;
+                    font-family: monospace;
                 }
                 .mermaid {
                     width: 100%;
@@ -76,7 +87,9 @@ fun MermaidDiagramView(
                     height: auto !important;
                 }
             </style>
-            <script src="mermaid.min.js"></script>
+            <script>
+            $mermaidJs
+            </script>
             <script>
                 document.addEventListener("DOMContentLoaded", function() {
                     try {
@@ -84,7 +97,7 @@ fun MermaidDiagramView(
                             window.mermaid.initialize({
                                 startOnLoad: true,
                                 theme: '$themeName',
-                                securityLevel: 'loose',
+                                securityLevel: 'strict',
                                 flowchart: { htmlLabels: true, curve: 'basis' }
                             });
                         }
@@ -109,9 +122,9 @@ fun MermaidDiagramView(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(0.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
     ) {
         // Header Bar with Diagram Label & Source Toggle
         Row(
@@ -127,20 +140,22 @@ fun MermaidDiagramView(
                     imageVector = Icons.Default.Hub,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Mermaid Diagram",
-                    style = MaterialTheme.typography.labelMedium,
+                    text = "DIAGRAM // MERMAID",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
             TextButton(onClick = { showSource = !showSource }) {
                 Text(
-                    text = if (showSource) "View Diagram" else "View Source",
-                    style = MaterialTheme.typography.labelSmall
+                    text = if (showSource) "[VIEW DIAGRAM]" else "[VIEW SOURCE]",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace
                 )
             }
         }
@@ -155,24 +170,24 @@ fun MermaidDiagramView(
                 contentAlignment = Alignment.Center
             ) {
                 AndroidView(
-                    factory = { context ->
+                    factory = { ctx ->
                         @SuppressLint("SetJavaScriptEnabled")
-                        val webView = WebView(context)
+                        val webView = WebView(ctx)
                         val webSettings = webView.settings
-                        @Suppress("UsePropertyAccessSyntax")
-                        webSettings.setJavaScriptEnabled(true)
-                        @Suppress("UsePropertyAccessSyntax")
-                        webSettings.setAllowContentAccess(true)
-                        @Suppress("UsePropertyAccessSyntax")
-                        webSettings.setAllowFileAccess(true)
+                        
+                        // Strict Security Configuration
+                        webSettings.javaScriptEnabled = true
+                        webSettings.allowContentAccess = false
+                        webSettings.allowFileAccess = false
                         webSettings.domStorageEnabled = true
                         webSettings.loadWithOverviewMode = true
                         webSettings.useWideViewPort = true
-                        webView.setBackgroundColor(0) // Transparent background layer
+
+                        webView.setBackgroundColor(0)
                         webView
                     },
                     update = { webView ->
-                        webView.loadDataWithBaseURL("file:///android_asset/", htmlContent, "text/html", "UTF-8", null)
+                        webView.loadDataWithBaseURL("https://localhost", htmlContent, "text/html", "UTF-8", null)
                     },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -180,3 +195,5 @@ fun MermaidDiagramView(
         }
     }
 }
+
+

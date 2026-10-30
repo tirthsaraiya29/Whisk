@@ -1,5 +1,7 @@
 package com.whisk.ui.screens.notes
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,30 +17,30 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Label
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.Note
 import com.whisk.ui.components.DismissibleHintBanner
 import com.whisk.ui.components.WhiskTopBar
@@ -54,16 +56,23 @@ fun NotesListScreen(
     onFilterChange: (NoteFilter) -> Unit,
     onSearchQueryChange: (String) -> Unit,
     showHint: Boolean = true,
-    onDismissHint: () -> Unit = {}
+    onDismissHint: () -> Unit = {},
+    onMenuClick: (() -> Unit)? = null
 ) {
+    val haptic = LocalHapticFeedback.current
+
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "Whisk Notes",
-                subtitle = "${state.notes.size} notes in vault",
+                title = "WHISK // VAULT",
+                subtitle = "${state.notes.size} OBJECTS LOADED",
+                onMenuClick = onMenuClick,
                 actions = {
-                    IconButton(onClick = { onFilterChange(NoteFilter.All) }) {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onFilterChange(NoteFilter.All)
+                    }) {
+                        Icon(Icons.Default.Search, contentDescription = "Search Vault")
                     }
                 }
             )
@@ -73,68 +82,89 @@ fun NotesListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Dismissible FTUE Hint Banner
             if (showHint) {
                 DismissibleHintBanner(
-                    text = "Tip: Use [[Note Title]] in your text to link notes automatically.",
+                    text = "TIP: USE [[NOTE TITLE]] TO LINK NOTES AUTOMATICALLY.",
                     onDismiss = onDismissHint
                 )
             }
 
-            // Search Filter Bar
+            // Monospaced Terminal Search Field
             OutlinedTextField(
                 value = state.searchQuery,
                 onValueChange = onSearchQueryChange,
-                placeholder = { Text("Filter notes or tags...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                placeholder = {
+                    Text(
+                        "> SEARCH OBJECTS OR TAGS...",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Monospace),
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                ),
+                shape = RoundedCornerShape(0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
                 singleLine = true
             )
 
-            // Category Filter Chips
+            // Brutalist Category Filter Chips
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 item {
-                    FilterChip(
+                    BrutalistChip(
                         selected = state.activeFilter is NoteFilter.All,
-                        onClick = { onFilterChange(NoteFilter.All) },
-                        label = { Text("All Notes") }
+                        label = "ALL_NOTES",
+                        onClick = { onFilterChange(NoteFilter.All) }
                     )
                 }
                 item {
-                    FilterChip(
+                    BrutalistChip(
                         selected = state.activeFilter is NoteFilter.Favorites,
-                        onClick = { onFilterChange(NoteFilter.Favorites) },
-                        label = { Text("Favorites") },
-                        leadingIcon = { Icon(Icons.Default.Favorite, contentDescription = null) }
+                        label = "* FAVORITES",
+                        onClick = { onFilterChange(NoteFilter.Favorites) }
                     )
                 }
                 items(state.folders) { folder ->
-                    FilterChip(
+                    BrutalistChip(
                         selected = (state.activeFilter as? NoteFilter.ByFolder)?.folderName == folder.name,
-                        onClick = { onFilterChange(NoteFilter.ByFolder(folder.name)) },
-                        label = { Text(folder.name) },
-                        leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) }
+                        label = "DIR/${folder.name.uppercase()}",
+                        onClick = { onFilterChange(NoteFilter.ByFolder(folder.name)) }
                     )
                 }
                 items(state.tags) { tag ->
-                    FilterChip(
+                    BrutalistChip(
                         selected = (state.activeFilter as? NoteFilter.ByTag)?.tagName == tag.name,
-                        onClick = { onFilterChange(NoteFilter.ByTag(tag.name)) },
-                        label = { Text("#${tag.name}") },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null) }
+                        label = "#${tag.name.uppercase()}",
+                        onClick = { onFilterChange(NoteFilter.ByTag(tag.name)) }
                     )
                 }
             }
 
-            // Notes List or Empty State
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+
+            // Notes High-Density Edge-to-Edge List
             if (state.notes.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -150,13 +180,16 @@ fun NotesListScreen(
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                         Text(
-                            text = if (state.searchQuery.isBlank()) "No notes yet" else "No matching notes found",
-                            style = MaterialTheme.typography.titleLarge,
+                            text = if (state.searchQuery.isBlank()) "NO OBJECTS FOUND" else "ZERO SEARCH MATCHES",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Tap + to create your first note",
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = "PRESS [+] TO INITIALIZE NEW NOTE",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -164,14 +197,12 @@ fun NotesListScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp)
                 ) {
                     items(state.notes, key = { it.id }) { note ->
                         NoteRowCard(note = note, onClick = { onNoteClick(note.id) })
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
                     }
                 }
             }
@@ -180,79 +211,111 @@ fun NotesListScreen(
 }
 
 @Composable
+private fun BrutalistChip(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    Box(
+        modifier = Modifier
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
+            )
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
 fun NoteRowCard(
     note: Note,
     onClick: () -> Unit
 ) {
-    val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+    val haptic = LocalHapticFeedback.current
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val dateStr = dateFormat.format(Date(note.updatedAt))
 
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = note.title.ifBlank { "Untitled Note" },
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = note.title.ifBlank { "UNTITLED.MD" },
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            if (note.isFavorite) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "Favorite",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
-                if (note.isFavorite) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Favorite",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
             }
+        }
 
+        val snippet = note.body.lines().take(2).joinToString(" ").replace("#", "").trim()
+        if (snippet.isNotBlank()) {
             Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = snippet,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
-            val snippet = note.body.lines().take(2).joinToString(" ").replace("#", "").trim()
-            if (snippet.isNotBlank()) {
-                Text(
-                    text = snippet,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+        Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "UPDATED $dateStr",
+                style = MaterialTheme.typography.labelSmall,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = dateStr,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                if (note.tags.isNotEmpty()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        note.tags.take(3).forEach { tag ->
-                            Text(
-                                text = "#$tag",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
+            if (note.tags.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    note.tags.take(3).forEach { tag ->
+                        Text(
+                            text = "#${tag.uppercase()}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }

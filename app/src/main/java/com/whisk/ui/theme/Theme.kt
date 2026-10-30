@@ -11,64 +11,36 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val ObsidianColorScheme = darkColorScheme(
-    primary = ObsidianPrimary,
-    onPrimary = ObsidianBackground,
-    background = ObsidianBackground,
-    onBackground = ObsidianTextPrimary,
-    surface = ObsidianSurface,
-    onSurface = ObsidianTextPrimary,
-    surfaceVariant = ObsidianSurfaceVariant,
-    onSurfaceVariant = ObsidianTextSecondary,
-    outline = ObsidianSurfaceVariant
+// Pure Brutalist Monochrome Dark Scheme (Vercel / Nothing Aesthetic)
+private val BrutalistDarkColorScheme = darkColorScheme(
+    primary = DarkTextPrimary,
+    onPrimary = DarkSurface,
+    background = DarkSurface,
+    onBackground = DarkTextPrimary,
+    surface = DarkSurface,
+    onSurface = DarkTextPrimary,
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = DarkTextSecondary,
+    outline = DarkHairline,
+    outlineVariant = DarkBorder,
+    error = NothingRed,
+    onError = DarkTextPrimary
 )
 
-private val CyberpunkColorScheme = darkColorScheme(
-    primary = CyberpunkPrimary,
-    onPrimary = CyberpunkBackground,
-    background = CyberpunkBackground,
-    onBackground = CyberpunkTextPrimary,
-    surface = CyberpunkSurface,
-    onSurface = CyberpunkTextPrimary,
-    surfaceVariant = CyberpunkSurfaceVariant,
-    onSurfaceVariant = CyberpunkTextSecondary,
-    outline = CyberpunkSurfaceVariant
-)
-
-private val SolarizedColorScheme = lightColorScheme(
-    primary = SolarizedPrimary,
-    onPrimary = SolarizedBackground,
-    background = SolarizedBackground,
-    onBackground = SolarizedTextPrimary,
-    surface = SolarizedSurface,
-    onSurface = SolarizedTextPrimary,
-    surfaceVariant = SolarizedSurfaceVariant,
-    onSurfaceVariant = SolarizedTextSecondary,
-    outline = SolarizedSurfaceVariant
-)
-
-private val MonokaiColorScheme = darkColorScheme(
-    primary = MonokaiPrimary,
-    onPrimary = MonokaiBackground,
-    background = MonokaiBackground,
-    onBackground = MonokaiTextPrimary,
-    surface = MonokaiSurface,
-    onSurface = MonokaiTextPrimary,
-    surfaceVariant = MonokaiSurfaceVariant,
-    onSurfaceVariant = MonokaiTextSecondary,
-    outline = MonokaiSurfaceVariant
-)
-
-private val NordicColorScheme = darkColorScheme(
-    primary = NordicPrimary,
-    onPrimary = NordicBackground,
-    background = NordicBackground,
-    onBackground = NordicTextPrimary,
-    surface = NordicSurface,
-    onSurface = NordicTextPrimary,
-    surfaceVariant = NordicSurfaceVariant,
-    onSurfaceVariant = NordicTextSecondary,
-    outline = NordicSurfaceVariant
+// Pure Brutalist Monochrome Light Scheme
+private val BrutalistLightColorScheme = lightColorScheme(
+    primary = LightTextPrimary,
+    onPrimary = LightSurface,
+    background = LightSurface,
+    onBackground = LightTextPrimary,
+    surface = LightSurface,
+    onSurface = LightTextPrimary,
+    surfaceVariant = LightSurfaceVariant,
+    onSurfaceVariant = LightTextSecondary,
+    outline = LightHairline,
+    outlineVariant = LightBorder,
+    error = NothingRed,
+    onError = LightSurface
 )
 
 @Composable
@@ -77,20 +49,13 @@ fun WhiskTheme(
     content: @Composable () -> Unit
 ) {
     val systemDark = isSystemInDarkTheme()
-    val colorScheme = when (themeMode) {
-        "CYBERPUNK" -> CyberpunkColorScheme
-        "SOLARIZED" -> SolarizedColorScheme
-        "MONOKAI" -> MonokaiColorScheme
-        "NORDIC" -> NordicColorScheme
-        "LIGHT" -> SolarizedColorScheme
-        "DARK" -> ObsidianColorScheme
-        else -> if (systemDark) ObsidianColorScheme else SolarizedColorScheme
+    val isDark = when (themeMode) {
+        "LIGHT" -> false
+        "DARK", "CYBERPUNK", "MONOKAI", "NORDIC" -> true
+        else -> systemDark
     }
 
-    val isDark = colorScheme.background == ObsidianBackground ||
-            colorScheme.background == CyberpunkBackground ||
-            colorScheme.background == MonokaiBackground ||
-            colorScheme.background == NordicBackground
+    val colorScheme = if (isDark) BrutalistDarkColorScheme else BrutalistLightColorScheme
 
     val view = LocalView.current
     if (!view.isInEditMode) {

@@ -1,5 +1,7 @@
 package com.whisk.ui.screens.tasks
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,14 +19,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -37,11 +35,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.whisk.domain.model.TaskItem
 import com.whisk.ui.components.WhiskTopBar
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
 
 enum class TaskFilter {
     ALL, PENDING, COMPLETED
@@ -53,6 +56,7 @@ fun TasksScreen(
     onToggleTask: (String, Boolean) -> Unit,
     onOpenNote: (String) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     var activeFilter by remember { mutableStateOf(TaskFilter.ALL) }
 
     val completedCount = remember(tasks) { tasks.count { it.isCompleted } }
@@ -71,8 +75,8 @@ fun TasksScreen(
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "Vault Checklist Tasks",
-                subtitle = "$pendingCount pending • $completedCount completed of $totalCount tasks"
+                title = "VAULT // CHECKLIST",
+                subtitle = "$pendingCount PENDING • $completedCount COMPLETED OF $totalCount TASKS"
             )
         }
     ) { paddingValues ->
@@ -80,45 +84,48 @@ fun TasksScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Task Progress Summary Header
             if (totalCount > 0) {
-                Card(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .padding(14.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Task Completion Progress",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "${(progress * 100).toInt()}%",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        LinearProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surface
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "COMPLETION PROGRESS",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "${(progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surface
+                    )
                 }
             }
 
@@ -126,109 +133,139 @@ fun TasksScreen(
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 item {
-                    FilterChip(
+                    BrutalistTaskChip(
                         selected = activeFilter == TaskFilter.ALL,
-                        onClick = { activeFilter = TaskFilter.ALL },
-                        label = { Text("All ($totalCount)") },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
+                        label = "ALL ($totalCount)",
+                        onClick = { activeFilter = TaskFilter.ALL }
                     )
                 }
                 item {
-                    FilterChip(
+                    BrutalistTaskChip(
                         selected = activeFilter == TaskFilter.PENDING,
-                        onClick = { activeFilter = TaskFilter.PENDING },
-                        label = { Text("Pending ($pendingCount)") },
-                        leadingIcon = { Icon(Icons.Default.Pending, contentDescription = null) }
+                        label = "PENDING ($pendingCount)",
+                        onClick = { activeFilter = TaskFilter.PENDING }
                     )
                 }
                 item {
-                    FilterChip(
+                    BrutalistTaskChip(
                         selected = activeFilter == TaskFilter.COMPLETED,
-                        onClick = { activeFilter = TaskFilter.COMPLETED },
-                        label = { Text("Completed ($completedCount)") },
-                        leadingIcon = { Icon(Icons.Default.CheckCircle, contentDescription = null) }
+                        label = "DONE ($completedCount)",
+                        onClick = { activeFilter = TaskFilter.COMPLETED }
                     )
                 }
             }
 
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+
             // Task List or Empty View
             if (filteredTasks.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = if (totalCount == 0) {
-                            "No checklist items in vault notes.\nAdd '- [ ] Task description' inside any note."
+                            "NO CHECKLIST ITEMS IN VAULT NOTES.\nADD '- [ ] TASK' INSIDE ANY NOTE."
                         } else {
-                            "No tasks match selected filter."
+                            "ZERO TASKS MATCH SELECTED FILTER."
                         },
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 6.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp)
                 ) {
                     items(filteredTasks, key = { it.id }) { task ->
-                        Card(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onOpenNote(task.noteId) },
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onOpenNote(task.noteId)
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
+                            Checkbox(
+                                checked = task.isCompleted,
+                                onCheckedChange = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onToggleTask(task.id, task.isCompleted)
+                                },
+                                colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                            )
+                            Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(10.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .weight(1f)
+                                    .padding(start = 8.dp)
                             ) {
-                                Checkbox(
-                                    checked = task.isCompleted,
-                                    onCheckedChange = { onToggleTask(task.id, task.isCompleted) },
-                                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    text = task.title,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFamily = VercelMonoFontFamily,
+                                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                                    ),
+                                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                                 )
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 8.dp)
-                                ) {
-                                    Text(
-                                        text = task.title,
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
-                                        ),
-                                        color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = "In note: ${task.noteTitle}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
+                                Text(
+                                    text = "FILE // ${task.noteTitle.uppercase()}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = DotMatrixFontFamily,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
 
-                                IconButton(onClick = { onOpenNote(task.noteId) }) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = "Open note",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                            IconButton(onClick = { onOpenNote(task.noteId) }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = "Open note",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BrutalistTaskChip(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    Box(
+        modifier = Modifier
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
+            )
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontFamily = DotMatrixFontFamily,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+        )
     }
 }

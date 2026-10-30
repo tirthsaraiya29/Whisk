@@ -52,7 +52,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.imePadding
 import com.whisk.domain.model.Note
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
 
 /**
  * Brutalist Vercel/Nothing style Sidebar Drawer.
@@ -94,6 +97,7 @@ fun SidebarDrawer(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .padding(16.dp)
         ) {
             // Header / System Identifier
@@ -108,14 +112,14 @@ fun SidebarDrawer(
                     Text(
                         text = "WHISK // VAULT",
                         style = MaterialTheme.typography.labelMedium,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = "${notes.size} OBJECTS LOADED",
                         style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = DotMatrixFontFamily,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -133,7 +137,7 @@ fun SidebarDrawer(
                     Text(
                         text = "+ NEW",
                         style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -150,12 +154,12 @@ fun SidebarDrawer(
                 placeholder = {
                     Text(
                         text = "> FILTER FILES...",
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = DotMatrixFontFamily,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
-                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Monospace),
+                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline,
@@ -196,7 +200,7 @@ fun SidebarDrawer(
                             ) {
                                 Text(
                                     text = if (isExpanded) "[-] " else "[+] ",
-                                    fontFamily = FontFamily.Monospace,
+                                    fontFamily = DotMatrixFontFamily,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -210,7 +214,7 @@ fun SidebarDrawer(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = folderName.uppercase(),
-                                    fontFamily = FontFamily.Monospace,
+                                    fontFamily = DotMatrixFontFamily,
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface

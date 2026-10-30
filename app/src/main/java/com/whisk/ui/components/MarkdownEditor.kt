@@ -70,6 +70,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
+
 enum class EditorMode {
     EDIT, PREVIEW, SPLIT
 }
@@ -203,7 +208,12 @@ fun MarkdownEditor(
         applyFormatting(prefix, suffix)
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         // Mode Toggle Header
         Row(
             modifier = Modifier
@@ -215,7 +225,7 @@ fun MarkdownEditor(
             Text(
                 text = "${wordCount}W // ${charCount}C // ${lineCount}L",
                 style = MaterialTheme.typography.labelSmall,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = DotMatrixFontFamily,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -241,7 +251,7 @@ fun MarkdownEditor(
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = DotMatrixFontFamily,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                         )
@@ -263,10 +273,10 @@ fun MarkdownEditor(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 IconButton(onClick = { applyFormattingWithHaptic("# ") }) {
-                    Text("H1", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Text("H1", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
                 IconButton(onClick = { applyFormattingWithHaptic("## ") }) {
-                    Text("H2", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Text("H2", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
                 IconButton(onClick = { applyFormattingWithHaptic("**", "**") }) {
                     Icon(Icons.Default.FormatBold, contentDescription = "Bold")
@@ -297,11 +307,11 @@ fun MarkdownEditor(
         OutlinedTextField(
             value = title,
             onValueChange = onTitleChange,
-            placeholder = { Text("Note Title...", style = MaterialTheme.typography.headlineMedium) },
-            textStyle = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            placeholder = { Text("NOTE TITLE...", style = MaterialTheme.typography.headlineMedium, fontFamily = DotMatrixFontFamily) },
+            textStyle = MaterialTheme.typography.headlineMedium.copy(fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
                 unfocusedBorderColor = Color.Transparent
@@ -309,7 +319,7 @@ fun MarkdownEditor(
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
         // Body Content Rendering according to EditorMode
         when (mode) {
@@ -323,7 +333,7 @@ fun MarkdownEditor(
                     Column(
                         modifier = Modifier
                             .fillMaxHeight()
-                            .width(32.dp)
+                            .width(36.dp)
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                             .padding(top = 16.dp, end = 6.dp),
                         horizontalAlignment = Alignment.End
@@ -333,6 +343,7 @@ fun MarkdownEditor(
                                 text = "$lineNum",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
+                                    fontFamily = DotMatrixFontFamily,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 ),
                                 maxLines = 1
@@ -348,8 +359,8 @@ fun MarkdownEditor(
                                 onBodyChange(newValue.text)
                             }
                         },
-                        placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge) },
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
+                        placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge, fontFamily = VercelMonoFontFamily) },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = VercelMonoFontFamily, lineHeight = 24.sp),
                         visualTransformation = visualTransformation,
                         modifier = Modifier
                             .fillMaxSize()

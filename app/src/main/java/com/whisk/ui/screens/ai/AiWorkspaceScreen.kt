@@ -1,5 +1,8 @@
 package com.whisk.ui.screens.ai
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,7 +11,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -26,18 +33,16 @@ import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,12 +52,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.AiProviderType
 import com.whisk.domain.model.AiRole
 import com.whisk.ui.components.CodeBlockView
 import com.whisk.ui.components.WhiskTopBar
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +77,7 @@ fun AiWorkspaceScreen(
     onApplyEdit: (String) -> Unit,
     onDismissEdit: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     var inputText by remember { mutableStateOf("") }
     val activeNote = state.contextPayload.activeNote
     val listState = rememberLazyListState()
@@ -80,15 +92,18 @@ fun AiWorkspaceScreen(
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "Whisk AI Workspace",
-                subtitle = "Active Engine: ${state.config.providerType.name}",
+                title = "WHISK // AI WORKSPACE",
+                subtitle = "ENGINE: ${state.config.providerType.name}",
                 actions = {
                     if (state.messages.isNotEmpty()) {
-                        IconButton(onClick = onClearHistory) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onClearHistory()
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.DeleteSweep,
                                 contentDescription = "Clear Chat",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -100,110 +115,137 @@ fun AiWorkspaceScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            // Provider Switcher Chip Row
+            // Provider Switcher Selector Bar
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(AiProviderType.entries.toTypedArray()) { provider ->
-                    FilterChip(
-                        selected = state.config.providerType == provider,
-                        onClick = { onSwitchProvider(provider) },
-                        label = { Text(provider.name) }
-                    )
-                }
-            }
-
-            // Active Note Context Chip Banner
-            if (activeNote != null) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                ) {
-                    Row(
+                    val isSelected = state.config.providerType == provider
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                            )
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onSwitchProvider(provider)
+                            }
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Description,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(end = 8.dp)
+                        Text(
+                            text = provider.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                         )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Active Context Note: ${activeNote.title}",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "${activeNote.body.length} chars • ~${state.contextPayload.estimateTokenCount()} tokens",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
                     }
                 }
             }
 
-            // Local Model Banner (when Local Gemma selected)
-            if (state.config.providerType == AiProviderType.LOCAL_GEMMA && !state.localStatus.isDownloaded) {
-                Card(
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+
+            // Active Context Banner
+            if (activeNote != null) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(10.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(
-                                text = "On-Device Google Gemma 2B LiteRT",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        Text(
-                            text = state.localStatus.statusText,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 6.dp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
                         )
-                        if (state.localStatus.downloadProgress > 0f && state.localStatus.downloadProgress < 1f) {
-                            LinearProgressIndicator(
-                                progress = { state.localStatus.downloadProgress },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.surface
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "CONTEXT // ${activeNote.title.uppercase()}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "${activeNote.body.length} CHARS • ~${state.contextPayload.estimateTokenCount()} TOKENS GROUNDED",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Local Model Download Banner
+            if (state.config.providerType == AiProviderType.LOCAL_GEMMA && !state.localStatus.isDownloaded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "ON-DEVICE GEMMA 2B LITERTLM",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Text(
+                        text = state.localStatus.statusText.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    if (state.localStatus.downloadProgress > 0f && state.localStatus.downloadProgress < 1f) {
+                        LinearProgressIndicator(
+                            progress = { state.localStatus.downloadProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surface
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.primary)
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onDownloadModel()
+                                }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "DOWNLOAD MODEL FROM HUGGING FACE",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
-                        } else {
-                            Button(
-                                onClick = onDownloadModel,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                            ) {
-                                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                                Text("Download Gemma 2B from Hugging Face")
-                            }
                         }
                     }
                 }
@@ -213,42 +255,45 @@ fun AiWorkspaceScreen(
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                item {
-                    SuggestionChip(
-                        onClick = { onSendMessage("Summarize active note into key bullet points") },
-                        label = { Text("Summarize Note") }
-                    )
-                }
-                item {
-                    SuggestionChip(
-                        onClick = { onSendMessage("Explain code snippets in active note and suggest optimizations") },
-                        label = { Text("Explain Code") }
-                    )
-                }
-                item {
-                    SuggestionChip(
-                        onClick = { onSendMessage("Extract TODO tasks from active note context") },
-                        label = { Text("Extract TODOs") }
-                    )
-                }
-                item {
-                    SuggestionChip(
-                        onClick = { onSendMessage("Draft architecture documentation for this module") },
-                        label = { Text("Draft Docs") }
-                    )
+                listOf(
+                    "SUMMARIZE NOTE" to "Summarize active note into key bullet points",
+                    "EXPLAIN CODE" to "Explain code snippets in active note and suggest optimizations",
+                    "EXTRACT TODOS" to "Extract TODO tasks from active note context",
+                    "DRAFT DOCS" to "Draft architecture documentation for this module"
+                ).forEach { (label, prompt) ->
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onSendMessage(prompt)
+                                }
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "> $label",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 }
             }
 
-            // Chat Messages History
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+
+            // Messages History or Empty State
             if (state.messages.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .padding(32.dp),
+                        .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -259,17 +304,20 @@ fun AiWorkspaceScreen(
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                         Text(
-                            text = "Whisk AI Assistant",
-                            style = MaterialTheme.typography.titleLarge,
+                            text = "WHISK AI ASSISTANT",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = if (activeNote != null) {
-                                "Grounded in '${activeNote.title}'. Ask questions, generate code, or request edits."
+                                "GROUNDED IN '${activeNote.title.uppercase()}'. ASK QUESTIONS, GENERATE CODE, OR REQUEST EDITS."
                             } else {
-                                "Select a note or ask a general technical question."
+                                "SELECT A NOTE FROM VAULT OR ASK A GENERAL TECHNICAL QUESTION."
                             },
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -281,7 +329,7 @@ fun AiWorkspaceScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(state.messages, key = { it.id }) { msg ->
@@ -290,64 +338,92 @@ fun AiWorkspaceScreen(
                             modifier = Modifier.fillMaxWidth(),
                             contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
                         ) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(0.88f),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
-                                )
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                    .background(
+                                        if (isUser) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
+                                    )
+                                    .padding(10.dp)
                             ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text(
-                                        text = if (isUser) "You" else "Whisk AI",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = msg.content.ifBlank { "..." },
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
+                                Text(
+                                    text = if (isUser) "[YOU]" else "[WHISK_AI]",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = DotMatrixFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = msg.content.ifBlank { "..." },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontFamily = VercelMonoFontFamily,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
                     }
                 }
             }
 
-            // Prompt Input Field
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+
+            // Terminal Prompt Input Row Sticky Above Keyboard
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 100.dp),
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
                     value = inputText,
                     onValueChange = { inputText = it },
-                    placeholder = { Text("Ask Whisk AI...") },
+                    placeholder = {
+                        Text(
+                            "> ASK WHISK AI...",
+                            fontFamily = DotMatrixFontFamily,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = VercelMonoFontFamily),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(0.dp),
                     modifier = Modifier.weight(1f),
                     singleLine = false,
                     maxLines = 4
                 )
-                IconButton(
-                    onClick = {
-                        if (state.isGenerating) {
-                            onStopGeneration()
-                        } else {
-                            if (inputText.isNotBlank()) {
-                                onSendMessage(inputText)
-                                inputText = ""
+
+                Box(
+                    modifier = Modifier
+                        .padding(start = 6.dp)
+                        .size(48.dp)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            if (state.isGenerating) {
+                                onStopGeneration()
+                            } else {
+                                if (inputText.isNotBlank()) {
+                                    onSendMessage(inputText)
+                                    inputText = ""
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier.padding(start = 8.dp)
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (state.isGenerating) Icons.Default.Stop else Icons.Default.Send,
-                        contentDescription = "Send",
-                        tint = MaterialTheme.colorScheme.primary
+                        contentDescription = "Send Prompt",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -357,7 +433,11 @@ fun AiWorkspaceScreen(
     // AI Edit Preview Sheet
     if (state.generatedEditPreview != null) {
         val editContent = state.generatedEditPreview
-        ModalBottomSheet(onDismissRequest = onDismissEdit) {
+        ModalBottomSheet(
+            onDismissRequest = onDismissEdit,
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(0.dp)
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -365,13 +445,16 @@ fun AiWorkspaceScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "Review AI Proposed Edit",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "REVIEW PROPOSED EDIT",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontFamily = DotMatrixFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Apply generated content to active note '${activeNote?.title ?: "Note"}'",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "APPLY GENERATED CONTENT TO '${activeNote?.title?.uppercase() ?: "NOTE"}'",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = DotMatrixFontFamily,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                 )
@@ -384,20 +467,38 @@ fun AiWorkspaceScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Button(
-                        onClick = onDismissEdit,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable { onDismissEdit() }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text("Dismiss")
+                        Text(
+                            text = "DISMISS",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                    Button(
-                        onClick = { onApplyEdit(editContent) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable { onApplyEdit(editContent) }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                        Text("Apply Edit")
+                        Text(
+                            text = "APPLY EDIT",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             }

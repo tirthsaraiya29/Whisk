@@ -34,8 +34,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.imePadding
 import com.whisk.ui.components.WhiskTopBar
 import com.whisk.ui.screens.notes.NoteRowCard
+import com.whisk.ui.theme.DotMatrixFontFamily
 
 @Composable
 fun SearchScreen(
@@ -62,6 +64,7 @@ fun SearchScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .background(MaterialTheme.colorScheme.background)
         ) {
             // Terminal Input Field
@@ -71,12 +74,12 @@ fun SearchScreen(
                 placeholder = {
                     Text(
                         "> TYPE QUERY OR TAG...",
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = DotMatrixFontFamily,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
-                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Monospace),
+                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
@@ -129,7 +132,7 @@ fun SearchScreen(
                                 Text(
                                     text = "> $keyword",
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = FontFamily.Monospace,
+                                    fontFamily = DotMatrixFontFamily,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
@@ -158,7 +161,7 @@ fun SearchScreen(
                         Text(
                             text = if (state.query.isBlank()) "SEARCH VAULT" else "ZERO SEARCH MATCHES",
                             style = MaterialTheme.typography.labelMedium,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -169,7 +172,7 @@ fun SearchScreen(
                                 "MODIFY QUERY PARAMETERS OR FILTER CRITERIA"
                             },
                             style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = DotMatrixFontFamily,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)
                         )

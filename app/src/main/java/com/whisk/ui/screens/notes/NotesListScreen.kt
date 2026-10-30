@@ -41,9 +41,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.imePadding
 import com.whisk.domain.model.Note
 import com.whisk.ui.components.DismissibleHintBanner
 import com.whisk.ui.components.WhiskTopBar
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -82,6 +85,7 @@ fun NotesListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .background(MaterialTheme.colorScheme.background)
         ) {
             // Dismissible FTUE Hint Banner
@@ -99,12 +103,12 @@ fun NotesListScreen(
                 placeholder = {
                     Text(
                         "> SEARCH OBJECTS OR TAGS...",
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = DotMatrixFontFamily,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
-                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Monospace),
+                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
@@ -182,14 +186,14 @@ fun NotesListScreen(
                         Text(
                             text = if (state.searchQuery.isBlank()) "NO OBJECTS FOUND" else "ZERO SEARCH MATCHES",
                             style = MaterialTheme.typography.labelMedium,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "PRESS [+] TO INITIALIZE NEW NOTE",
                             style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = DotMatrixFontFamily,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -232,7 +236,7 @@ private fun BrutalistChip(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = DotMatrixFontFamily,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
         )
@@ -255,7 +259,7 @@ fun NoteRowCard(
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -265,6 +269,7 @@ fun NoteRowCard(
             Text(
                 text = note.title.ifBlank { "UNTITLED.MD" },
                 style = MaterialTheme.typography.titleLarge,
+                fontFamily = VercelMonoFontFamily,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -282,17 +287,18 @@ fun NoteRowCard(
 
         val snippet = note.body.lines().take(2).joinToString(" ").replace("#", "").trim()
         if (snippet.isNotBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = snippet,
                 style = MaterialTheme.typography.bodyMedium,
+                fontFamily = VercelMonoFontFamily,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -302,7 +308,7 @@ fun NoteRowCard(
             Text(
                 text = "UPDATED $dateStr",
                 style = MaterialTheme.typography.labelSmall,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = DotMatrixFontFamily,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
@@ -312,7 +318,7 @@ fun NoteRowCard(
                         Text(
                             text = "#${tag.uppercase()}",
                             style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )

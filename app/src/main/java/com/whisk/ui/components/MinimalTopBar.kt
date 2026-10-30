@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.whisk.ui.theme.DotMatrixFontFamily
 import com.whisk.ui.theme.StatusGreen
 
 /**
@@ -142,7 +143,7 @@ fun MinimalTopBar(
                         Text(
                             text = title.uppercase(),
                             style = MaterialTheme.typography.labelMedium,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
@@ -154,7 +155,7 @@ fun MinimalTopBar(
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = DotMatrixFontFamily,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis

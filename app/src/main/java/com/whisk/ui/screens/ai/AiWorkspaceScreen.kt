@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -110,26 +111,28 @@ fun AiWorkspaceScreen(
 
     val activeNote = state.contextPayload.activeNote
     val listState = rememberLazyListState()
+    val isUserDragging by listState.interactionSource.collectIsDraggedAsState()
 
-    // Detect if scroll position is at the very bottom
+    // Detect if scroll position is at the very bottom (including item height)
     val isAtBottom by remember {
         derivedStateOf {
-            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf true
-            lastVisibleItem.index >= listState.layoutInfo.totalItemsCount - 1
+            val layoutInfo = listState.layoutInfo
+            val visibleItems = layoutInfo.visibleItemsInfo
+            if (visibleItems.isEmpty()) true
+            else {
+                val lastVisible = visibleItems.last()
+                lastVisible.index == layoutInfo.totalItemsCount - 1 &&
+                    (lastVisible.offset + lastVisible.size) <= layoutInfo.viewportEndOffset + 80
+            }
         }
     }
 
-    // Reset userScrolledUp when user reaches bottom
-    LaunchedEffect(isAtBottom) {
-        if (isAtBottom) {
-            userScrolledUp = false
-        }
-    }
-
-    // Mark userScrolledUp when user manually drags up
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (listState.isScrollInProgress && !isAtBottom) {
+    // Gesture-aware scroll state tracking
+    LaunchedEffect(isUserDragging, isAtBottom) {
+        if (isUserDragging && !isAtBottom) {
             userScrolledUp = true
+        } else if (isAtBottom && !isUserDragging) {
+            userScrolledUp = false
         }
     }
 
@@ -144,11 +147,11 @@ fun AiWorkspaceScreen(
         }
     }
 
-    // Non-rigid auto-scroll during streaming: only if user has not scrolled up
+    // Auto-scroll to absolute bottom of last message as new tokens arrive (only when user is not dragging up)
     val lastMessageContent = state.messages.lastOrNull()?.content ?: ""
     LaunchedEffect(state.messages.size, lastMessageContent.length) {
-        if (state.messages.isNotEmpty() && !userScrolledUp) {
-            listState.scrollToItem(state.messages.size - 1)
+        if (state.messages.isNotEmpty() && !userScrolledUp && !isUserDragging) {
+            listState.scrollToItem(index = state.messages.size - 1, scrollOffset = 100000)
         }
     }
 
@@ -159,6 +162,24 @@ fun AiWorkspaceScreen(
                 subtitle = "${state.activeSessionTitle} // ${state.config.providerType.name}",
                 onMenuClick = onMenuClick,
                 actions = {
+                    Box(
+                        modifier = Modifier
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onStartNewSession()
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "+ NEW",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
                     IconButton(onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         showHistorySheet = true

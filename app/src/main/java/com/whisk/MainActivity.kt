@@ -1,31 +1,33 @@
 package com.whisk
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -42,6 +44,7 @@ import com.whisk.data.repository.GitHubRepository
 import com.whisk.data.repository.GraphRepository
 import com.whisk.data.repository.McpRepository
 import com.whisk.data.repository.NotesRepository
+import com.whisk.domain.model.Note
 import com.whisk.ui.components.CommandPalette
 import com.whisk.ui.components.WhiskBottomBar
 import com.whisk.ui.screens.ai.AiViewModel
@@ -54,7 +57,6 @@ import com.whisk.ui.screens.graph.GraphViewModel
 import com.whisk.ui.screens.graph.KnowledgeGraphScreen
 import com.whisk.ui.screens.notes.NoteDetailScreen
 import com.whisk.ui.screens.notes.NoteDetailViewModel
-import com.whisk.ui.screens.notes.NoteFilter
 import com.whisk.ui.screens.notes.NotesListScreen
 import com.whisk.ui.screens.notes.NotesViewModel
 import com.whisk.ui.screens.search.SearchScreen
@@ -64,7 +66,15 @@ import com.whisk.ui.screens.settings.SettingsViewModel
 import com.whisk.ui.screens.tasks.TasksScreen
 import com.whisk.ui.screens.tasks.TasksViewModel
 import com.whisk.ui.theme.WhiskTheme
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.launch
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T : ViewModel> viewModelFactory(crossinline creator: () -> T): ViewModelProvider.Factory =
+    object : ViewModelProvider.Factory {
+        override fun <VM : ViewModel> create(modelClass: Class<VM>): VM = creator() as VM
+    }
 
 class MainActivity : ComponentActivity() {
 
@@ -100,6 +110,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -115,9 +126,11 @@ class MainActivity : ComponentActivity() {
         localGemmaManager = LocalGemmaManager(this)
         remoteAiManager = RemoteAiManager()
 
+        handleShareIntent(intent)
+
         setContent {
-            val themeMode by preferencesManager.themeMode.collectAsState(initial = "SYSTEM")
-            val isFirstLaunch by preferencesManager.isFirstLaunch.collectAsState(initial = true)
+            val themeMode by preferencesManager.themeMode.collectAsStateWithLifecycle(initialValue = "SYSTEM")
+            val isFirstLaunch by preferencesManager.isFirstLaunch.collectAsStateWithLifecycle(initialValue = true)
 
             WhiskTheme(themeMode = themeMode) {
                 WhiskApp(
@@ -134,6 +147,30 @@ class MainActivity : ComponentActivity() {
                     onExportZip = { exportZipLauncher.launch("Whisk_Vault_Backup.zip") },
                     onImportZip = { importZipLauncher.launch(arrayOf("application/zip", "text/plain", "text/markdown")) }
                 )
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleShareIntent(intent)
+    }
+
+    private fun handleShareIntent(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+            val sharedSubject = intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: "Quick Capture"
+            if (sharedText.isNotBlank()) {
+                lifecycleScope.launch {
+                    val newNote = Note(
+                        title = sharedSubject.ifBlank { "Quick Capture" },
+                        body = sharedText,
+                        createdAt = System.currentTimeMillis()
+                    )
+                    notesRepository.saveNote(newNote)
+                    Toast.makeText(this@MainActivity, "Captured quick note to vault", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -161,23 +198,35 @@ fun WhiskApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: "notes"
 
+    val hazeState = remember { HazeState() }
+
     // Seed Welcome Note on First Launch
-    LaunchedEffect(Unit) {
-        notesRepository.seedWelcomeNoteIfEmpty()
+    LaunchedEffect(isFirstLaunch) {
+        if (isFirstLaunch) {
+            notesRepository.seedWelcomeNoteIfEmpty()
+        }
     }
 
-    val hintsDismissed by preferencesManager.hintsDismissed.collectAsState(initial = emptyMap())
+    val hintsDismissed by preferencesManager.hintsDismissed.collectAsStateWithLifecycle(initialValue = emptyMap())
 
     Box(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
             startDestination = "notes",
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(state = hazeState),
+            enterTransition = { slideInHorizontally(initialOffsetX = { it / 4 }) + fadeIn() },
+            exitTransition = { fadeOut() },
+            popEnterTransition = { fadeIn() },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it / 4 }) + fadeOut() }
         ) {
             // 1. Notes List Destination
             composable("notes") {
-                val viewModel = remember { NotesViewModel(notesRepository) }
-                val state by viewModel.uiState.collectAsState()
+                val viewModel: NotesViewModel = viewModel(
+                    factory = viewModelFactory { NotesViewModel(notesRepository) }
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 NotesListScreen(
                     state = state,
@@ -203,8 +252,11 @@ fun WhiskApp(
                 arguments = listOf(navArgument("noteId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
-                val viewModel = remember(noteId) { NoteDetailViewModel(notesRepository, noteId) }
-                val state by viewModel.uiState.collectAsState()
+                val viewModel: NoteDetailViewModel = viewModel(
+                    key = noteId,
+                    factory = viewModelFactory { NoteDetailViewModel(notesRepository, noteId) }
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 LaunchedEffect(state.isDeleted) {
                     if (state.isDeleted) navController.popBackStack()
@@ -233,8 +285,10 @@ fun WhiskApp(
 
             // 3. Search Destination
             composable("search") {
-                val viewModel = remember { SearchViewModel(notesRepository) }
-                val state by viewModel.uiState.collectAsState()
+                val viewModel: SearchViewModel = viewModel(
+                    factory = viewModelFactory { SearchViewModel(notesRepository) }
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 SearchScreen(
                     state = state,
@@ -245,8 +299,10 @@ fun WhiskApp(
 
             // 4. Knowledge Graph Destination
             composable("graph") {
-                val viewModel = remember { GraphViewModel(graphRepository) }
-                val state by viewModel.uiState.collectAsState()
+                val viewModel: GraphViewModel = viewModel(
+                    factory = viewModelFactory { GraphViewModel(graphRepository) }
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 KnowledgeGraphScreen(
                     state = state,
@@ -259,8 +315,10 @@ fun WhiskApp(
 
             // 5. Spatial Canvas Destination
             composable("canvas") {
-                val viewModel = remember { CanvasViewModel(canvasRepository, notesRepository) }
-                val state by viewModel.uiState.collectAsState()
+                val viewModel: CanvasViewModel = viewModel(
+                    factory = viewModelFactory { CanvasViewModel(canvasRepository, notesRepository) }
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 SpatialCanvasScreen(
                     state = state,
@@ -274,8 +332,10 @@ fun WhiskApp(
 
             // 6. Tasks Checklist Destination
             composable("tasks") {
-                val viewModel = remember { TasksViewModel(notesRepository) }
-                val tasks by viewModel.tasks.collectAsState()
+                val viewModel: TasksViewModel = viewModel(
+                    factory = viewModelFactory { TasksViewModel(notesRepository) }
+                )
+                val tasks by viewModel.tasks.collectAsStateWithLifecycle(initialValue = emptyList())
 
                 TasksScreen(
                     tasks = tasks,
@@ -295,14 +355,17 @@ fun WhiskApp(
             ) { backStackEntry ->
                 val context = androidx.compose.ui.platform.LocalContext.current
                 val noteId = backStackEntry.arguments?.getString("noteId")
-                val viewModel = remember(noteId) {
-                    AiViewModel(localGemmaManager, remoteAiManager, preferencesManager).apply {
-                        if (!noteId.isNullOrBlank()) {
-                            loadNoteContext(notesRepository, noteId)
+                val viewModel: AiViewModel = viewModel(
+                    key = noteId ?: "ai_global",
+                    factory = viewModelFactory {
+                        AiViewModel(localGemmaManager, remoteAiManager, preferencesManager).apply {
+                            if (!noteId.isNullOrBlank()) {
+                                loadNoteContext(notesRepository, noteId)
+                            }
                         }
                     }
-                }
-                val state by viewModel.uiState.collectAsState()
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 AiWorkspaceScreen(
                     state = state,
@@ -333,8 +396,10 @@ fun WhiskApp(
 
             // 8. GitHub & MCP Destination
             composable("github") {
-                val viewModel = remember { GitHubViewModel(gitHubRepository, mcpRepository, preferencesManager) }
-                val state by viewModel.uiState.collectAsState()
+                val viewModel: GitHubViewModel = viewModel(
+                    factory = viewModelFactory { GitHubViewModel(gitHubRepository, mcpRepository, preferencesManager) }
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 GitHubBrowserScreen(
                     state = state,
@@ -347,8 +412,10 @@ fun WhiskApp(
 
             // 9. Settings Destination
             composable("settings") {
-                val viewModel = remember { SettingsViewModel(preferencesManager, exportImportRepository) }
-                val state by viewModel.uiState.collectAsState()
+                val viewModel: SettingsViewModel = viewModel(
+                    factory = viewModelFactory { SettingsViewModel(preferencesManager, exportImportRepository) }
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 SettingsScreen(
                     state = state,
@@ -377,35 +444,36 @@ fun WhiskApp(
                 },
                 onQuickAdd = {
                     scope.launch {
-                        val newNote = com.whisk.domain.model.Note(title = "Untitled Note", body = "")
+                        val newNote = Note(title = "Untitled Note", body = "")
                         notesRepository.saveNote(newNote)
                         navController.navigate("note_detail/${newNote.id}")
                     }
                 },
-                modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
+                hazeState = hazeState
             )
         }
 
-            // Command Palette Modal
-            if (showCommandPalette) {
-                CommandPalette(
-                    onDismiss = { showCommandPalette = false },
-                    onNavigate = { route -> navController.navigate(route) },
-                    onNewNote = {
-                        scope.launch {
-                            val newNote = com.whisk.domain.model.Note(title = "Untitled Note", body = "")
-                            notesRepository.saveNote(newNote)
-                            navController.navigate("note_detail/${newNote.id}")
-                        }
-                    },
-                    onExportBackup = onExportZip,
-                    onCreateTemplateNote = { templateNote ->
-                        scope.launch {
-                            notesRepository.saveNote(templateNote)
-                            navController.navigate("note_detail/${templateNote.id}")
-                        }
+        // Command Palette Modal
+        if (showCommandPalette) {
+            CommandPalette(
+                onDismiss = { showCommandPalette = false },
+                onNavigate = { route -> navController.navigate(route) },
+                onNewNote = {
+                    scope.launch {
+                        val newNote = Note(title = "Untitled Note", body = "")
+                        notesRepository.saveNote(newNote)
+                        navController.navigate("note_detail/${newNote.id}")
                     }
-                )
-            }
+                },
+                onExportBackup = onExportZip,
+                onCreateTemplateNote = { templateNote ->
+                    scope.launch {
+                        notesRepository.saveNote(templateNote)
+                        navController.navigate("note_detail/${templateNote.id}")
+                    }
+                }
+            )
         }
     }
+}

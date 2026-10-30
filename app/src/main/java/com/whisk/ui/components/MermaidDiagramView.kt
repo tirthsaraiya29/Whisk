@@ -76,16 +76,18 @@ fun MermaidDiagramView(
                     height: auto !important;
                 }
             </style>
-            <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+            <script src="mermaid.min.js"></script>
             <script>
                 document.addEventListener("DOMContentLoaded", function() {
                     try {
-                        mermaid.initialize({
-                            startOnLoad: true,
-                            theme: '$themeName',
-                            securityLevel: 'loose',
-                            flowchart: { htmlLabels: true, curve: 'basis' }
-                        });
+                        if (window.mermaid) {
+                            window.mermaid.initialize({
+                                startOnLoad: true,
+                                theme: '$themeName',
+                                securityLevel: 'loose',
+                                flowchart: { htmlLabels: true, curve: 'basis' }
+                            });
+                        }
                     } catch (e) {
                         console.error("Mermaid initialization failed", e);
                     }
@@ -160,9 +162,9 @@ fun MermaidDiagramView(
                         @Suppress("UsePropertyAccessSyntax")
                         webSettings.setJavaScriptEnabled(true)
                         @Suppress("UsePropertyAccessSyntax")
-                        webSettings.setAllowContentAccess(false)
+                        webSettings.setAllowContentAccess(true)
                         @Suppress("UsePropertyAccessSyntax")
-                        webSettings.setAllowFileAccess(false)
+                        webSettings.setAllowFileAccess(true)
                         webSettings.domStorageEnabled = true
                         webSettings.loadWithOverviewMode = true
                         webSettings.useWideViewPort = true
@@ -170,7 +172,7 @@ fun MermaidDiagramView(
                         webView
                     },
                     update = { webView ->
-                        webView.loadDataWithBaseURL("https://mermaid.js.org", htmlContent, "text/html", "UTF-8", null)
+                        webView.loadDataWithBaseURL("file:///android_asset/", htmlContent, "text/html", "UTF-8", null)
                     },
                     modifier = Modifier.fillMaxSize()
                 )

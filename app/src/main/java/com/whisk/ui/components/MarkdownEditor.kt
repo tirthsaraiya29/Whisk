@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +47,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,15 +57,90 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 enum class EditorMode {
     EDIT, PREVIEW, SPLIT
+}
+
+class MarkdownVisualTransformation(
+    private val primaryColor: Color,
+    private val codeColor: Color,
+    private val keywordColor: Color,
+    private val headerColor: Color
+) : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val builder = AnnotatedString.Builder(text)
+        val str = text.text
+        if (str.isEmpty()) return TransformedText(text, OffsetMapping.Identity)
+
+        val lines = str.lines()
+        var inCode = false
+
+        val keywords = setOf(
+            "fun", "val", "var", "class", "import", "return", "if", "else",
+            "function", "let", "const", "def", "select", "from", "where", "async", "await"
+        )
+        val keywordRegex = Regex("\\b(" + keywords.joinToString("|") + ")\\b", RegexOption.IGNORE_CASE)
+        val linkRegex = Regex("\\[\\[(.*?)\\]\\]")
+        val headerRegex = Regex("^#{1,3}\\s.*")
+
+        for (match in linkRegex.findAll(str)) {
+            val start = match.range.first.coerceIn(0, str.length)
+            val end = (match.range.last + 1).coerceIn(0, str.length)
+            builder.addStyle(
+                SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
+                start,
+                end
+            )
+        }
+
+        var charOffset = 0
+        lines.forEach { line ->
+            val lineEnd = (charOffset + line.length).coerceIn(0, str.length)
+            val currentOffset = charOffset.coerceIn(0, str.length)
+
+            if (line.trim().startsWith("```")) {
+                inCode = !inCode
+                builder.addStyle(
+                    SpanStyle(fontFamily = FontFamily.Monospace, color = codeColor, fontWeight = FontWeight.Bold),
+                    currentOffset,
+                    lineEnd
+                )
+            } else if (inCode) {
+                builder.addStyle(SpanStyle(fontFamily = FontFamily.Monospace), currentOffset, lineEnd)
+                for (km in keywordRegex.findAll(line)) {
+                    val kStart = (currentOffset + km.range.first).coerceIn(0, str.length)
+                    val kEnd = (currentOffset + km.range.last + 1).coerceIn(0, str.length)
+                    builder.addStyle(
+                        SpanStyle(color = keywordColor, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
+                        kStart,
+                        kEnd
+                    )
+                }
+            } else if (headerRegex.matches(line)) {
+                builder.addStyle(
+                    SpanStyle(color = headerColor, fontWeight = FontWeight.Bold),
+                    currentOffset,
+                    lineEnd
+                )
+            }
+            charOffset = lineEnd + 1
+        }
+
+        return TransformedText(builder.toAnnotatedString(), OffsetMapping.Identity)
+    }
 }
 
 @Composable
@@ -77,23 +154,38 @@ fun MarkdownEditor(
 ) {
     var mode by remember { mutableStateOf(EditorMode.EDIT) }
 
-    var textFieldValue by remember(body) {
+    var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = body, selection = TextRange(body.length)))
+    }
+
+    LaunchedEffect(body) {
+        if (body != textFieldValue.text) {
+            textFieldValue = textFieldValue.copy(text = body)
+        }
+    }
+
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val codeColor = MaterialTheme.colorScheme.tertiary
+    val keywordColor = Color(0xFFD97706)
+    val headerColor = MaterialTheme.colorScheme.primary
+
+    val visualTransformation = remember(primaryColor, codeColor, keywordColor, headerColor) {
+        MarkdownVisualTransformation(primaryColor, codeColor, keywordColor, headerColor)
     }
 
     fun applyFormatting(prefix: String, suffix: String = "") {
         val currentTfv = textFieldValue
         val selection = currentTfv.selection
         val text = currentTfv.text
-        val selectedText = if (selection.collapsed) "" else text.substring(selection.start, selection.end)
+        val selectedText = if (selection.collapsed) "" else text.substring(selection.start.coerceIn(0, text.length), selection.end.coerceIn(0, text.length))
         val inserted = prefix + selectedText + suffix
-        val newText = text.substring(0, selection.start) + inserted + text.substring(selection.end)
+        val newText = text.substring(0, selection.start.coerceIn(0, text.length)) + inserted + text.substring(selection.end.coerceIn(0, text.length))
         val newCursor = if (selection.collapsed && suffix.isNotEmpty()) {
             selection.start + prefix.length
         } else {
             selection.start + inserted.length
         }
-        val nextTfv = TextFieldValue(text = newText, selection = TextRange(newCursor))
+        val nextTfv = TextFieldValue(text = newText, selection = TextRange(newCursor.coerceIn(0, newText.length)))
         textFieldValue = nextTfv
         onBodyChange(newText)
     }
@@ -102,6 +194,7 @@ fun MarkdownEditor(
         if (body.isBlank()) 0 else body.trim().split(Regex("\\s+")).size
     }
     val charCount = remember(body) { body.length }
+    val lineCount = remember(body) { body.lines().size }
 
     Column(modifier = modifier.fillMaxSize()) {
         // Mode Toggle Header
@@ -113,7 +206,7 @@ fun MarkdownEditor(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "$wordCount words • $charCount chars",
+                text = "$wordCount words • $charCount chars • $lineCount lines",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -192,7 +285,7 @@ fun MarkdownEditor(
             }
         }
 
-        // Formatting Scrollable Toolbar (when in EDIT or SPLIT mode)
+        // Formatting Scrollable Toolbar
         if (mode == EditorMode.EDIT || mode == EditorMode.SPLIT) {
             Row(
                 modifier = Modifier
@@ -252,7 +345,32 @@ fun MarkdownEditor(
         // Body Content Rendering according to EditorMode
         when (mode) {
             EditorMode.EDIT -> {
-                Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                ) {
+                    // Line-Number Gutter
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(32.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .padding(top = 16.dp, end = 6.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        (1..lineCount.coerceAtMost(100)).forEach { lineNum ->
+                            Text(
+                                text = "$lineNum",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                ),
+                                maxLines = 1
+                            )
+                        }
+                    }
+
                     OutlinedTextField(
                         value = textFieldValue,
                         onValueChange = { newValue ->
@@ -262,11 +380,12 @@ fun MarkdownEditor(
                             }
                         },
                         placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge) },
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
+                        visualTransformation = visualTransformation,
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(1f)
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
                             unfocusedBorderColor = Color.Transparent
@@ -291,6 +410,7 @@ fun MarkdownEditor(
                         },
                         placeholder = { Text("Write notes...", style = MaterialTheme.typography.bodyMedium) },
                         textStyle = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
+                        visualTransformation = visualTransformation,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()

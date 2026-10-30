@@ -49,6 +49,8 @@ import com.whisk.domain.model.AiConfig
 import com.whisk.domain.model.AiProviderType
 import com.whisk.ui.components.WhiskTopBar
 
+import androidx.compose.runtime.saveable.rememberSaveable
+
 @Composable
 fun SettingsScreen(
     state: SettingsUiState,
@@ -59,12 +61,12 @@ fun SettingsScreen(
     onExportBackup: () -> Unit,
     onImportBackup: () -> Unit
 ) {
-    var apiKeyText by remember(state.aiConfig) { mutableStateOf(state.aiConfig.apiKey) }
-    var githubTokenText by remember(state.githubToken) { mutableStateOf(state.githubToken) }
-    var selectedProvider by remember(state.aiConfig) { mutableStateOf(state.aiConfig.providerType) }
-    var hfModelUrlText by remember(state.aiConfig) { mutableStateOf(state.aiConfig.hfModelUrl) }
-    var hfTokenText by remember(state.aiConfig) { mutableStateOf(state.aiConfig.hfApiToken) }
-    var useGpu by remember(state.aiConfig) { mutableStateOf(state.aiConfig.useGpuAccelerator) }
+    var apiKeyText by rememberSaveable { mutableStateOf(state.aiConfig.apiKey) }
+    var githubTokenText by rememberSaveable { mutableStateOf(state.githubToken) }
+    var selectedProvider by rememberSaveable { mutableStateOf(state.aiConfig.providerType) }
+    var hfModelUrlText by rememberSaveable { mutableStateOf(state.aiConfig.hfModelUrl) }
+    var hfTokenText by rememberSaveable { mutableStateOf(state.aiConfig.hfApiToken) }
+    var useGpu by rememberSaveable { mutableStateOf(state.aiConfig.useGpuAccelerator) }
 
     var showApiKeySecret by remember { mutableStateOf(false) }
     var showHfTokenSecret by remember { mutableStateOf(false) }

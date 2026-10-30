@@ -59,6 +59,8 @@ import androidx.compose.ui.unit.sp
 import com.whisk.ui.components.NavDestination
 import kotlinx.coroutines.launch
 
+import dev.chrisbanes.haze.HazeState
+
 /**
  * Liquid Glass Floating Bottom Navigation Capsule with Quick-Add Action Jewel.
  * Features fluid animated selected lens indicator, volume-preserving jelly physics,
@@ -69,7 +71,8 @@ fun LiquidGlassBottomBar(
     currentRoute: String,
     onNavigate: (String) -> Unit,
     onQuickAdd: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hazeState: HazeState? = null
 ) {
     val destinations = remember {
         listOf(
@@ -119,7 +122,8 @@ fun LiquidGlassBottomBar(
                     shape = CircleShape,
                     blurRadius = 24.dp,
                     elevation = 12.dp,
-                    isDarkTheme = isDarkTheme
+                    isDarkTheme = isDarkTheme,
+                    hazeState = hazeState
                 ) {
                     BoxWithConstraints(
                         modifier = Modifier
@@ -265,7 +269,8 @@ fun LiquidGlassBottomBar(
                     blurRadius = 24.dp,
                     elevation = 12.dp,
                     tintColor = addLensTint,
-                    isDarkTheme = isDarkTheme
+                    isDarkTheme = isDarkTheme,
+                    hazeState = hazeState
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),

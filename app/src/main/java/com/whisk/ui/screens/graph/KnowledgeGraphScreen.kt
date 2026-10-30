@@ -90,19 +90,78 @@ fun KnowledgeGraphScreen(
         }
     }
 
-    val nodePositions = remember(nodes) {
+    // Force-directed graph layout calculation (Fruchterman-Reingold algorithm)
+    val nodePositions = remember(nodes, state.graph.edges) {
         val posMap = mutableMapOf<String, Offset>()
         val count = nodes.size
-        if (count > 0) {
-            val radius = (150f + count * 25f).coerceAtMost(450f)
-            nodes.forEachIndexed { i, node ->
-                val angle = (2 * Math.PI * i / count).toFloat()
-                val x = 500f + radius * cos(angle)
-                val y = 600f + radius * sin(angle)
-                posMap[node.id] = Offset(x, y)
+        if (count == 0) return@remember posMap
+
+        val goldenAngle = 137.5f * (Math.PI / 180f).toFloat()
+        nodes.forEachIndexed { i, node ->
+            val r = 90f * kotlin.math.sqrt(i.toFloat() + 1f)
+            val theta = i * goldenAngle
+            posMap[node.id] = Offset(500f + r * cos(theta), 500f + r * sin(theta))
+        }
+
+        val iterations = 45
+        val kRepulsion = 14000f
+        val kAttraction = 0.06f
+
+        val edgeList = state.graph.edges.filter { e -> posMap.containsKey(e.sourceId) && posMap.containsKey(e.targetId) }
+
+        repeat(iterations) {
+            val disp = mutableMapOf<String, Offset>()
+            nodes.forEach { disp[it.id] = Offset.Zero }
+
+            for (i in 0 until count) {
+                val u = nodes[i]
+                val pU = posMap[u.id] ?: continue
+                for (j in i + 1 until count) {
+                    val v = nodes[j]
+                    val pV = posMap[v.id] ?: continue
+                    val delta = pU - pV
+                    val dist = delta.getDistance().coerceAtLeast(1f)
+                    val force = (kRepulsion / (dist * dist)).coerceAtMost(60f)
+                    val dir = delta / dist
+                    disp[u.id] = (disp[u.id] ?: Offset.Zero) + dir * force
+                    disp[v.id] = (disp[v.id] ?: Offset.Zero) - dir * force
+                }
+            }
+
+            for (edge in edgeList) {
+                val pU = posMap[edge.sourceId] ?: continue
+                val pV = posMap[edge.targetId] ?: continue
+                val delta = pU - pV
+                val dist = delta.getDistance().coerceAtLeast(1f)
+                val force = dist * kAttraction
+                val dir = delta / dist
+                disp[edge.sourceId] = (disp[edge.sourceId] ?: Offset.Zero) - dir * force
+                disp[edge.targetId] = (disp[edge.targetId] ?: Offset.Zero) + dir * force
+            }
+
+            nodes.forEach { node ->
+                val d = disp[node.id] ?: Offset.Zero
+                val currentPos = posMap[node.id] ?: Offset.Zero
+                val maxStep = 35f
+                val clampedDisp = if (d.getDistance() > maxStep) d / d.getDistance() * maxStep else d
+                posMap[node.id] = currentPos + clampedDisp
             }
         }
+
         posMap
+    }
+
+    // Memoize pre-measured text layouts outside the Canvas draw loop
+    val labelLayouts = remember(nodes, textColor, textMeasurer) {
+        nodes.associate { node ->
+            node.id to textMeasurer.measure(
+                text = node.label,
+                style = androidx.compose.ui.text.TextStyle(
+                    color = textColor,
+                    fontSize = 11.sp
+                )
+            )
+        }
     }
 
     Scaffold(
@@ -212,18 +271,14 @@ fun KnowledgeGraphScreen(
                             center = drawPos
                         )
 
-                        // Label Text
-                        val measuredText = textMeasurer.measure(
-                            text = node.label,
-                            style = androidx.compose.ui.text.TextStyle(
-                                color = textColor,
-                                fontSize = (11 * scale).sp
+                        // Label Text using pre-measured layout
+                        val measuredText = labelLayouts[node.id]
+                        if (measuredText != null) {
+                            drawText(
+                                textLayoutResult = measuredText,
+                                topLeft = Offset(drawPos.x - measuredText.size.width / 2, drawPos.y + (nodeRadius + 4f) * scale)
                             )
-                        )
-                        drawText(
-                            textLayoutResult = measuredText,
-                            topLeft = Offset(drawPos.x - measuredText.size.width / 2, drawPos.y + (nodeRadius + 4f) * scale)
-                        )
+                        }
                     }
                 }
 

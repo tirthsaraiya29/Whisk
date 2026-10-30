@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.whisk.ui.components.glass.LiquidGlassBottomBar
 
+import dev.chrisbanes.haze.HazeState
+
 sealed class NavDestination(val route: String, val label: String, val icon: ImageVector) {
     object Notes : NavDestination("notes", "Notes", Icons.Default.Description)
     object Search : NavDestination("search", "Search", Icons.Default.Search)
@@ -24,12 +26,14 @@ fun WhiskBottomBar(
     currentRoute: String,
     onNavigate: (String) -> Unit,
     onQuickAdd: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hazeState: HazeState? = null
 ) {
     LiquidGlassBottomBar(
         currentRoute = currentRoute,
         onNavigate = onNavigate,
         onQuickAdd = onQuickAdd,
-        modifier = modifier
+        modifier = modifier,
+        hazeState = hazeState
     )
 }

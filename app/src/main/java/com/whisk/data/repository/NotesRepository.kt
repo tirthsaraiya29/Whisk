@@ -12,7 +12,10 @@ import com.whisk.domain.model.Note
 import com.whisk.domain.model.NoteLink
 import com.whisk.domain.model.Tag
 import com.whisk.domain.model.TaskItem
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class NotesRepository(
@@ -63,6 +66,19 @@ class NotesRepository(
     fun searchNotes(query: String): Flow<List<Note>> {
         return noteDao.searchNotes(query).map { entities ->
             entities.map { it.toDomain() }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun searchNotesFts(query: String): Flow<List<Note>> {
+        val sanitized = query.trim().replace("\"", "").replace("'", "")
+        if (sanitized.isBlank()) return allNotes
+        return noteDao.searchNotesFts("$sanitized*").flatMapLatest { ftsResults ->
+            if (ftsResults.isNotEmpty()) {
+                flowOf(ftsResults.map { it.toDomain() })
+            } else {
+                noteDao.searchNotes(query).map { entities -> entities.map { it.toDomain() } }
+            }
         }
     }
 

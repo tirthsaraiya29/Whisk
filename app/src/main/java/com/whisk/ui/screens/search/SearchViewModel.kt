@@ -5,10 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.whisk.data.repository.NotesRepository
 import com.whisk.domain.model.Note
 import com.whisk.domain.model.Tag
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 
 data class SearchUiState(
@@ -18,6 +22,7 @@ data class SearchUiState(
     val tags: List<Tag> = emptyList()
 )
 
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class SearchViewModel(
     private val notesRepository: NotesRepository
 ) : ViewModel() {
@@ -25,18 +30,23 @@ class SearchViewModel(
     private val _query = MutableStateFlow("")
     private val _selectedTag = MutableStateFlow<String?>(null)
 
+    private val searchResults = _query
+        .debounce(150)
+        .flatMapLatest { query ->
+            if (query.isBlank()) {
+                notesRepository.allNotes
+            } else {
+                notesRepository.searchNotesFts(query)
+            }
+        }
+
     val uiState: StateFlow<SearchUiState> = combine(
         _query,
         _selectedTag,
-        notesRepository.allNotes
-    ) { query, tag, allNotes ->
-        val filtered = allNotes.filter { note ->
-            val matchesTag = tag == null || note.tags.contains(tag)
-            val matchesQuery = query.isBlank() ||
-                    note.title.contains(query, ignoreCase = true) ||
-                    note.body.contains(query, ignoreCase = true) ||
-                    note.tags.any { it.contains(query, ignoreCase = true) }
-            matchesTag && matchesQuery
+        searchResults
+    ) { query, tag, results ->
+        val filtered = results.filter { note ->
+            tag == null || note.tags.contains(tag)
         }
 
         SearchUiState(

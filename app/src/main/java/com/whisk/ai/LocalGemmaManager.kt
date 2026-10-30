@@ -3,7 +3,12 @@ package com.whisk.ai
 import android.content.Context
 import android.os.Environment
 import android.os.StatFs
-import com.google.mediapipe.tasks.genai.llminference.LlmInference
+import com.google.ai.edge.litertlm.Backend
+import com.google.ai.edge.litertlm.Contents
+import com.google.ai.edge.litertlm.Conversation
+import com.google.ai.edge.litertlm.ConversationConfig
+import com.google.ai.edge.litertlm.Engine
+import com.google.ai.edge.litertlm.EngineConfig
 import com.whisk.domain.model.AiConfig
 import com.whisk.domain.model.LocalModelStatus
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +24,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import java.io.File
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class LocalGemmaManager(private val context: Context) : AutoCloseable {
@@ -26,7 +32,13 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     private val _modelStatus = MutableStateFlow(LocalModelStatus())
     val modelStatus: StateFlow<LocalModelStatus> = _modelStatus.asStateFlow()
 
+    private val executor = Executors.newSingleThreadExecutor()
+
+    private var engine: Engine? = null
+    private var conversation: Conversation? = null
+
     private val modelFileName = "gemma-4-E2B-it-gpu.litertlm"
+
     fun getModelFile(): File {
         val extDir = context.getExternalFilesDir(null)
         val extFile = File(extDir, modelFileName)
@@ -47,8 +59,6 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
 
         return extFile
     }
-
-    private var llmInference: LlmInference? = null
 
     // Disable automatic redirects so we can handle CDN redirects without sending HF Auth headers to S3/R2
     private val certificatePinner = okhttp3.CertificatePinner.Builder()
@@ -74,17 +84,17 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
             _modelStatus.value = LocalModelStatus(
                 isDownloaded = true,
                 downloadProgress = 1.0f,
-                statusText = "Gemma 4 E2B LiteRT GPU ready ($sizeMb MB)",
+                statusText = "Gemma 4 E2B LiteRT ready ($sizeMb MB)",
                 modelSizeBytes = file.length(),
                 downloadedBytes = file.length(),
                 totalBytes = file.length(),
-                isLoaded = llmInference != null
+                isLoaded = engine != null
             )
         } else {
             _modelStatus.value = LocalModelStatus(
                 isDownloaded = false,
                 downloadProgress = 0f,
-                statusText = "Gemma 4 E2B GPU model not downloaded from Hugging Face",
+                statusText = "Gemma 4 E2B model not downloaded",
                 isLoaded = false
             )
         }
@@ -130,7 +140,6 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
 
                 while (redirectCount < 5) {
                     val requestBuilder = Request.Builder().url(currentUrl).get()
-                    // Only send Authorization header to huggingface.co domain
                     if (config.hfApiToken.isNotBlank() && currentUrl.contains("huggingface.co")) {
                         requestBuilder.header("Authorization", "Bearer ${config.hfApiToken}")
                     }
@@ -201,9 +210,9 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
                             val downloadedMb = bytesDownloaded / (1024 * 1024)
                             val totalMb = if (totalBytes > 0) totalBytes / (1024 * 1024) else 0
                             val statusText = if (totalBytes > 0) {
-                                "Downloading Gemma 4 E2B GPU: $downloadedMb / $totalMb MB (${(progress * 100).toInt()}%) • ${speedKbps.toInt()} KB/s"
+                                "Downloading Gemma 4 E2B: $downloadedMb / $totalMb MB (${(progress * 100).toInt()}%) • ${speedKbps.toInt()} KB/s"
                             } else {
-                                "Downloading Gemma 4 E2B GPU: $downloadedMb MB • ${speedKbps.toInt()} KB/s"
+                                "Downloading Gemma 4 E2B: $downloadedMb MB • ${speedKbps.toInt()} KB/s"
                             }
 
                             _modelStatus.value = _modelStatus.value.copy(
@@ -225,7 +234,7 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
                     _modelStatus.value = LocalModelStatus(
                         isDownloaded = true,
                         downloadProgress = 1.0f,
-                        statusText = "Gemma 4 E2B GPU downloaded & ready (${targetFile.length() / (1024 * 1024)} MB)",
+                        statusText = "Gemma 4 E2B downloaded & ready (${targetFile.length() / (1024 * 1024)} MB)",
                         modelSizeBytes = targetFile.length(),
                         downloadedBytes = targetFile.length(),
                         totalBytes = targetFile.length(),
@@ -262,37 +271,39 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
         }
 
         try {
-            _modelStatus.value = _modelStatus.value.copy(statusText = "Initializing MediaPipe LLM engine...")
-            llmInference?.close()
+            _modelStatus.value = _modelStatus.value.copy(statusText = "Loading LiteRT-LM engine into memory...")
+            conversation?.close()
+            conversation = null
+            engine?.close()
+            engine = null
 
-            val primaryBackend = if (config.useGpuAccelerator) LlmInference.Backend.GPU else LlmInference.Backend.CPU
+            val backend = if (config.useGpuAccelerator) Backend.GPU() else Backend.CPU()
+            val engineConfig = EngineConfig(
+                modelPath = file.absolutePath,
+                backend = backend,
+                cacheDir = context.cacheDir.path
+            )
 
-            llmInference = try {
-                val options = LlmInference.LlmInferenceOptions.builder()
-                    .setModelPath(file.absolutePath)
-                    .setMaxTokens(config.maxTokens.coerceAtMost(1024))
-                    .setPreferredBackend(primaryBackend)
-                    .build()
-                LlmInference.createFromOptions(context, options)
-            } catch (_: Throwable) {
-                val cpuOptions = LlmInference.LlmInferenceOptions.builder()
-                    .setModelPath(file.absolutePath)
-                    .setMaxTokens(config.maxTokens.coerceAtMost(1024))
-                    .setPreferredBackend(LlmInference.Backend.CPU)
-                    .build()
-                LlmInference.createFromOptions(context, cpuOptions)
-            }
+            val newEngine = Engine(engineConfig)
+            newEngine.initialize()
+            engine = newEngine
+
+            conversation = newEngine.createConversation(
+                ConversationConfig(
+                    systemInstruction = Contents.of("You are Whisk AI, a senior developer knowledge workspace assistant.")
+                )
+            )
 
             _modelStatus.value = _modelStatus.value.copy(
                 isLoaded = true,
-                statusText = "Gemma 4 E2B LiteRT active",
+                statusText = "LiteRT-LM Gemma Engine active",
                 loadError = null
             )
             true
         } catch (e: Throwable) {
             _modelStatus.value = _modelStatus.value.copy(
                 isLoaded = false,
-                statusText = "Local model unavailable: ${e.message}",
+                statusText = "Initialization failed: ${e.message}",
                 loadError = e.message
             )
             false
@@ -300,47 +311,21 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     }
 
     fun generateStream(prompt: String, contextText: String = "", config: AiConfig = AiConfig()): Flow<String> = callbackFlow {
-        val file = getModelFile()
-        if (!file.exists() || file.length() < 50_000_000L) {
-            trySend("Local Gemma 2B model is not downloaded yet. Please tap 'Download Gemma 2B' above or switch to a Cloud Provider / Developer Copilot Mode.")
+        val activeConv = conversation
+        if (activeConv == null) {
+            trySend("Error: LiteRT-LM conversation engine is not initialized.")
             close()
             return@callbackFlow
         }
 
-        val fullPrompt = buildString {
-            append("<start_of_turn>user\n")
-            if (contextText.isNotBlank()) {
-                append("Context:\n").append(contextText).append("\n\n")
-            }
-            append("User Question:\n").append(prompt).append("<end_of_turn>\n")
-            append("<start_of_turn>model\n")
-        }
-
-        if (llmInference == null) {
-            val initialized = initializeEngine(config)
-            if (!initialized || llmInference == null) {
-                val errorMsg = _modelStatus.value.loadError ?: "Local model is not initialized or not downloaded."
-                trySend("Error: $errorMsg")
-                close()
-                return@callbackFlow
-            }
-        }
+        val fullText = if (contextText.isNotBlank()) "Context:\n$contextText\n\nPrompt:\n$prompt" else prompt
 
         try {
-            val activeInference = llmInference
-            if (activeInference != null) {
-                activeInference.generateResponseAsync(fullPrompt) { partialResult, done ->
-                    if (!partialResult.isNullOrEmpty()) {
-                        trySend(partialResult)
-                    }
-                    if (done) {
-                        close()
-                    }
-                }
-            } else {
-                trySend("Error: LLM Inference instance unavailable.")
-                close()
+            val asyncReply = activeConv.sendMessageAsync(fullText)
+            asyncReply.collect { messageChunk ->
+                trySend(messageChunk.toString())
             }
+            close()
         } catch (e: Exception) {
             trySend("Inference Exception: ${e.message}")
             close()
@@ -350,8 +335,14 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     }.flowOn(Dispatchers.IO)
 
     suspend fun deleteModel(): Boolean = withContext(Dispatchers.IO) {
-        llmInference?.close()
-        llmInference = null
+        try {
+            conversation?.close()
+        } catch (_: Exception) {}
+        try {
+            engine?.close()
+        } catch (_: Exception) {}
+        conversation = null
+        engine = null
 
         val file = getModelFile()
         if (file.exists()) {
@@ -367,7 +358,14 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     }
 
     override fun close() {
-        llmInference?.close()
-        llmInference = null
+        try {
+            conversation?.close()
+        } catch (_: Exception) {}
+        try {
+            engine?.close()
+        } catch (_: Exception) {}
+        conversation = null
+        engine = null
+        executor.shutdown()
     }
 }

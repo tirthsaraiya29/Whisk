@@ -33,10 +33,16 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     androidResources {
-        noCompress += listOf("bin", "task", "tflite")
+        noCompress += listOf("bin", "task", "tflite", "litertlm")
     }
     buildFeatures {
         compose = true
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        freeCompilerArgs.add("-Xskip-metadata-version-check")
     }
 }
 
@@ -74,7 +80,9 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.security.crypto)
     implementation(libs.mediapipe.tasks.genai)
-    implementation(libs.litertlm.android)
+    implementation(libs.litertlm.android) {
+        exclude(group = "org.jetbrains.kotlin")
+    }
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

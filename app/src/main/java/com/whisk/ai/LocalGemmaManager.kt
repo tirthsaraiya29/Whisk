@@ -27,7 +27,26 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     val modelStatus: StateFlow<LocalModelStatus> = _modelStatus.asStateFlow()
 
     private val modelFileName = "gemma-4-E2B-it-gpu.litertlm"
-    fun getModelFile(): File = File(context.getExternalFilesDir(null) ?: context.filesDir, modelFileName)
+    fun getModelFile(): File {
+        val extDir = context.getExternalFilesDir(null)
+        val extFile = File(extDir, modelFileName)
+        if (extFile.exists() && extFile.length() > 50_000_000L) return extFile
+
+        val intFile = File(context.filesDir, modelFileName)
+        if (intFile.exists() && intFile.length() > 50_000_000L) return intFile
+
+        val candidateInExt = extDir?.listFiles()?.firstOrNull {
+            (it.name.endsWith(".litertlm") || it.name.endsWith(".task") || it.name.endsWith(".bin") || it.name.endsWith(".tflite")) && it.length() > 50_000_000L
+        }
+        if (candidateInExt != null) return candidateInExt
+
+        val candidateInInt = context.filesDir.listFiles()?.firstOrNull {
+            (it.name.endsWith(".litertlm") || it.name.endsWith(".task") || it.name.endsWith(".bin") || it.name.endsWith(".tflite")) && it.length() > 50_000_000L
+        }
+        if (candidateInInt != null) return candidateInInt
+
+        return extFile
+    }
 
     private var llmInference: LlmInference? = null
 
@@ -295,10 +314,13 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
             return@callbackFlow
         }
 
-        val fullPrompt = if (contextText.isNotBlank()) {
-            "Context:\n$contextText\n\nUser Question:\n$prompt\n\nAnswer concisely as a senior developer:"
-        } else {
-            "User Question:\n$prompt\n\nAnswer concisely as a senior developer:"
+        val fullPrompt = buildString {
+            append("<start_of_turn>user\n")
+            if (contextText.isNotBlank()) {
+                append("Context:\n").append(contextText).append("\n\n")
+            }
+            append("User Question:\n").append(prompt).append("<end_of_turn>\n")
+            append("<start_of_turn>model\n")
         }
 
         if (llmInference == null) {

@@ -93,12 +93,27 @@ class AiViewModel(
         val assistantMsgId = java.util.UUID.randomUUID().toString()
         val initialAssistantMsg = AiMessage(id = assistantMsgId, role = AiRole.ASSISTANT, content = "")
 
+        val existingHistory = _messages.value
         _messages.value = _messages.value + userMsg + initialAssistantMsg
         _isGenerating.value = true
 
         val config = uiState.value.config
         val localStatus = uiState.value.localStatus
         val activeNote = _contextPayload.value.activeNote
+
+        val historyContext = buildString {
+            if (existingHistory.isNotEmpty()) {
+                append("Previous Conversation:\n")
+                existingHistory.takeLast(6).forEach { msg ->
+                    val sender = if (msg.role == AiRole.USER) "User" else "Assistant"
+                    if (msg.content.isNotBlank()) {
+                        append("$sender: ").append(msg.content.take(200)).append("\n")
+                    }
+                }
+                append("\n")
+            }
+            append(_contextPayload.value.formatContext())
+        }
 
         generationJob = viewModelScope.launch {
             val isLocalGemmaNotReady = config.providerType == AiProviderType.LOCAL_GEMMA &&
@@ -108,21 +123,26 @@ class AiViewModel(
                     config.apiKey.isBlank()
 
             val streamFlow: Flow<String> = if (isLocalGemmaNotReady || isCloudMissingKey) {
-                // Execute intelligent Developer Simulation Copilot Engine
                 generateSimulatedCopilotResponse(userText, activeNote)
             } else if (config.providerType == AiProviderType.LOCAL_GEMMA) {
-                localGemmaManager.generateStream(userText, _contextPayload.value.formatContext(), config)
+                localGemmaManager.generateStream(userText, historyContext, config)
             } else {
-                remoteAiManager.generateStream(userText, _contextPayload.value.formatContext(), config)
+                remoteAiManager.generateStream(userText, historyContext, config)
             }
 
             val contentBuilder = StringBuilder()
+            var lastUpdateMs = 0L
+
             try {
                 streamFlow.collect { chunk ->
                     contentBuilder.append(chunk)
-                    val currentContent = contentBuilder.toString()
-                    _messages.value = _messages.value.map { msg ->
-                        if (msg.id == assistantMsgId) msg.copy(content = currentContent) else msg
+                    val now = System.currentTimeMillis()
+                    if (now - lastUpdateMs > 50L) {
+                        lastUpdateMs = now
+                        val currentText = contentBuilder.toString()
+                        _messages.value = _messages.value.map { msg ->
+                            if (msg.id == assistantMsgId) msg.copy(content = currentText) else msg
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -132,6 +152,9 @@ class AiViewModel(
             } finally {
                 _isGenerating.value = false
                 val finalRes = contentBuilder.toString()
+                _messages.value = _messages.value.map { msg ->
+                    if (msg.id == assistantMsgId) msg.copy(content = finalRes) else msg
+                }
                 if (finalRes.contains("```")) {
                     _generatedEditPreview.value = finalRes
                 }

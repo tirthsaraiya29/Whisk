@@ -118,7 +118,7 @@ fun LiquidGlassBottomBar(
                 LiquidGlassBox(
                     modifier = Modifier
                         .weight(1f)
-                        .height(64.dp),
+                        .height(58.dp),
                     shape = CircleShape,
                     blurRadius = 24.dp,
                     elevation = 12.dp,
@@ -236,11 +236,11 @@ fun LiquidGlassBottomBar(
                                             text = dest.label,
                                             style = TextStyle(
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                fontSize = 9.5.sp,
+                                                fontSize = 11.sp,
                                                 color = if (isSelected) activeColor else inactiveColor
                                             ),
                                             maxLines = 1,
-                                            modifier = Modifier.padding(top = 2.dp)
+                                            modifier = Modifier.padding(top = 1.dp)
                                         )
                                     }
                                 }
@@ -254,7 +254,7 @@ fun LiquidGlassBottomBar(
                 val quickAddInteractionSource = remember { MutableInteractionSource() }
                 LiquidGlassBox(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(58.dp)
                         .jellyPressEffect(quickAddInteractionSource)
                         .clickable(
                             interactionSource = quickAddInteractionSource,

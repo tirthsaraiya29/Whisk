@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.HazeState
 
 /**
  * Native iOS-Inspired Liquid Glass Top App Bar Chrome.
@@ -39,6 +40,7 @@ fun LiquidGlassTopBar(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     onBackClick: (() -> Unit)? = null,
+    hazeState: HazeState? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
@@ -49,19 +51,20 @@ fun LiquidGlassTopBar(
         modifier = modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = 14.dp, vertical = 6.dp)
+            .padding(horizontal = 14.dp, vertical = 4.dp)
     ) {
         LiquidGlassBox(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 58.dp),
+                .heightIn(min = 56.dp),
             shape = RoundedCornerShape(22.dp),
             blurRadius = 20.dp,
             elevation = 6.dp,
-            isDarkTheme = isDarkTheme
+            isDarkTheme = isDarkTheme,
+            hazeState = hazeState
         ) {
             Box(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Row(
@@ -105,9 +108,7 @@ fun LiquidGlassTopBar(
                             if (!subtitle.isNullOrBlank()) {
                                 Text(
                                     text = subtitle,
-                                    style = androidx.compose.ui.text.TextStyle(
-                                        fontSize = 11.sp
-                                    ),
+                                    style = MaterialTheme.typography.labelSmall,
                                     color = subtitleColor,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis

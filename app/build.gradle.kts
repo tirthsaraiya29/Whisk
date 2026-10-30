@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.security.crypto)
     implementation(libs.mediapipe.tasks.genai)
+    implementation(libs.litertlm.android)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

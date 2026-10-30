@@ -70,8 +70,8 @@ fun AiWorkspaceScreen(
     val activeNote = state.contextPayload.activeNote
     val listState = rememberLazyListState()
 
-    // Auto scroll chat list to latest message
-    LaunchedEffect(state.messages.size) {
+    val lastMessageContent = state.messages.lastOrNull()?.content ?: ""
+    LaunchedEffect(state.messages.size, lastMessageContent.length) {
         if (state.messages.isNotEmpty()) {
             listState.animateScrollToItem(state.messages.size - 1)
         }

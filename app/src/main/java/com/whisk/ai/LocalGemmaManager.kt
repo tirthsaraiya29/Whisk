@@ -265,41 +265,34 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
             _modelStatus.value = _modelStatus.value.copy(statusText = "Initializing MediaPipe LLM engine...")
             llmInference?.close()
 
-            val backend = if (config.useGpuAccelerator) LlmInference.Backend.GPU else LlmInference.Backend.CPU
-
-            val optionsBuilder = LlmInference.LlmInferenceOptions.builder()
-                .setModelPath(file.absolutePath)
-                .setMaxTokens(config.maxTokens)
-                .setPreferredBackend(backend)
-
-            val options = optionsBuilder.build()
+            val primaryBackend = if (config.useGpuAccelerator) LlmInference.Backend.GPU else LlmInference.Backend.CPU
 
             llmInference = try {
+                val options = LlmInference.LlmInferenceOptions.builder()
+                    .setModelPath(file.absolutePath)
+                    .setMaxTokens(config.maxTokens.coerceAtMost(1024))
+                    .setPreferredBackend(primaryBackend)
+                    .build()
                 LlmInference.createFromOptions(context, options)
-            } catch (e: Exception) {
-                if (config.useGpuAccelerator) {
-                    // Fallback to CPU backend if GPU fails
-                    val cpuOptions = LlmInference.LlmInferenceOptions.builder()
-                        .setModelPath(file.absolutePath)
-                        .setMaxTokens(config.maxTokens)
-                        .setPreferredBackend(LlmInference.Backend.CPU)
-                        .build()
-                    LlmInference.createFromOptions(context, cpuOptions)
-                } else {
-                    throw e
-                }
+            } catch (_: Throwable) {
+                val cpuOptions = LlmInference.LlmInferenceOptions.builder()
+                    .setModelPath(file.absolutePath)
+                    .setMaxTokens(config.maxTokens.coerceAtMost(1024))
+                    .setPreferredBackend(LlmInference.Backend.CPU)
+                    .build()
+                LlmInference.createFromOptions(context, cpuOptions)
             }
 
             _modelStatus.value = _modelStatus.value.copy(
                 isLoaded = true,
-                statusText = "Gemma 4 E2B LiteRT active (${if (config.useGpuAccelerator) "GPU" else "CPU"})",
+                statusText = "Gemma 4 E2B LiteRT active",
                 loadError = null
             )
             true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             _modelStatus.value = _modelStatus.value.copy(
                 isLoaded = false,
-                statusText = "Engine initialization failed: ${e.message}",
+                statusText = "Local model unavailable: ${e.message}",
                 loadError = e.message
             )
             false

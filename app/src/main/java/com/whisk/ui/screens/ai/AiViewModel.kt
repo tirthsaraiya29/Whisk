@@ -125,7 +125,12 @@ class AiViewModel(
             val streamFlow: Flow<String> = if (isLocalGemmaNotReady || isCloudMissingKey) {
                 generateSimulatedCopilotResponse(userText, activeNote)
             } else if (config.providerType == AiProviderType.LOCAL_GEMMA) {
-                localGemmaManager.generateStream(userText, historyContext, config)
+                val initSuccess = localGemmaManager.initializeEngine(config)
+                if (initSuccess) {
+                    localGemmaManager.generateStream(userText, historyContext, config)
+                } else {
+                    generateSimulatedCopilotResponse(userText, activeNote)
+                }
             } else {
                 remoteAiManager.generateStream(userText, historyContext, config)
             }

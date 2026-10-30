@@ -412,6 +412,9 @@ fun WhiskApp(
                     onDownloadModel = { viewModel.downloadLocalModel() },
                     onSwitchProvider = { provider -> viewModel.switchProvider(provider) },
                     onClearHistory = { viewModel.clearHistory() },
+                    onStartNewSession = { viewModel.startNewSession() },
+                    onLoadSession = { session -> viewModel.loadSession(session) },
+                    onDeleteSession = { id -> viewModel.deleteSession(id) },
                     onApplyEdit = { edit ->
                         scope.launch {
                             val currentNote = state.contextPayload.activeNote
@@ -428,7 +431,15 @@ fun WhiskApp(
                             viewModel.dismissEditPreview()
                         }
                     },
-                    onDismissEdit = { viewModel.dismissEditPreview() }
+                    onDismissEdit = { viewModel.dismissEditPreview() },
+                    onOpenNote = { targetNoteIdOrTitle ->
+                        scope.launch {
+                            val target = notesRepository.getNoteByTitle(targetNoteIdOrTitle) ?: notesRepository.getNoteById(targetNoteIdOrTitle)
+                            if (target != null) {
+                                navController.navigate("note_detail/${target.id}")
+                            }
+                        }
+                    }
                 )
             }
 

@@ -20,6 +20,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
+
+data class ChatSession(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String,
+    val timestamp: Long = System.currentTimeMillis(),
+    val messages: List<AiMessage>
+)
 
 data class AiUiState(
     val config: AiConfig = AiConfig(),
@@ -27,7 +38,8 @@ data class AiUiState(
     val messages: List<AiMessage> = emptyList(),
     val isGenerating: Boolean = false,
     val contextPayload: ContextPayload = ContextPayload(),
-    val generatedEditPreview: String? = null
+    val generatedEditPreview: String? = null,
+    val historySessions: List<ChatSession> = emptyList()
 )
 
 class AiViewModel(
@@ -40,13 +52,14 @@ class AiViewModel(
     private val _isGenerating = MutableStateFlow(false)
     private val _contextPayload = MutableStateFlow(ContextPayload())
     private val _generatedEditPreview = MutableStateFlow<String?>(null)
+    private val _historySessions = MutableStateFlow<List<ChatSession>>(emptyList())
 
     private var generationJob: Job? = null
 
     val uiState: StateFlow<AiUiState> = combine(
         combine(preferencesManager.aiConfig, localGemmaManager.modelStatus) { config, localStatus -> Pair(config, localStatus) },
         combine(_messages, _isGenerating) { messages, isGenerating -> Pair(messages, isGenerating) },
-        combine(_contextPayload, _generatedEditPreview) { contextPayload, editPreview -> Pair(contextPayload, editPreview) }
+        combine(_contextPayload, _generatedEditPreview, _historySessions) { contextPayload, editPreview, historySessions -> Triple(contextPayload, editPreview, historySessions) }
     ) { p1, p2, p3 ->
         AiUiState(
             config = p1.first,
@@ -54,7 +67,8 @@ class AiViewModel(
             messages = p2.first,
             isGenerating = p2.second,
             contextPayload = p3.first,
-            generatedEditPreview = p3.second
+            generatedEditPreview = p3.second,
+            historySessions = p3.third
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AiUiState())
 
@@ -88,7 +102,7 @@ class AiViewModel(
     fun sendMessage(userText: String) {
         if (userText.isBlank()) return
         val userMsg = AiMessage(role = AiRole.USER, content = userText)
-        val assistantMsgId = java.util.UUID.randomUUID().toString()
+        val assistantMsgId = UUID.randomUUID().toString()
         val initialAssistantMsg = AiMessage(id = assistantMsgId, role = AiRole.ASSISTANT, content = "")
 
         val existingHistory = _messages.value
@@ -130,7 +144,7 @@ class AiViewModel(
                 streamFlow.collect { chunk ->
                     contentBuilder.append(chunk)
                     val now = System.currentTimeMillis()
-                    if (now - lastUpdateMs > 50L) {
+                    if (now - lastUpdateMs > 30L) {
                         lastUpdateMs = now
                         val currentText = contentBuilder.toString()
                         _messages.value = _messages.value.map { msg ->
@@ -160,7 +174,35 @@ class AiViewModel(
         _isGenerating.value = false
     }
 
+    fun startNewSession() {
+        val currentMsgs = _messages.value
+        if (currentMsgs.isNotEmpty()) {
+            val firstUserMsg = currentMsgs.firstOrNull { it.role == AiRole.USER }?.content ?: "Conversation"
+            val titleSnippet = firstUserMsg.take(30).trim().ifBlank { "Conversation" }
+            val dateFormat = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+            val sessionTitle = "$titleSnippet (${dateFormat.format(Date())})"
+
+            val session = ChatSession(
+                title = sessionTitle,
+                messages = currentMsgs
+            )
+            _historySessions.value = listOf(session) + _historySessions.value
+        }
+        _messages.value = emptyList()
+        _generatedEditPreview.value = null
+    }
+
+    fun loadSession(session: ChatSession) {
+        startNewSession()
+        _messages.value = session.messages
+    }
+
+    fun deleteSession(sessionId: String) {
+        _historySessions.value = _historySessions.value.filterNot { it.id == sessionId }
+    }
+
     fun clearHistory() {
+        startNewSession()
         _messages.value = emptyList()
         _generatedEditPreview.value = null
     }

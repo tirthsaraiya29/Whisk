@@ -1,5 +1,10 @@
 package com.whisk.ui.screens.ai
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -28,15 +32,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -50,24 +55,32 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.AiProviderType
 import com.whisk.domain.model.AiRole
 import com.whisk.ui.components.CodeBlockView
+import com.whisk.ui.components.RenderMarkdownPreview
 import com.whisk.ui.components.WhiskTopBar
 import com.whisk.ui.theme.DotMatrixFontFamily
 import com.whisk.ui.theme.VercelMonoFontFamily
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,19 +91,64 @@ fun AiWorkspaceScreen(
     onDownloadModel: () -> Unit,
     onSwitchProvider: (AiProviderType) -> Unit,
     onClearHistory: () -> Unit,
+    onStartNewSession: () -> Unit = {},
+    onLoadSession: (ChatSession) -> Unit = {},
+    onDeleteSession: (String) -> Unit = {},
     onApplyEdit: (String) -> Unit,
     onDismissEdit: () -> Unit,
+    onOpenNote: (String) -> Unit = {},
     onMenuClick: (() -> Unit)? = null
 ) {
     val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     var inputText by remember { mutableStateOf("") }
+    var showHistorySheet by remember { mutableStateOf(false) }
+    var userScrolledUp by remember { mutableStateOf(false) }
+
     val activeNote = state.contextPayload.activeNote
     val listState = rememberLazyListState()
 
+    // Detect if scroll position is at the very bottom
+    val isAtBottom by remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf true
+            lastVisibleItem.index >= listState.layoutInfo.totalItemsCount - 1
+        }
+    }
+
+    // Reset userScrolledUp when user reaches bottom
+    LaunchedEffect(isAtBottom) {
+        if (isAtBottom) {
+            userScrolledUp = false
+        }
+    }
+
+    // Mark userScrolledUp when user manually drags up
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress && !isAtBottom) {
+            userScrolledUp = true
+        }
+    }
+
+    fun handleSendPrompt(promptText: String) {
+        if (promptText.isNotBlank()) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            userScrolledUp = false
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            onSendMessage(promptText)
+            inputText = ""
+        }
+    }
+
+    // Non-rigid auto-scroll during streaming: only if user has not scrolled up
     val lastMessageContent = state.messages.lastOrNull()?.content ?: ""
     LaunchedEffect(state.messages.size, lastMessageContent.length) {
-        if (state.messages.isNotEmpty()) {
-            listState.animateScrollToItem(state.messages.size - 1)
+        if (state.messages.isNotEmpty() && !userScrolledUp) {
+            listState.scrollToItem(state.messages.size - 1)
         }
     }
 
@@ -101,6 +159,16 @@ fun AiWorkspaceScreen(
                 subtitle = "ENGINE: ${state.config.providerType.name}",
                 onMenuClick = onMenuClick,
                 actions = {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        showHistorySheet = true
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "Chat History (${state.historySessions.size})",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                     if (state.messages.isNotEmpty()) {
                         IconButton(onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -108,7 +176,7 @@ fun AiWorkspaceScreen(
                         }) {
                             Icon(
                                 imageVector = Icons.Default.DeleteSweep,
-                                contentDescription = "Clear Chat",
+                                contentDescription = "Clear Active Chat",
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -274,10 +342,7 @@ fun AiWorkspaceScreen(
                         Box(
                             modifier = Modifier
                                 .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    onSendMessage(prompt)
-                                }
+                                .clickable { handleSendPrompt(prompt) }
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
@@ -293,81 +358,135 @@ fun AiWorkspaceScreen(
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
-            // Messages History or Empty State
-            if (state.messages.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        Text(
-                            text = "WHISK AI ASSISTANT",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = if (activeNote != null) {
-                                "GROUNDED IN '${activeNote.title.uppercase()}'. ASK QUESTIONS, GENERATE CODE, OR REQUEST EDITS."
-                            } else {
-                                "SELECT A NOTE FROM VAULT OR ASK A GENERAL TECHNICAL QUESTION."
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
+            // Messages History Viewport with Floating Scroll To Bottom Button
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                if (state.messages.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            Text(
+                                text = "WHISK AI ASSISTANT",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontFamily = DotMatrixFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = if (activeNote != null) {
+                                    "GROUNDED IN '${activeNote.title.uppercase()}'. ASK QUESTIONS, GENERATE CODE, OR REQUEST EDITS."
+                                } else {
+                                    "SELECT A NOTE FROM VAULT OR ASK A GENERAL TECHNICAL QUESTION."
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(state.messages, key = { it.id }) { msg ->
+                            val isUser = msg.role == AiRole.USER
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.95f)
+                                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                        .background(
+                                            if (isUser) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
+                                        )
+                                        .padding(10.dp)
+                                ) {
+                                    Text(
+                                        text = if (isUser) "[YOU]" else "[WHISK_AI]",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontFamily = DotMatrixFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    if (isUser) {
+                                        Text(
+                                            text = msg.content.ifBlank { "..." },
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontFamily = VercelMonoFontFamily,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    } else {
+                                        RenderMarkdownPreview(
+                                            body = msg.content.ifBlank { "..." },
+                                            onLinkClick = { noteIdOrTitle -> onOpenNote(noteIdOrTitle) },
+                                            onBodyChange = {}
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            } else {
-                LazyColumn(
-                    state = listState,
+
+                // Floating Scroll to Bottom Button
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = !isAtBottom && state.messages.isNotEmpty(),
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 12.dp, end = 12.dp)
                 ) {
-                    items(state.messages, key = { it.id }) { msg ->
-                        val isUser = msg.role == AiRole.USER
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.9f)
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                                    .background(
-                                        if (isUser) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
-                                    )
-                                    .padding(10.dp)
-                            ) {
-                                Text(
-                                    text = if (isUser) "[YOU]" else "[WHISK_AI]",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = DotMatrixFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = msg.content.ifBlank { "..." },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontFamily = VercelMonoFontFamily,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                    Box(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                userScrolledUp = false
+                                scope.launch {
+                                    listState.animateScrollToItem(state.messages.size - 1)
+                                }
                             }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDownward,
+                                contentDescription = "Scroll to Bottom",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "LATEST",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
@@ -413,14 +532,10 @@ fun AiWorkspaceScreen(
                         .background(MaterialTheme.colorScheme.primary)
                         .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
                         .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             if (state.isGenerating) {
                                 onStopGeneration()
                             } else {
-                                if (inputText.isNotBlank()) {
-                                    onSendMessage(inputText)
-                                    inputText = ""
-                                }
+                                handleSendPrompt(inputText)
                             }
                         },
                     contentAlignment = Alignment.Center
@@ -443,6 +558,120 @@ fun AiWorkspaceScreen(
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .height(58.dp)
                 )
+            }
+        }
+    }
+
+    // Chat History Sessions Modal Sheet
+    if (showHistorySheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showHistorySheet = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(0.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "CHAT SESSIONS // [${state.historySessions.size}]",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showHistorySheet = false
+                                onStartNewSession()
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "+ NEW CHAT",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (state.historySessions.isEmpty()) {
+                    Text(
+                        text = "NO PREVIOUS CHAT SESSIONS SAVED IN HISTORY.",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                    ) {
+                        items(state.historySessions, key = { it.id }) { session ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        showHistorySheet = false
+                                        onLoadSession(session)
+                                    }
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = session.title.uppercase(),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = DotMatrixFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = "${session.messages.size} MESSAGES",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontFamily = DotMatrixFontFamily,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    )
+                                }
+
+                                IconButton(onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onDeleteSession(session.id)
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete Session",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

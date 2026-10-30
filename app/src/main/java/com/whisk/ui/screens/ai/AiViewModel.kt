@@ -20,11 +20,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
+@Serializable
 data class ChatSession(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
@@ -39,7 +43,8 @@ data class AiUiState(
     val isGenerating: Boolean = false,
     val contextPayload: ContextPayload = ContextPayload(),
     val generatedEditPreview: String? = null,
-    val historySessions: List<ChatSession> = emptyList()
+    val historySessions: List<ChatSession> = emptyList(),
+    val activeSessionTitle: String = "NEW CHAT"
 )
 
 class AiViewModel(
@@ -53,13 +58,38 @@ class AiViewModel(
     private val _contextPayload = MutableStateFlow(ContextPayload())
     private val _generatedEditPreview = MutableStateFlow<String?>(null)
     private val _historySessions = MutableStateFlow<List<ChatSession>>(emptyList())
+    private val _activeSessionId = MutableStateFlow<String?>(null)
+    private val _activeSessionTitle = MutableStateFlow("NEW CHAT")
 
     private var generationJob: Job? = null
+    private val json = Json { ignoreUnknownKeys = true; prettyPrint = false }
+
+    init {
+        // Load persisted chat sessions from DataStore
+        viewModelScope.launch {
+            preferencesManager.savedAiSessionsJson.collect { jsonStr ->
+                if (jsonStr.isNotBlank() && jsonStr != "[]") {
+                    try {
+                        val loadedSessions = json.decodeFromString<List<ChatSession>>(jsonStr)
+                        _historySessions.value = loadedSessions
+                        if (_messages.value.isEmpty() && loadedSessions.isNotEmpty()) {
+                            val mostRecent = loadedSessions.first()
+                            _activeSessionId.value = mostRecent.id
+                            _activeSessionTitle.value = mostRecent.title
+                            _messages.value = mostRecent.messages
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+    }
 
     val uiState: StateFlow<AiUiState> = combine(
         combine(preferencesManager.aiConfig, localGemmaManager.modelStatus) { config, localStatus -> Pair(config, localStatus) },
         combine(_messages, _isGenerating) { messages, isGenerating -> Pair(messages, isGenerating) },
-        combine(_contextPayload, _generatedEditPreview, _historySessions) { contextPayload, editPreview, historySessions -> Triple(contextPayload, editPreview, historySessions) }
+        combine(_contextPayload, _generatedEditPreview, _historySessions, _activeSessionTitle) { contextPayload, editPreview, historySessions, title ->
+            Quadruple(contextPayload, editPreview, historySessions, title)
+        }
     ) { p1, p2, p3 ->
         AiUiState(
             config = p1.first,
@@ -68,7 +98,8 @@ class AiViewModel(
             isGenerating = p2.second,
             contextPayload = p3.first,
             generatedEditPreview = p3.second,
-            historySessions = p3.third
+            historySessions = p3.third,
+            activeSessionTitle = p3.fourth
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AiUiState())
 
@@ -99,8 +130,52 @@ class AiViewModel(
         }
     }
 
+    private fun generateAutomaticTitle(userText: String): String {
+        val snippet = userText.trim().lines().firstOrNull()?.take(28)?.trim() ?: "AI CHAT"
+        val cleanTitle = snippet.replace(Regex("[^a-zA-Z0-9\\s_\\-]"), "").trim().uppercase()
+        return if (cleanTitle.isNotBlank()) cleanTitle else "AI CHAT"
+    }
+
+    private fun persistCurrentSession() {
+        val currentMsgs = _messages.value
+        if (currentMsgs.isEmpty()) return
+
+        var sessionId = _activeSessionId.value
+        if (sessionId == null) {
+            sessionId = UUID.randomUUID().toString()
+            _activeSessionId.value = sessionId
+        }
+
+        val sessionTitle = _activeSessionTitle.value
+
+        val updatedSession = ChatSession(
+            id = sessionId,
+            title = sessionTitle,
+            timestamp = System.currentTimeMillis(),
+            messages = currentMsgs
+        )
+
+        val updatedHistory = listOf(updatedSession) + _historySessions.value.filterNot { it.id == sessionId }
+        _historySessions.value = updatedHistory
+
+        viewModelScope.launch {
+            try {
+                val jsonStr = json.encodeToString(updatedHistory)
+                preferencesManager.saveAiSessionsJson(jsonStr)
+            } catch (_: Exception) {}
+        }
+    }
+
     fun sendMessage(userText: String) {
         if (userText.isBlank()) return
+
+        // Automatic Title Generation on first message of a session
+        if (_messages.value.isEmpty() || _activeSessionId.value == null) {
+            val autoTitle = generateAutomaticTitle(userText)
+            _activeSessionTitle.value = autoTitle
+            _activeSessionId.value = UUID.randomUUID().toString()
+        }
+
         val userMsg = AiMessage(role = AiRole.USER, content = userText)
         val assistantMsgId = UUID.randomUUID().toString()
         val initialAssistantMsg = AiMessage(id = assistantMsgId, role = AiRole.ASSISTANT, content = "")
@@ -108,6 +183,8 @@ class AiViewModel(
         val existingHistory = _messages.value
         _messages.value = _messages.value + userMsg + initialAssistantMsg
         _isGenerating.value = true
+
+        persistCurrentSession()
 
         val config = uiState.value.config
 
@@ -150,6 +227,7 @@ class AiViewModel(
                         _messages.value = _messages.value.map { msg ->
                             if (msg.id == assistantMsgId) msg.copy(content = currentText) else msg
                         }
+                        persistCurrentSession() // Token-by-token live saving
                     }
                 }
             } catch (e: Exception) {
@@ -162,6 +240,7 @@ class AiViewModel(
                 _messages.value = _messages.value.map { msg ->
                     if (msg.id == assistantMsgId) msg.copy(content = finalRes) else msg
                 }
+                persistCurrentSession() // Final token save
                 if (finalRes.contains("```")) {
                     _generatedEditPreview.value = finalRes
                 }
@@ -172,39 +251,42 @@ class AiViewModel(
     fun stopGeneration() {
         generationJob?.cancel()
         _isGenerating.value = false
+        persistCurrentSession()
     }
 
     fun startNewSession() {
-        val currentMsgs = _messages.value
-        if (currentMsgs.isNotEmpty()) {
-            val firstUserMsg = currentMsgs.firstOrNull { it.role == AiRole.USER }?.content ?: "Conversation"
-            val titleSnippet = firstUserMsg.take(30).trim().ifBlank { "Conversation" }
-            val dateFormat = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
-            val sessionTitle = "$titleSnippet (${dateFormat.format(Date())})"
-
-            val session = ChatSession(
-                title = sessionTitle,
-                messages = currentMsgs
-            )
-            _historySessions.value = listOf(session) + _historySessions.value
-        }
+        persistCurrentSession()
+        _activeSessionId.value = UUID.randomUUID().toString()
+        _activeSessionTitle.value = "NEW CHAT"
         _messages.value = emptyList()
         _generatedEditPreview.value = null
     }
 
     fun loadSession(session: ChatSession) {
-        startNewSession()
+        persistCurrentSession()
+        _activeSessionId.value = session.id
+        _activeSessionTitle.value = session.title
         _messages.value = session.messages
+        _generatedEditPreview.value = null
     }
 
     fun deleteSession(sessionId: String) {
         _historySessions.value = _historySessions.value.filterNot { it.id == sessionId }
+        if (_activeSessionId.value == sessionId) {
+            _activeSessionId.value = null
+            _activeSessionTitle.value = "NEW CHAT"
+            _messages.value = emptyList()
+        }
+        viewModelScope.launch {
+            try {
+                val jsonStr = json.encodeToString(_historySessions.value)
+                preferencesManager.saveAiSessionsJson(jsonStr)
+            } catch (_: Exception) {}
+        }
     }
 
     fun clearHistory() {
         startNewSession()
-        _messages.value = emptyList()
-        _generatedEditPreview.value = null
     }
 
     fun dismissEditPreview() {
@@ -216,3 +298,10 @@ class AiViewModel(
         localGemmaManager.close()
     }
 }
+
+private data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)

@@ -156,7 +156,7 @@ fun AiWorkspaceScreen(
         topBar = {
             WhiskTopBar(
                 title = "WHISK // AI WORKSPACE",
-                subtitle = "ENGINE: ${state.config.providerType.name}",
+                subtitle = "${state.activeSessionTitle} // ${state.config.providerType.name}",
                 onMenuClick = onMenuClick,
                 actions = {
                     IconButton(onClick = {

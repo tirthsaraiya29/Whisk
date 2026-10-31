@@ -18,21 +18,21 @@ import androidx.compose.ui.unit.sp
 object MarkdownParser {
 
     private val inlineRegex = Regex(
-        "(\\[\\[(?<wikilink>.*?)\\]\\])|" +
-        "(\\[(?<linktext>.*?)\\]\\((?<linkurl>.*?)\\))|" +
+        "(\\[\\[(?<wikilink>.*?)]])|" +
+        "(\\[(?<linktext>.*?)]\\((?<linkurl>.*?)\\))|" +
         "(\\*\\*(?<bold1>.*?)\\*\\*)|" +
         "(__(?<bold2>.*?)__)|" +
         "(\\*(?<italic1>.*?)\\*)|" +
         "(_(?<italic2>.*?)_)|" +
         "(`(?<codeText>.*?)`)|" +
-        "(~~(?<strike>.*?)~~)"
+        "(~~(?<strike>.*?)~~)",
     )
 
     fun parseInlineMarkdown(
         text: String,
         primaryColor: Color,
         onBackgroundColor: Color,
-        codeBgColor: Color
+        codeBgColor: Color,
     ): AnnotatedString {
         if (text.isEmpty()) return AnnotatedString("")
 
@@ -71,19 +71,19 @@ object MarkdownParser {
                             style = SpanStyle(
                                 color = primaryColor,
                                 fontWeight = FontWeight.SemiBold,
-                                background = primaryColor.copy(alpha = 0.15f)
+                                background = primaryColor.copy(alpha = 0.15f),
                             ),
                             start = linkStart,
-                            end = linkEnd
+                            end = linkEnd,
                         )
                         addStringAnnotation(
                             tag = "NOTE_LINK",
                             annotation = cleanTitle,
                             start = linkStart,
-                            end = linkEnd
+                            end = linkEnd,
                         )
                     }
-                    linkText != null && linkUrl != null -> {
+                    (linkText != null) && (linkUrl != null) -> {
                         val linkStart = length
                         append(linkText)
                         val linkEnd = length
@@ -92,16 +92,16 @@ object MarkdownParser {
                             style = SpanStyle(
                                 color = primaryColor,
                                 fontWeight = FontWeight.Medium,
-                                textDecoration = TextDecoration.Underline
+                                textDecoration = TextDecoration.Underline,
                             ),
                             start = linkStart,
-                            end = linkEnd
+                            end = linkEnd,
                         )
                         addStringAnnotation(
                             tag = "URL_LINK",
                             annotation = linkUrl,
                             start = linkStart,
-                            end = linkEnd
+                            end = linkEnd,
                         )
                     }
                     boldText != null -> {
@@ -109,9 +109,9 @@ object MarkdownParser {
                         append(boldText)
                         val endPos = length
                         addStyle(
-                            style = SpanStyle(fontWeight = FontWeight.Bold),
+                            style = SpanStyle(fontWeight = FontWeight.Bold, color = onBackgroundColor),
                             start = startPos,
-                            end = endPos
+                            end = endPos,
                         )
                     }
                     italicText != null -> {
@@ -121,7 +121,7 @@ object MarkdownParser {
                         addStyle(
                             style = SpanStyle(fontStyle = FontStyle.Italic),
                             start = startPos,
-                            end = endPos
+                            end = endPos,
                         )
                     }
                     codeText != null -> {
@@ -133,10 +133,10 @@ object MarkdownParser {
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 13.sp,
                                 background = codeBgColor,
-                                color = primaryColor
+                                color = primaryColor,
                             ),
                             start = startPos,
-                            end = endPos
+                            end = endPos,
                         )
                     }
                     strikeText != null -> {
@@ -146,7 +146,7 @@ object MarkdownParser {
                         addStyle(
                             style = SpanStyle(textDecoration = TextDecoration.LineThrough),
                             start = startPos,
-                            end = endPos
+                            end = endPos,
                         )
                     }
                     else -> {

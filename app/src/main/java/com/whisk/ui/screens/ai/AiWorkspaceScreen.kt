@@ -1,6 +1,5 @@
 package com.whisk.ui.screens.ai
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -33,15 +32,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -98,7 +95,7 @@ fun AiWorkspaceScreen(
     onApplyEdit: (String) -> Unit,
     onDismissEdit: () -> Unit,
     onOpenNote: (String) -> Unit = {},
-    onMenuClick: (() -> Unit)? = null
+    onMenuClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
@@ -106,8 +103,8 @@ fun AiWorkspaceScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var inputText by remember { mutableStateOf("") }
-    var showHistorySheet by remember { mutableStateOf(false) }
-    var userScrolledUp by remember { mutableStateOf(false) }
+    var showHistorySheet by remember { mutableStateOf(value = false) }
+    var userScrolledUp by remember { mutableStateOf(value = false) }
 
     val activeNote = state.contextPayload.activeNote
     val listState = rememberLazyListState()
@@ -118,11 +115,12 @@ fun AiWorkspaceScreen(
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
             val visibleItems = layoutInfo.visibleItemsInfo
-            if (visibleItems.isEmpty()) true
-            else {
+            if (visibleItems.isEmpty()) {
+                true
+            } else {
                 val lastVisible = visibleItems.last()
-                lastVisible.index == layoutInfo.totalItemsCount - 1 &&
-                    (lastVisible.offset + lastVisible.size) <= layoutInfo.viewportEndOffset + 80
+                (lastVisible.index == (layoutInfo.totalItemsCount - 1)) &&
+                    ((lastVisible.offset + lastVisible.size) <= (layoutInfo.viewportEndOffset + 80))
             }
         }
     }
@@ -169,77 +167,81 @@ fun AiWorkspaceScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onStartNewSession()
                             }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = "+ NEW",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
 
-                    IconButton(onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        showHistorySheet = true
-                    }) {
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            showHistorySheet = true
+                        },
+                    ) {
                         Icon(
                             imageVector = Icons.Default.History,
                             contentDescription = "Chat History (${state.historySessions.size})",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     if (state.messages.isNotEmpty()) {
-                        IconButton(onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onClearHistory()
-                        }) {
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onClearHistory()
+                            },
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.DeleteSweep,
                                 contentDescription = "Clear Active Chat",
-                                tint = MaterialTheme.colorScheme.onSurface
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .imePadding()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
         ) {
             // Provider Switcher Selector Bar
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 items(AiProviderType.entries.toTypedArray()) { provider ->
                     val isSelected = state.config.providerType == provider
                     Box(
                         modifier = Modifier
                             .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                             )
                             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onSwitchProvider(provider)
                             }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                     ) {
                         Text(
                             text = provider.name,
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
@@ -254,14 +256,14 @@ fun AiWorkspaceScreen(
                         .fillMaxWidth()
                         .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
                         .background(MaterialTheme.colorScheme.surface)
-                        .padding(10.dp)
+                        .padding(10.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Description,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(14.dp),
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -269,7 +271,7 @@ fun AiWorkspaceScreen(
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
@@ -277,25 +279,25 @@ fun AiWorkspaceScreen(
                         text = "${activeNote.body.length} CHARS • ~${state.contextPayload.estimateTokenCount()} TOKENS GROUNDED",
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
             // Local Model Download Banner
-            if (state.config.providerType == AiProviderType.LOCAL_GEMMA && !state.localStatus.isDownloaded) {
+            if ((state.config.providerType == AiProviderType.LOCAL_GEMMA) && (!state.localStatus.isDownloaded)) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                        .padding(12.dp)
+                        .padding(12.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(16.dp),
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -303,7 +305,7 @@ fun AiWorkspaceScreen(
                             style = MaterialTheme.typography.labelMedium,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     Text(
@@ -311,16 +313,16 @@ fun AiWorkspaceScreen(
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = DotMatrixFontFamily,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        modifier = Modifier.padding(vertical = 4.dp),
                     )
-                    if (state.localStatus.downloadProgress > 0f && state.localStatus.downloadProgress < 1f) {
+                    if ((state.localStatus.downloadProgress > 0f) && (state.localStatus.downloadProgress < 1f)) {
                         LinearProgressIndicator(
                             progress = { state.localStatus.downloadProgress },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 6.dp),
                             color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surface
+                            trackColor = MaterialTheme.colorScheme.surface,
                         )
                     } else {
                         Box(
@@ -332,14 +334,14 @@ fun AiWorkspaceScreen(
                                     onDownloadModel()
                                 }
                                 .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "DOWNLOAD MODEL FROM HUGGING FACE",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontFamily = DotMatrixFontFamily,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.onPrimary,
                             )
                         }
                     }
@@ -351,26 +353,26 @@ fun AiWorkspaceScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 listOf(
                     "SUMMARIZE NOTE" to "Summarize active note into key bullet points",
                     "EXPLAIN CODE" to "Explain code snippets in active note and suggest optimizations",
                     "EXTRACT TODOS" to "Extract TODO tasks from active note context",
-                    "DRAFT DOCS" to "Draft architecture documentation for this module"
+                    "DRAFT DOCS" to "Draft architecture documentation for this module",
                 ).forEach { (label, prompt) ->
                     item {
                         Box(
                             modifier = Modifier
                                 .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
                                 .clickable { handleSendPrompt(prompt) }
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                         ) {
                             Text(
                                 text = "> $label",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontFamily = DotMatrixFontFamily,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -461,8 +463,7 @@ fun AiWorkspaceScreen(
                                         RenderMarkdownPreview(
                                             body = msg.content.ifBlank { "..." },
                                             onLinkClick = { noteIdOrTitle -> onOpenNote(noteIdOrTitle) },
-                                            onBodyChange = {}
-                                        )
+                                        ) { _ -> }
                                     }
                                 }
                             }
@@ -473,8 +474,8 @@ fun AiWorkspaceScreen(
                 // Floating Scroll to Bottom Button
                 androidx.compose.animation.AnimatedVisibility(
                     visible = !isAtBottom && state.messages.isNotEmpty(),
-                    enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+                    enter = fadeIn() + slideInVertically { it },
+                    exit = fadeOut() + slideOutVertically { it },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(bottom = 12.dp, end = 12.dp)
@@ -562,10 +563,10 @@ fun AiWorkspaceScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (state.isGenerating) Icons.Default.Stop else Icons.Default.Send,
+                        imageVector = if (state.isGenerating) Icons.Default.Stop else Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send Prompt",
                         tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -678,10 +679,12 @@ fun AiWorkspaceScreen(
                                     )
                                 }
 
-                                IconButton(onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    onDeleteSession(session.id)
-                                }) {
+                                IconButton(
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onDeleteSession(session.id)
+                                    },
+                                ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete Session",

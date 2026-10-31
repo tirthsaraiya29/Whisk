@@ -18,23 +18,23 @@ data class SettingsUiState(
     val aiConfig: AiConfig = AiConfig(),
     val githubToken: String = "",
     val isExporting: Boolean = false,
-    val importResultText: String? = null
+    val importResultText: String? = null,
 )
 
 class SettingsViewModel(
     private val preferencesManager: PreferencesManager,
-    private val exportImportRepository: ExportImportRepository
+    private val exportImportRepository: ExportImportRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> = combine(
         preferencesManager.themeMode,
         preferencesManager.aiConfig,
-        preferencesManager.githubToken
+        preferencesManager.githubToken,
     ) { theme, aiConfig, ghToken ->
         SettingsUiState(
             themeMode = theme,
             aiConfig = aiConfig,
-            githubToken = ghToken
+            githubToken = ghToken,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 

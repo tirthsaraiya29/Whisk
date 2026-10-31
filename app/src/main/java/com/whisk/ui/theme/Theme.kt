@@ -7,7 +7,6 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -24,7 +23,7 @@ private val BrutalistDarkColorScheme = darkColorScheme(
     outline = DarkHairline,
     outlineVariant = DarkBorder,
     error = NothingRed,
-    onError = DarkTextPrimary
+    onError = DarkTextPrimary,
 )
 
 // Pure Brutalist Monochrome Light Scheme
@@ -40,13 +39,13 @@ private val BrutalistLightColorScheme = lightColorScheme(
     outline = LightHairline,
     outlineVariant = LightBorder,
     error = NothingRed,
-    onError = LightSurface
+    onError = LightSurface,
 )
 
 @Composable
 fun WhiskTheme(
     themeMode: String = "SYSTEM",
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val systemDark = isSystemInDarkTheme()
     val isDark = when (themeMode) {
@@ -61,8 +60,6 @@ fun WhiskTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            window.navigationBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !isDark
         }
@@ -71,6 +68,6 @@ fun WhiskTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }

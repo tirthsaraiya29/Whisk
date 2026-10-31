@@ -15,11 +15,11 @@ data class GraphUiState(
     val selectedNode: GraphNode? = null,
     val isLocalGraph: Boolean = false,
     val centerNoteId: String? = null,
-    val showOrphans: Boolean = true
+    val showOrphans: Boolean = true,
 )
 
 class GraphViewModel(
-    private val graphRepository: GraphRepository
+    private val graphRepository: GraphRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GraphUiState())
@@ -35,7 +35,7 @@ class GraphViewModel(
             _uiState.value = _uiState.value.copy(
                 graph = graph,
                 isLocalGraph = false,
-                centerNoteId = null
+                centerNoteId = null,
             )
         }
     }
@@ -46,7 +46,7 @@ class GraphViewModel(
             _uiState.value = _uiState.value.copy(
                 graph = graph,
                 isLocalGraph = true,
-                centerNoteId = centerNoteId
+                centerNoteId = centerNoteId,
             )
         }
     }

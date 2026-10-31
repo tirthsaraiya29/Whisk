@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -46,8 +45,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,14 +66,13 @@ fun KnowledgeGraphScreen(
     onOpenNote: (String) -> Unit,
     onResetGraph: () -> Unit,
     onToggleOrphans: () -> Unit,
-    onMenuClick: (() -> Unit)? = null
+    onMenuClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var nodeSearchQuery by remember { mutableStateOf("") }
 
-    val primaryColor = MaterialTheme.colorScheme.primary
     val nodeColorNote = MaterialTheme.colorScheme.primary
     val nodeColorTag = Color(0xFFD97706)
     val edgeColor = MaterialTheme.colorScheme.outline
@@ -111,7 +109,7 @@ fun KnowledgeGraphScreen(
         nodes.forEachIndexed { i, node ->
             val r = 90f * kotlin.math.sqrt(i.toFloat() + 1f)
             val theta = i * goldenAngle
-            posMap[node.id] = Offset(500f + r * cos(theta), 500f + r * sin(theta))
+            posMap[node.id] = Offset(500f + (r * cos(theta)), 500f + (r * sin(theta)))
         }
 
         val iterations = 45
@@ -138,21 +136,21 @@ fun KnowledgeGraphScreen(
                 }
             }
 
-            edgeList.forEach { edge ->
-                val pSrc = posMap[edge.sourceId] ?: return@forEach
-                val pTgt = posMap[edge.targetId] ?: return@forEach
+            edgeList.forEach { (sourceId, targetId) ->
+                val pSrc = posMap[sourceId] ?: return@forEach
+                val pTgt = posMap[targetId] ?: return@forEach
                 val delta = pSrc - pTgt
                 val dist = delta.getDistance().coerceAtLeast(1f)
                 val force = (delta / dist) * (kAttraction * dist)
-                disp[edge.sourceId] = (disp[edge.sourceId] ?: Offset.Zero) - force
-                disp[edge.targetId] = (disp[edge.targetId] ?: Offset.Zero) + force
+                disp[sourceId] = (disp[sourceId] ?: Offset.Zero) - force
+                disp[targetId] = (disp[targetId] ?: Offset.Zero) + force
             }
 
-            nodes.forEach { node ->
-                val curr = posMap[node.id] ?: Offset.Zero
-                val d = disp[node.id] ?: Offset.Zero
+            nodes.forEach { (id) ->
+                val curr = posMap[id] ?: Offset.Zero
+                val d = disp[id] ?: Offset.Zero
                 val limitedD = Offset(d.x.coerceIn(-25f, 25f), d.y.coerceIn(-25f, 25f))
-                posMap[node.id] = curr + limitedD
+                posMap[id] = curr + limitedD
             }
         }
         posMap
@@ -172,7 +170,7 @@ fun KnowledgeGraphScreen(
                         Icon(
                             imageVector = Icons.Default.FilterList,
                             contentDescription = "Toggle Orphans",
-                            tint = if (state.showOrphans) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            tint = if (state.showOrphans) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     IconButton(onClick = {
@@ -184,19 +182,19 @@ fun KnowledgeGraphScreen(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Recenter Graph",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .imePadding()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
         ) {
             // Node Filter Search Bar
             OutlinedTextField(
@@ -207,7 +205,7 @@ fun KnowledgeGraphScreen(
                         "> FILTER GRAPH NODES...",
                         fontFamily = DotMatrixFontFamily,
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 },
                 textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
@@ -215,13 +213,13 @@ fun KnowledgeGraphScreen(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
+                    unfocusedContainerColor = Color.Transparent,
                 ),
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 6.dp),
-                singleLine = true
+                singleLine = true,
             )
 
             // Legend Status Row
@@ -230,34 +228,34 @@ fun KnowledgeGraphScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(8.dp)
-                            .background(nodeColorNote)
+                            .background(nodeColorNote),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "NOTE",
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(8.dp)
-                            .background(nodeColorTag)
+                            .background(nodeColorTag),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "TAG",
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -268,7 +266,7 @@ fun KnowledgeGraphScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .weight(1f)
+                    .weight(1f),
             ) {
                 Canvas(
                     modifier = Modifier
@@ -292,11 +290,11 @@ fun KnowledgeGraphScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onNodeSelect(clickedNode)
                             }
-                        }
+                        },
                 ) {
-                    state.graph.edges.forEach { edge ->
-                        val srcPos = nodePositions[edge.sourceId]
-                        val tgtPos = nodePositions[edge.targetId]
+                    state.graph.edges.forEach { (sourceId, targetId) ->
+                        val srcPos = nodePositions[sourceId]
+                        val tgtPos = nodePositions[targetId]
                         if (srcPos != null && tgtPos != null) {
                             val p1 = (srcPos * scale) + offset
                             val p2 = (tgtPos * scale) + offset
@@ -305,7 +303,7 @@ fun KnowledgeGraphScreen(
                                 start = p1,
                                 end = p2,
                                 strokeWidth = 1.5f * scale,
-                                cap = StrokeCap.Round
+                                cap = StrokeCap.Round,
                             )
                         }
                     }
@@ -320,7 +318,7 @@ fun KnowledgeGraphScreen(
                         drawCircle(
                             color = color,
                             radius = radius,
-                            center = center
+                            center = center,
                         )
 
                         val textLayout = textMeasurer.measure(
@@ -329,15 +327,15 @@ fun KnowledgeGraphScreen(
                                 fontSize = (11.sp.value * scale.coerceIn(0.8f, 1.4f)).sp,
                                 color = textColor,
                                 fontFamily = VercelMonoFontFamily,
-                                fontWeight = FontWeight.Bold
-                            )
+                                fontWeight = FontWeight.Bold,
+                            ),
                         )
                         drawText(
                             textLayoutResult = textLayout,
                             topLeft = Offset(
                                 center.x - (textLayout.size.width / 2f),
-                                center.y + radius + 4f
-                            )
+                                center.y + radius + 4f,
+                            ),
                         )
                     }
                 }
@@ -346,31 +344,30 @@ fun KnowledgeGraphScreen(
     }
 
     // Selected Node Details Inspector Sheet
-    if (state.selectedNode != null) {
-        val selNode = state.selectedNode
+    state.selectedNode?.let { selNode ->
         ModalBottomSheet(
             onDismissRequest = { onNodeSelect(null) },
             containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(0.dp)
+            shape = RoundedCornerShape(0.dp),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(20.dp),
             ) {
                 Text(
                     text = "NODE // ${selNode.label.uppercase()}",
                     style = MaterialTheme.typography.labelMedium,
                     fontFamily = DotMatrixFontFamily,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
                     text = "TYPE: ${selNode.type.name} • CONNECTIONS: ${nodeDegrees[selNode.id] ?: 0}",
                     style = MaterialTheme.typography.labelSmall,
                     fontFamily = DotMatrixFontFamily,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
                 )
 
                 if (selNode.type == NodeType.NOTE) {
@@ -385,14 +382,14 @@ fun KnowledgeGraphScreen(
                                 onOpenNote(selNode.id)
                             }
                             .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "OPEN NOTE FILE",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = MaterialTheme.colorScheme.onPrimary,
                         )
                     }
                 }

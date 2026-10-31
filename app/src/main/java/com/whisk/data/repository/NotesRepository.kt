@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.map
 class NotesRepository(
     private val noteDao: NoteDao,
     private val folderDao: FolderDao,
-    private val taskDao: TaskDao
+    private val taskDao: TaskDao,
 ) {
 
     val allNotes: Flow<List<Note>> = noteDao.getAllNotes().map { entities ->
@@ -37,7 +37,7 @@ class NotesRepository(
     }
 
     val folders: Flow<List<Folder>> = folderDao.getAllFolders().map { entities ->
-        entities.map { Folder(id = it.id, name = it.name, parentId = it.parentId) }
+        entities.map { (id, name, parentId) -> Folder(id = id, name = name, parentId = parentId) }
     }
 
     val allTasks: Flow<List<TaskItem>> = taskDao.getAllTasks().map { entities ->
@@ -83,7 +83,7 @@ class NotesRepository(
     }
 
     suspend fun extractLinks(note: Note): List<NoteLink> {
-        val pattern = Regex("\\[\\[(.*?)\\]\\]")
+        val pattern = Regex("\\[\\[(.*?)]]")
         val matches = pattern.findAll(note.body).toList()
         val links = mutableListOf<NoteLink>()
         for (match in matches) {
@@ -94,8 +94,8 @@ class NotesRepository(
                     sourceNoteId = note.id,
                     targetTitle = title,
                     targetNoteId = target?.id,
-                    isBroken = target == null
-                )
+                    isBroken = target == null,
+                ),
             )
         }
         return links
@@ -104,7 +104,7 @@ class NotesRepository(
     suspend fun getBacklinksForNote(noteTitle: String, noteId: String): List<Backlink> {
         val all = noteDao.getAllNotesDirect()
         val backlinks = mutableListOf<Backlink>()
-        val linkRegex = Regex("\\[\\[${Regex.escape(noteTitle)}\\]\\]", RegexOption.IGNORE_CASE)
+        val linkRegex = Regex("\\[\\[${Regex.escape(noteTitle)}]]", RegexOption.IGNORE_CASE)
         for (n in all) {
             if (n.id == noteId) continue
             if (linkRegex.containsMatchIn(n.body) || n.body.contains(noteTitle, ignoreCase = true)) {
@@ -114,8 +114,8 @@ class NotesRepository(
                         sourceNoteId = n.id,
                         sourceNoteTitle = n.title,
                         snippet = if (line.length > 80) line.take(80) + "..." else line,
-                        updatedAt = n.updatedAt
-                    )
+                        updatedAt = n.updatedAt,
+                    ),
                 )
             }
         }
@@ -126,7 +126,7 @@ class NotesRepository(
         val notes = noteDao.getAllNotesDirect()
         val tagCounts = mutableMapOf<String, Int>()
         notes.forEach { n ->
-            val tags = n.tags.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            val tags = n.tags.split(",").asSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList()
             tags.forEach { t -> tagCounts[t] = (tagCounts[t] ?: 0) + 1 }
         }
         return tagCounts.map { Tag(name = it.key, noteCount = it.value) }.sortedByDescending { it.noteCount }
@@ -144,7 +144,7 @@ class NotesRepository(
         // Sync Markdown body of note
         val noteEntity = noteDao.getNoteById(task.noteId) ?: return
         val lines = noteEntity.body.lines().toMutableList()
-        if (task.lineNumber in 1..lines.size) {
+        if ((task.lineNumber in 1..lines.size)) {
             val lineIdx = task.lineNumber - 1
             val line = lines[lineIdx]
             val newCheck = if (newStatus) "- [x]" else "- [ ]"
@@ -174,8 +174,8 @@ class NotesRepository(
                             title = taskText,
                             isCompleted = completed,
                             lineNumber = index + 1,
-                            tag = note.tags.firstOrNull()
-                        )
+                            tag = note.tags.firstOrNull(),
+                        ),
                     )
                 }
             }
@@ -226,7 +226,7 @@ fun main() {
 - [ ] Explore the Knowledge Graph
                 """.trimIndent(),
                 tags = listOf("welcome", "getting-started"),
-                isFavorite = true
+                isFavorite = true,
             )
             saveNote(welcomeNote)
         }

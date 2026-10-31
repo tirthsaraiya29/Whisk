@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 sealed class NoteFilter {
-    object All : NoteFilter()
-    object Favorites : NoteFilter()
+    data object All : NoteFilter()
+    data object Favorites : NoteFilter()
     data class ByFolder(val folderName: String) : NoteFilter()
     data class ByTag(val tagName: String) : NoteFilter()
 }
@@ -24,11 +24,11 @@ data class NotesUiState(
     val folders: List<Folder> = emptyList(),
     val tags: List<Tag> = emptyList(),
     val activeFilter: NoteFilter = NoteFilter.All,
-    val searchQuery: String = ""
+    val searchQuery: String = "",
 )
 
 class NotesViewModel(
-    private val notesRepository: NotesRepository
+    private val notesRepository: NotesRepository,
 ) : ViewModel() {
 
     private val _activeFilter = MutableStateFlow<NoteFilter>(NoteFilter.All)
@@ -38,19 +38,19 @@ class NotesViewModel(
         notesRepository.allNotes,
         notesRepository.folders,
         _activeFilter,
-        _searchQuery
+        _searchQuery,
     ) { allNotes, folders, filter, query ->
         // Extract tags dynamically from all vault notes
         val tagCounts = mutableMapOf<String, Int>()
-        allNotes.forEach { note ->
-            note.tags.forEach { tag ->
+        allNotes.forEach { (_, _, _, _, _, _, tags) ->
+            tags.forEach { tag ->
                 if (tag.isNotBlank()) {
                     tagCounts[tag] = (tagCounts[tag] ?: 0) + 1
                 }
             }
         }
-        val extractedTags = tagCounts.map { Tag(name = it.key, noteCount = it.value) }
-            .sortedByDescending { it.noteCount }
+        val extractedTags = tagCounts.asSequence().map { (name, count) -> Tag(name = name, noteCount = count) }
+            .sortedByDescending { (_, noteCount) -> noteCount }.toList()
 
         val filtered = allNotes.filter { note ->
             val matchesFilter = when (filter) {
@@ -64,7 +64,7 @@ class NotesViewModel(
                     note.body.contains(query, ignoreCase = true) ||
                     note.tags.any { it.contains(query, ignoreCase = true) }
 
-            matchesFilter && matchesQuery
+            (matchesFilter) && (matchesQuery)
         }
 
         NotesUiState(
@@ -72,7 +72,7 @@ class NotesViewModel(
             folders = folders,
             tags = extractedTags,
             activeFilter = filter,
-            searchQuery = query
+            searchQuery = query,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), NotesUiState())
 
@@ -88,7 +88,7 @@ class NotesViewModel(
         val newNote = Note(
             title = "Untitled Note",
             body = "",
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
         )
         notesRepository.saveNote(newNote)
         return newNote.id

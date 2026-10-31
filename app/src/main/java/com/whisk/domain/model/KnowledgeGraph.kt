@@ -15,17 +15,17 @@ data class GraphNode(
     val subtitle: String? = null,
     val isOrphan: Boolean = false,
     val isArchived: Boolean = false,
-    val noteId: String? = null
+    val noteId: String? = null,
 )
 
 data class GraphEdge(
     val sourceId: String,
     val targetId: String,
     val type: EdgeType,
-    val label: String? = null
+    val label: String? = null,
 )
 
 data class KnowledgeGraph(
     val nodes: List<GraphNode> = emptyList(),
-    val edges: List<GraphEdge> = emptyList()
+    val edges: List<GraphEdge> = emptyList(),
 )

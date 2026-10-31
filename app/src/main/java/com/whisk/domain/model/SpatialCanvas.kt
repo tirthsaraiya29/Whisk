@@ -18,7 +18,7 @@ data class CanvasCard(
     val width: Float = 220f,
     val height: Float = 140f,
     val type: CardType = CardType.NOTE_CARD,
-    val colorHex: String? = null
+    val colorHex: String? = null,
 )
 
 @Serializable
@@ -26,7 +26,7 @@ data class CanvasConnection(
     val id: String = UUID.randomUUID().toString(),
     val fromCardId: String,
     val toCardId: String,
-    val label: String? = null
+    val label: String? = null,
 )
 
 @Serializable
@@ -35,5 +35,5 @@ data class SpatialCanvas(
     val title: String,
     val cards: List<CanvasCard> = emptyList(),
     val connections: List<CanvasConnection> = emptyList(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
 )

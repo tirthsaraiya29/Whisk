@@ -30,12 +30,14 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE title LIKE '%' || :query || '%' OR body LIKE '%' || :query || '%' OR tags LIKE '%' || :query || '%' ORDER BY updatedAt DESC")
     fun searchNotes(query: String): Flow<List<NoteEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT notes.* FROM notes
         JOIN notes_fts ON notes.rowid = notes_fts.rowid
         WHERE notes_fts MATCH :query AND notes.isArchived = 0
         ORDER BY notes.updatedAt DESC
-    """)
+    """,
+    )
     fun searchNotesFts(query: String): Flow<List<NoteEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

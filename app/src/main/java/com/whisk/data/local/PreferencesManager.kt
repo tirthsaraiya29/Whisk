@@ -68,7 +68,7 @@ class PreferencesManager(private val context: Context) {
             "graph" to (prefs[KEY_HINT_GRAPH_DISMISSED] ?: false),
             "ai" to (prefs[KEY_HINT_AI_DISMISSED] ?: false),
             "github" to (prefs[KEY_HINT_GITHUB_DISMISSED] ?: false),
-            "canvas" to (prefs[KEY_HINT_CANVAS_DISMISSED] ?: false)
+            "canvas" to (prefs[KEY_HINT_CANVAS_DISMISSED] ?: false),
         )
     }
 
@@ -99,7 +99,7 @@ class PreferencesManager(private val context: Context) {
         val providerStr = prefs[KEY_AI_PROVIDER] ?: AiProviderType.LOCAL_GEMMA.name
         val providerType = try {
             AiProviderType.valueOf(providerStr)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             AiProviderType.LOCAL_GEMMA
         }
         val secretApiKey = secureStorage.getSecret(SECRET_AI_API_KEY)
@@ -112,7 +112,7 @@ class PreferencesManager(private val context: Context) {
             selectedModel = prefs[KEY_AI_MODEL] ?: "gemma-4-E2B-it-gpu.litertlm",
             hfModelUrl = prefs[KEY_AI_HF_MODEL_URL] ?: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm",
             hfApiToken = secretHfToken,
-            useGpuAccelerator = prefs[KEY_AI_USE_GPU] ?: true
+            useGpuAccelerator = prefs[KEY_AI_USE_GPU] ?: true,
         )
     }
 

@@ -11,7 +11,7 @@ class NotesRepositoryTest {
     @Test
     fun testInternalLinkRegexExtraction() {
         val body = "Refer to [[Architecture Overview]] and [[Database Schema]] for details."
-        val linkRegex = Regex("\\[\\[(.*?)\\]\\]")
+        val linkRegex = Regex("\\[\\[(.*?)]]")
         val matches = linkRegex.findAll(body).map { it.groupValues[1].trim() }.toList()
 
         assertEquals(2, matches.size)
@@ -43,7 +43,7 @@ class NotesRepositoryTest {
         val note = Note(
             title = "Test",
             body = "Body",
-            tags = listOf("android", "kotlin", "architecture")
+            tags = listOf("android", "kotlin", "architecture"),
         )
         assertEquals(3, note.tags.size)
         assertEquals("android", note.tags[0])

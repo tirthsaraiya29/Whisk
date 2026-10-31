@@ -18,15 +18,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 
 @Serializable
@@ -34,7 +30,7 @@ data class ChatSession(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val messages: List<AiMessage>
+    val messages: List<AiMessage>,
 )
 
 data class AiUiState(
@@ -45,17 +41,17 @@ data class AiUiState(
     val contextPayload: ContextPayload = ContextPayload(),
     val generatedEditPreview: String? = null,
     val historySessions: List<ChatSession> = emptyList(),
-    val activeSessionTitle: String = "NEW CHAT"
+    val activeSessionTitle: String = "NEW CHAT",
 )
 
 class AiViewModel(
     private val localGemmaManager: LocalGemmaManager,
     private val remoteAiManager: RemoteAiManager,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
 ) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<AiMessage>>(emptyList())
-    private val _isGenerating = MutableStateFlow(false)
+    private val _isGenerating = MutableStateFlow(value = false)
     private val _contextPayload = MutableStateFlow(ContextPayload())
     private val _generatedEditPreview = MutableStateFlow<String?>(null)
     private val _historySessions = MutableStateFlow<List<ChatSession>>(emptyList())
@@ -69,15 +65,15 @@ class AiViewModel(
         // Load persisted chat sessions from DataStore
         viewModelScope.launch {
             preferencesManager.savedAiSessionsJson.collect { jsonStr ->
-                if (jsonStr.isNotBlank() && jsonStr != "[]") {
+                if (jsonStr.isNotBlank() && (jsonStr != "[]")) {
                     try {
                         val loadedSessions = json.decodeFromString<List<ChatSession>>(jsonStr)
                         _historySessions.value = loadedSessions
                         if (_messages.value.isEmpty() && loadedSessions.isNotEmpty()) {
-                            val mostRecent = loadedSessions.first()
-                            _activeSessionId.value = mostRecent.id
-                            _activeSessionTitle.value = mostRecent.title
-                            _messages.value = mostRecent.messages
+                            val (id, title, _, messages) = loadedSessions.first()
+                            _activeSessionId.value = id
+                            _activeSessionTitle.value = title
+                            _messages.value = messages
                         }
                     } catch (_: Exception) {}
                 }
@@ -90,17 +86,17 @@ class AiViewModel(
         combine(_messages, _isGenerating) { messages, isGenerating -> Pair(messages, isGenerating) },
         combine(_contextPayload, _generatedEditPreview, _historySessions, _activeSessionTitle) { contextPayload, editPreview, historySessions, title ->
             Quadruple(contextPayload, editPreview, historySessions, title)
-        }
-    ) { p1, p2, p3 ->
+        },
+    ) { (config, localStatus), (messages, isGenerating), (contextPayload, editPreview, historySessions, title) ->
         AiUiState(
-            config = p1.first,
-            localStatus = p1.second,
-            messages = p2.first,
-            isGenerating = p2.second,
-            contextPayload = p3.first,
-            generatedEditPreview = p3.second,
-            historySessions = p3.third,
-            activeSessionTitle = p3.fourth
+            config = config,
+            localStatus = localStatus,
+            messages = messages,
+            isGenerating = isGenerating,
+            contextPayload = contextPayload,
+            generatedEditPreview = editPreview,
+            historySessions = historySessions,
+            activeSessionTitle = title,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AiUiState())
 
@@ -111,9 +107,7 @@ class AiViewModel(
     fun loadNoteContext(notesRepository: com.whisk.data.repository.NotesRepository, noteId: String) {
         viewModelScope.launch {
             val note = notesRepository.getNoteById(noteId)
-            if (note != null) {
-                setContextNote(note)
-            }
+            note?.let { setContextNote(it) }
         }
     }
 
@@ -134,7 +128,7 @@ class AiViewModel(
     private fun generateAutomaticTitle(userText: String): String {
         val snippet = userText.trim().lines().firstOrNull()?.take(28)?.trim() ?: "AI CHAT"
         val cleanTitle = snippet.replace(Regex("[^a-zA-Z0-9\\s_\\-]"), "").trim().uppercase()
-        return if (cleanTitle.isNotBlank()) cleanTitle else "AI CHAT"
+        return cleanTitle.ifBlank { "AI CHAT" }
     }
 
     private fun persistCurrentSession() {
@@ -153,10 +147,10 @@ class AiViewModel(
             id = sessionId,
             title = sessionTitle,
             timestamp = System.currentTimeMillis(),
-            messages = currentMsgs
+            messages = currentMsgs,
         )
 
-        val updatedHistory = listOf(updatedSession) + _historySessions.value.filterNot { it.id == sessionId }
+        val updatedHistory = listOf(updatedSession) + _historySessions.value.filterNot { (id) -> id == sessionId }
         _historySessions.value = updatedHistory
 
         viewModelScope.launch {
@@ -171,7 +165,7 @@ class AiViewModel(
         if (userText.isBlank()) return
 
         // Automatic Title Generation on first message of a session
-        if (_messages.value.isEmpty() || _activeSessionId.value == null) {
+        if (_messages.value.isEmpty() || (_activeSessionId.value == null)) {
             val autoTitle = generateAutomaticTitle(userText)
             _activeSessionTitle.value = autoTitle
             _activeSessionId.value = UUID.randomUUID().toString()
@@ -192,10 +186,10 @@ class AiViewModel(
         val historyContext = buildString {
             if (existingHistory.isNotEmpty()) {
                 append("Previous Conversation:\n")
-                existingHistory.takeLast(6).forEach { msg ->
-                    val sender = if (msg.role == AiRole.USER) "User" else "Assistant"
-                    if (msg.content.isNotBlank()) {
-                        append("$sender: ").append(msg.content.take(200)).append("\n")
+                existingHistory.takeLast(6).forEach { (_, role, content) ->
+                    val sender = if (role == AiRole.USER) "User" else "Assistant"
+                    if (content.isNotBlank()) {
+                        append("$sender: ").append(content.take(200)).append("\n")
                     }
                 }
                 append("\n")
@@ -222,7 +216,7 @@ class AiViewModel(
                 streamFlow.collect { chunk ->
                     contentBuilder.append(chunk)
                     val now = System.currentTimeMillis()
-                    if (now - lastUpdateMs > 30L) {
+                    if ((now - lastUpdateMs) > 30L) {
                         lastUpdateMs = now
                         val currentText = contentBuilder.toString()
                         _messages.value = _messages.value.map { msg ->
@@ -272,7 +266,7 @@ class AiViewModel(
     }
 
     fun deleteSession(sessionId: String) {
-        _historySessions.value = _historySessions.value.filterNot { it.id == sessionId }
+        _historySessions.value = _historySessions.value.filterNot { (id) -> id == sessionId }
         if (_activeSessionId.value == sessionId) {
             _activeSessionId.value = null
             _activeSessionTitle.value = "NEW CHAT"
@@ -304,5 +298,5 @@ private data class Quadruple<A, B, C, D>(
     val first: A,
     val second: B,
     val third: C,
-    val fourth: D
+    val fourth: D,
 )

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,7 +27,6 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +44,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -52,7 +51,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.AiConfig
 import com.whisk.domain.model.AiProviderType
 import com.whisk.ui.components.WhiskTopBar
@@ -68,7 +66,7 @@ fun SettingsScreen(
     onResetOnboarding: () -> Unit,
     onExportBackup: () -> Unit,
     onImportBackup: () -> Unit,
-    onMenuClick: (() -> Unit)? = null
+    onMenuClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     var apiKeyText by rememberSaveable { mutableStateOf(state.aiConfig.apiKey) }
@@ -87,9 +85,9 @@ fun SettingsScreen(
             WhiskTopBar(
                 title = "WHISK // SETTINGS",
                 subtitle = "THEME, AI ENGINES & VAULT BACKUPS",
-                onMenuClick = onMenuClick
+                onMenuClick = onMenuClick,
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -99,14 +97,14 @@ fun SettingsScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Theme Mode Section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                    .padding(16.dp)
+                    .padding(16.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
@@ -116,7 +114,7 @@ fun SettingsScreen(
                         fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
 
@@ -125,7 +123,7 @@ fun SettingsScreen(
                 listOf(
                     "SYSTEM" to "SYSTEM DEFAULT",
                     "DARK" to "DARK OBSIDIAN (OLED)",
-                    "LIGHT" to "LIGHT MONOCHROME"
+                    "LIGHT" to "LIGHT MONOCHROME",
                 ).forEach { (modeKey, label) ->
                     val isSelected = state.themeMode == modeKey
                     Row(
@@ -136,19 +134,19 @@ fun SettingsScreen(
                                 onThemeChange(modeKey)
                             }
                             .padding(vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = if (isSelected) "[X] " else "[ ] ",
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
@@ -159,7 +157,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                    .padding(16.dp)
+                    .padding(16.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
@@ -169,7 +167,7 @@ fun SettingsScreen(
                         fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
 
@@ -179,12 +177,12 @@ fun SettingsScreen(
                     text = "SELECT ACTIVE PROVIDER:",
                     style = MaterialTheme.typography.labelSmall,
                     fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 Column(
                     modifier = Modifier.padding(vertical = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     AiProviderType.entries.forEach { provider ->
                         val isSelected = selectedProvider == provider
@@ -196,19 +194,19 @@ fun SettingsScreen(
                                     selectedProvider = provider
                                 }
                                 .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
                                 text = if (isSelected) "[*] " else "[ ] ",
                                 fontFamily = DotMatrixFontFamily,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.primary,
                             )
                             Text(
                                 text = provider.name,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontFamily = DotMatrixFontFamily,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -222,18 +220,18 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .padding(vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = "USE OPENCL GPU ACCELERATOR",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         Switch(
                             checked = useGpu,
                             onCheckedChange = { useGpu = it },
-                            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary)
+                            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary),
                         )
                     }
 
@@ -247,19 +245,19 @@ fun SettingsScreen(
                             IconButton(onClick = { showHfTokenSecret = !showHfTokenSecret }) {
                                 Icon(
                                     imageVector = if (showHfTokenSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = "Toggle Token Visibility"
+                                    contentDescription = "Toggle Token Visibility",
                                 )
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                         ),
                         shape = RoundedCornerShape(0.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp),
-                        singleLine = true
+                        singleLine = true,
                     )
                 } else {
                     OutlinedTextField(
@@ -273,19 +271,19 @@ fun SettingsScreen(
                             IconButton(onClick = { showApiKeySecret = !showApiKeySecret }) {
                                 Icon(
                                     imageVector = if (showApiKeySecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = "Toggle Secret Visibility"
+                                    contentDescription = "Toggle Secret Visibility",
                                 )
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                         ),
                         shape = RoundedCornerShape(0.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp),
-                        singleLine = true
+                        singleLine = true,
                     )
                 }
 
@@ -304,19 +302,19 @@ fun SettingsScreen(
                                     apiKey = apiKeyText,
                                     hfModelUrl = hfModelUrlText,
                                     hfApiToken = hfTokenText,
-                                    useGpuAccelerator = useGpu
-                                )
+                                    useGpuAccelerator = useGpu,
+                                ),
                             )
                         }
                         .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = "SAVE AI CONFIGURATION",
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onPrimary,
                     )
                 }
             }
@@ -326,7 +324,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                    .padding(16.dp)
+                    .padding(16.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Code, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
@@ -336,7 +334,7 @@ fun SettingsScreen(
                         fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
 
@@ -353,19 +351,19 @@ fun SettingsScreen(
                         IconButton(onClick = { showGithubTokenSecret = !showGithubTokenSecret }) {
                             Icon(
                                 imageVector = if (showGithubTokenSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = "Toggle GitHub Token Visibility"
+                                contentDescription = "Toggle GitHub Token Visibility",
                             )
                         }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     ),
                     shape = RoundedCornerShape(0.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 6.dp),
-                    singleLine = true
+                    singleLine = true,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -379,14 +377,14 @@ fun SettingsScreen(
                             onSaveGitHubToken(githubTokenText)
                         }
                         .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = "SAVE GITHUB TOKEN",
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -396,7 +394,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                    .padding(16.dp)
+                    .padding(16.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Backup, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
@@ -406,7 +404,7 @@ fun SettingsScreen(
                         fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 8.dp)
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
 
@@ -414,7 +412,7 @@ fun SettingsScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Box(
                         modifier = Modifier
@@ -425,13 +423,13 @@ fun SettingsScreen(
                                 onExportBackup()
                             }
                             .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "EXPORT ZIP",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
 
@@ -444,13 +442,38 @@ fun SettingsScreen(
                                 onImportBackup()
                             }
                             .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "IMPORT ZIP",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onResetOnboarding()
+                        }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "RESET ONBOARDING HINTS",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }

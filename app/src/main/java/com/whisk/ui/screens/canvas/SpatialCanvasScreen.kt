@@ -60,7 +60,7 @@ fun SpatialCanvasScreen(
     onAddNoteCard: (Note) -> Unit,
     onUpdateCardPos: (String, Float, Float) -> Unit,
     onDeleteCard: (String) -> Unit,
-    onOpenNote: (String) -> Unit
+    onOpenNote: (String) -> Unit,
 ) {
     var showNotePickerSheet by remember { mutableStateOf(false) }
     var canvasScale by remember { mutableFloatStateOf(1f) }
@@ -78,18 +78,18 @@ fun SpatialCanvasScreen(
                     }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Reset Zoom")
                     }
-                }
+                },
             )
         },
         floatingActionButton = {
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 FloatingActionButton(
                     onClick = { showNotePickerSheet = true },
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    contentColor = MaterialTheme.colorScheme.primary,
                 ) {
                     Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = "Add Note to Canvas")
                 }
@@ -97,12 +97,12 @@ fun SpatialCanvasScreen(
                 FloatingActionButton(
                     onClick = onAddTextCard,
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Text Card")
                 }
             }
-        }
+        },
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -113,7 +113,7 @@ fun SpatialCanvasScreen(
                         canvasScale = (canvasScale * zoom).coerceIn(0.4f, 3.0f)
                         canvasOffset += pan
                     }
-                }
+                },
         ) {
             Box(
                 modifier = Modifier
@@ -123,7 +123,7 @@ fun SpatialCanvasScreen(
                         scaleY = canvasScale
                         translationX = canvasOffset.x
                         translationY = canvasOffset.y
-                    }
+                    },
             ) {
                 val strokeColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
 
@@ -138,7 +138,7 @@ fun SpatialCanvasScreen(
                                 start = Offset(fromCard.x + 110f, fromCard.y + 60f),
                                 end = Offset(toCard.x + 110f, toCard.y + 60f),
                                 strokeWidth = 3f,
-                                cap = StrokeCap.Round
+                                cap = StrokeCap.Round,
                             )
                         }
                     }
@@ -147,12 +147,12 @@ fun SpatialCanvasScreen(
                 if (state.currentCanvas.cards.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "Spatial Canvas is empty.\nTap + or Note icon to place cards.",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 } else {
@@ -167,7 +167,7 @@ fun SpatialCanvasScreen(
                             onOpenNote = {
                                 val nId = card.noteId
                                 if (nId != null) onOpenNote(nId)
-                            }
+                            },
                         )
                     }
                 }
@@ -181,12 +181,12 @@ fun SpatialCanvasScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(20.dp),
             ) {
                 Text(
                     text = "Add Vault Note to Spatial Canvas",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -195,7 +195,7 @@ fun SpatialCanvasScreen(
                     Text(
                         text = "No notes in vault. Create notes first.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -208,13 +208,13 @@ fun SpatialCanvasScreen(
                                         showNotePickerSheet = false
                                     },
                                 shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
                                         text = note.title.ifBlank { "Untitled" },
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     val excerpt = note.body.take(80).replace("\n", " ")
                                     if (excerpt.isNotBlank()) {
@@ -222,7 +222,7 @@ fun SpatialCanvasScreen(
                                             text = excerpt,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(top = 2.dp)
+                                            modifier = Modifier.padding(top = 2.dp),
                                         )
                                     }
                                 }
@@ -240,7 +240,7 @@ fun CanvasCardItem(
     card: CanvasCard,
     onDrag: (Float, Float) -> Unit,
     onDelete: () -> Unit,
-    onOpenNote: () -> Unit
+    onOpenNote: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -251,7 +251,7 @@ fun CanvasCardItem(
                     change.consume()
                     onDrag(dragAmount.x, dragAmount.y)
                 }
-            }
+            },
     ) {
         Card(
             modifier = Modifier
@@ -261,28 +261,28 @@ fun CanvasCardItem(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = androidx.compose.foundation.BorderStroke(
                 1.dp,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = card.title,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                     IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete card",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -293,7 +293,7 @@ fun CanvasCardItem(
                     text = card.content,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3
+                    maxLines = 3,
                 )
             }
         }

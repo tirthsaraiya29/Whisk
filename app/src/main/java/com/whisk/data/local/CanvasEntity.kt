@@ -9,5 +9,5 @@ data class CanvasEntity(
     val title: String,
     val cardsJson: String,
     val connectionsJson: String,
-    val updatedAt: Long
+    val updatedAt: Long,
 )

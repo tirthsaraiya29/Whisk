@@ -17,7 +17,6 @@ class GitHubRepository {
 
     private val certificatePinner = CertificatePinner.Builder()
         .add("api.github.com", "sha256/nTvjJtN51Jp5ounTgUohZxRsHH5DUHgGorVUZyBxrAM=")
-        // Backup pins could be added here for root or intermediate CAs
         .build()
 
     private val client = OkHttpClient.Builder()
@@ -52,12 +51,12 @@ class GitHubRepository {
                         description = item.optString("description", ""),
                         defaultBranch = item.optString("default_branch", "main"),
                         isPrivate = item.getBoolean("private"),
-                        stars = item.getInt("stargazers_count")
-                    )
+                        stars = item.getInt("stargazers_count"),
+                    ),
                 )
             }
             repos
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }
@@ -86,12 +85,12 @@ class GitHubRepository {
                         body = obj.optString("body", ""),
                         state = obj.getString("state"),
                         author = obj.getJSONObject("user").getString("login"),
-                        url = obj.getString("html_url")
-                    )
+                        url = obj.getString("html_url"),
+                    ),
                 )
             }
             issues
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }
@@ -120,12 +119,12 @@ class GitHubRepository {
                         state = obj.getString("state"),
                         author = obj.getJSONObject("user").getString("login"),
                         url = obj.getString("html_url"),
-                        diffUrl = obj.optString("diff_url", "")
-                    )
+                        diffUrl = obj.optString("diff_url", ""),
+                    ),
                 )
             }
             prs
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }
@@ -152,12 +151,12 @@ class GitHubRepository {
                         sha = obj.getString("sha").take(7),
                         message = commitObj.getString("message").lines().firstOrNull() ?: "",
                         author = commitObj.getJSONObject("author").optString("name", "Unknown"),
-                        date = commitObj.getJSONObject("author").optString("date", "")
-                    )
+                        date = commitObj.getJSONObject("author").optString("date", ""),
+                    ),
                 )
             }
             commits
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }

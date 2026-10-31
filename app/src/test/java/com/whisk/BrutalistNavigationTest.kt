@@ -17,7 +17,7 @@ class BrutalistNavigationTest {
             NavDestination.Search,
             NavDestination.Graph,
             NavDestination.AI,
-            NavDestination.Settings
+            NavDestination.Settings,
         )
 
         assertEquals(5, destinations.size)
@@ -49,7 +49,7 @@ class BrutalistNavigationTest {
             NavDestination.Search,
             NavDestination.Graph,
             NavDestination.AI,
-            NavDestination.Settings
+            NavDestination.Settings,
         )
 
         val mappedIndices = routes.map { route ->

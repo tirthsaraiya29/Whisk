@@ -50,7 +50,7 @@ data class CommandItem(
     val subtitle: String,
     val shortcut: String,
     val icon: ImageVector,
-    val action: () -> Unit
+    val action: () -> Unit,
 )
 
 @Composable
@@ -59,7 +59,7 @@ fun CommandPalette(
     onNavigate: (String) -> Unit,
     onNewNote: () -> Unit,
     onExportBackup: () -> Unit,
-    onCreateTemplateNote: ((Note) -> Unit)? = null
+    onCreateTemplateNote: ((Note) -> Unit)? = null,
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
@@ -108,14 +108,14 @@ fun CommandPalette(
             CommandItem("settings", "Settings", "Manage themes, AI keys & preferences", "⌘,", Icons.Default.Settings) {
                 onNavigate("settings")
                 onDismiss()
-            }
+            },
         )
     }
 
-    val filtered = commands.filter {
-        it.title.contains(searchQuery, ignoreCase = true) ||
-                it.subtitle.contains(searchQuery, ignoreCase = true) ||
-                it.shortcut.contains(searchQuery, ignoreCase = true)
+    val filtered = commands.filter { (_, title, subtitle, shortcut) ->
+        title.contains(searchQuery, ignoreCase = true) ||
+                subtitle.contains(searchQuery, ignoreCase = true) ||
+                shortcut.contains(searchQuery, ignoreCase = true)
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -124,14 +124,14 @@ fun CommandPalette(
                 .fillMaxWidth()
                 .padding(12.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "Command Palette",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
 
                 OutlinedTextField(
@@ -140,7 +140,7 @@ fun CommandPalette(
                     placeholder = { Text("Type command or shortcut...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
                 )
 
                 LazyColumn(modifier = Modifier.padding(top = 10.dp)) {
@@ -151,28 +151,28 @@ fun CommandPalette(
                                 .clickable { cmd.action() }
                                 .padding(vertical = 10.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
                             ) {
                                 Icon(
                                     imageVector = cmd.icon,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(end = 12.dp)
+                                    modifier = Modifier.padding(end = 12.dp),
                                 )
                                 Column {
                                     Text(
                                         text = cmd.title,
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
                                         text = cmd.subtitle,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
@@ -181,12 +181,12 @@ fun CommandPalette(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
                             ) {
                                 Text(
                                     text = cmd.shortcut,
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary,
                                 )
                             }
                         }

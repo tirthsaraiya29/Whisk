@@ -42,20 +42,20 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     fun getModelFile(): File {
         val extDir = context.getExternalFilesDir(null)
         val extFile = File(extDir, modelFileName)
-        if (extFile.exists() && extFile.length() > 50_000_000L) return extFile
+        if (extFile.exists() && (extFile.length() > 50_000_000L)) return extFile
 
         val intFile = File(context.filesDir, modelFileName)
-        if (intFile.exists() && intFile.length() > 50_000_000L) return intFile
+        if (intFile.exists() && (intFile.length() > 50_000_000L)) return intFile
 
         val candidateInExt = extDir?.listFiles()?.firstOrNull {
-            (it.name.endsWith(".litertlm") || it.name.endsWith(".task") || it.name.endsWith(".bin") || it.name.endsWith(".tflite")) && it.length() > 50_000_000L
+            (it.name.endsWith(".litertlm") || it.name.endsWith(".task") || it.name.endsWith(".bin") || it.name.endsWith(".tflite")) && (it.length() > 50_000_000L)
         }
-        if (candidateInExt != null) return candidateInExt
+        candidateInExt?.let { return it }
 
         val candidateInInt = context.filesDir.listFiles()?.firstOrNull {
-            (it.name.endsWith(".litertlm") || it.name.endsWith(".task") || it.name.endsWith(".bin") || it.name.endsWith(".tflite")) && it.length() > 50_000_000L
+            (it.name.endsWith(".litertlm") || it.name.endsWith(".task") || it.name.endsWith(".bin") || it.name.endsWith(".tflite")) && (it.length() > 50_000_000L)
         }
-        if (candidateInInt != null) return candidateInInt
+        candidateInInt?.let { return it }
 
         return extFile
     }
@@ -69,8 +69,8 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
         .certificatePinner(certificatePinner)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
-        .followRedirects(false)
-        .followSslRedirects(false)
+        .followRedirects(followRedirects = false)
+        .followSslRedirects(followProtocolRedirects = false)
         .build()
 
     init {
@@ -79,7 +79,7 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
 
     fun checkModelFile() {
         val file = getModelFile()
-        if (file.exists() && file.length() > 50_000_000L) {
+        if (file.exists() && (file.length() > 50_000_000L)) {
             val sizeMb = file.length() / (1024 * 1024)
             _modelStatus.value = LocalModelStatus(
                 isDownloaded = true,
@@ -88,14 +88,14 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
                 modelSizeBytes = file.length(),
                 downloadedBytes = file.length(),
                 totalBytes = file.length(),
-                isLoaded = engine != null
+                isLoaded = engine != null,
             )
         } else {
             _modelStatus.value = LocalModelStatus(
                 isDownloaded = false,
                 downloadProgress = 0f,
                 statusText = "Gemma 4 E2B model not downloaded",
-                isLoaded = false
+                isLoaded = false,
             )
         }
     }
@@ -110,25 +110,25 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
         if (available < 1_500_000_000L) {
             _modelStatus.value = _modelStatus.value.copy(
                 statusText = "Error: Insufficient storage (Requires 1.5 GB free)",
-                loadError = "Insufficient storage"
+                loadError = "Insufficient storage",
             )
             return@withContext false
         }
 
         _modelStatus.value = _modelStatus.value.copy(
             statusText = "Connecting to Hugging Face...",
-            downloadProgress = 0f
+            downloadProgress = 0f,
         )
 
         val targetFile = getModelFile()
         val tempFile = File(targetFile.parentFile, "${targetFile.name}.tmp")
 
-        val urlsToTry = listOf(
+        val urlsToTry = sequenceOf(
             config.hfModelUrl,
             "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm",
             "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm",
-            "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-web.task"
-        ).filter { it.isNotBlank() }.distinct()
+            "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-web.task",
+        ).filter { it.isNotBlank() }.distinct().toList()
 
         var lastError = ""
 
@@ -145,7 +145,7 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
                     }
 
                     val resp = okHttpClient.newCall(requestBuilder.build()).execute()
-                    if (resp.code in 300..399) {
+                    if ((resp.code in 300..399)) {
                         val location = resp.header("Location")
                         resp.close()
                         if (location != null) {
@@ -220,14 +220,14 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
                                 statusText = statusText,
                                 downloadedBytes = bytesDownloaded,
                                 totalBytes = totalBytes,
-                                downloadSpeedKbps = speedKbps
+                                downloadSpeedKbps = speedKbps,
                             )
                         }
                     }
                 }
                 finalResponse.close()
 
-                if (tempFile.exists() && tempFile.length() > 50_000_000L) {
+                if (tempFile.exists() && (tempFile.length() > 50_000_000L)) {
                     if (targetFile.exists()) targetFile.delete()
                     tempFile.renameTo(targetFile)
 
@@ -238,7 +238,7 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
                         modelSizeBytes = targetFile.length(),
                         downloadedBytes = targetFile.length(),
                         totalBytes = targetFile.length(),
-                        isLoaded = false
+                        isLoaded = false,
                     )
                     initializeEngine(config)
                     return@withContext true
@@ -255,17 +255,17 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
         if (tempFile.exists()) tempFile.delete()
         _modelStatus.value = _modelStatus.value.copy(
             statusText = lastError.ifBlank { "Download failed" },
-            loadError = lastError
+            loadError = lastError,
         )
         false
     }
 
     suspend fun initializeEngine(config: AiConfig): Boolean = withContext(Dispatchers.IO) {
         val file = getModelFile()
-        if (!file.exists() || file.length() < 50_000_000L) {
+        if (!file.exists() || (file.length() < 50_000_000L)) {
             _modelStatus.value = _modelStatus.value.copy(
                 isLoaded = false,
-                statusText = "Model file missing or incomplete"
+                statusText = "Model file missing or incomplete",
             )
             return@withContext false
         }
@@ -281,7 +281,7 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
             val engineConfig = EngineConfig(
                 modelPath = file.absolutePath,
                 backend = backend,
-                cacheDir = context.cacheDir.path
+                cacheDir = context.cacheDir.path,
             )
 
             val newEngine = Engine(engineConfig)
@@ -290,21 +290,21 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
 
             conversation = newEngine.createConversation(
                 ConversationConfig(
-                    systemInstruction = Contents.of("You are Whisk AI, a senior developer knowledge workspace assistant.")
-                )
+                    systemInstruction = Contents.of("You are Whisk AI, a senior developer knowledge workspace assistant."),
+                ),
             )
 
             _modelStatus.value = _modelStatus.value.copy(
                 isLoaded = true,
                 statusText = "LiteRT-LM Gemma Engine active",
-                loadError = null
+                loadError = null,
             )
             true
         } catch (e: Throwable) {
             _modelStatus.value = _modelStatus.value.copy(
                 isLoaded = false,
                 statusText = "Initialization failed: ${e.message}",
-                loadError = e.message
+                loadError = e.message,
             )
             false
         }
@@ -313,7 +313,7 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
     fun generateStream(prompt: String, contextText: String = "", config: AiConfig = AiConfig()): Flow<String> = callbackFlow {
         val activeConv = conversation
         if (activeConv == null) {
-            trySend("Error: LiteRT-LM conversation engine is not initialized.")
+            trySend("Error: LiteRT-LM conversation engine is not initialized. Config provider: ${config.providerType}")
             close()
             return@callbackFlow
         }
@@ -352,7 +352,7 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
             isDownloaded = false,
             downloadProgress = 0f,
             statusText = "Model deleted",
-            isLoaded = false
+            isLoaded = false,
         )
         true
     }

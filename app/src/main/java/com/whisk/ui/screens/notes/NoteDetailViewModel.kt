@@ -20,12 +20,12 @@ data class NoteDetailUiState(
     val note: Note? = null,
     val backlinks: List<Backlink> = emptyList(),
     val saveState: SaveState = SaveState.IDLE,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
 )
 
 class NoteDetailViewModel(
     private val notesRepository: NotesRepository,
-    private val noteId: String
+    private val noteId: String,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NoteDetailUiState())
@@ -44,7 +44,7 @@ class NoteDetailViewModel(
                 val backlinks = notesRepository.getBacklinksForNote(note.title, note.id)
                 _uiState.value = _uiState.value.copy(
                     note = note,
-                    backlinks = backlinks
+                    backlinks = backlinks,
                 )
             }
         }
@@ -55,11 +55,11 @@ class NoteDetailViewModel(
         val updated = currentNote.copy(
             title = title,
             body = body,
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         )
         _uiState.value = _uiState.value.copy(
             note = updated,
-            saveState = SaveState.SAVING
+            saveState = SaveState.SAVING,
         )
 
         // Debounced autosave
@@ -71,9 +71,9 @@ class NoteDetailViewModel(
                 val backlinks = notesRepository.getBacklinksForNote(updated.title, updated.id)
                 _uiState.value = _uiState.value.copy(
                     backlinks = backlinks,
-                    saveState = SaveState.SAVED
+                    saveState = SaveState.SAVED,
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.value = _uiState.value.copy(saveState = SaveState.ERROR)
             }
         }
@@ -105,9 +105,9 @@ class NoteDetailViewModel(
                     val backlinks = notesRepository.getBacklinksForNote(note.title, note.id)
                     _uiState.value = _uiState.value.copy(
                         backlinks = backlinks,
-                        saveState = SaveState.SAVED
+                        saveState = SaveState.SAVED,
                     )
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     _uiState.value = _uiState.value.copy(saveState = SaveState.ERROR)
                 }
             }

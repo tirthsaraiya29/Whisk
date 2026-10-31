@@ -14,7 +14,7 @@ class McpRepositoryTest {
             name = "github_search_repositories",
             description = "Search public repositories",
             inputSchemaJson = """{"type":"object"}""",
-            requiresApproval = false
+            requiresApproval = false,
         )
 
         assertEquals("github_search_repositories", tool.name)

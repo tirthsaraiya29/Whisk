@@ -29,13 +29,13 @@ data class GitHubUiState(
     val mcpLogs: List<McpToolLog> = emptyList(),
     val isMcpConnected: Boolean = false,
     val isGitDiagramOpen: Boolean = false,
-    val token: String = ""
+    val token: String = "",
 )
 
 class GitHubViewModel(
     private val gitHubRepository: GitHubRepository,
     private val mcpRepository: McpRepository,
-    private val preferencesManager: PreferencesManager
+    preferencesManager: PreferencesManager,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("android")
@@ -44,12 +44,12 @@ class GitHubViewModel(
     private val _issues = MutableStateFlow<List<GitHubIssue>>(emptyList())
     private val _prs = MutableStateFlow<List<GitHubPullRequest>>(emptyList())
     private val _commits = MutableStateFlow<List<GitHubCommit>>(emptyList())
-    private val _isGitDiagramOpen = MutableStateFlow(false)
+    private val _isGitDiagramOpen = MutableStateFlow(value = false)
 
     val uiState: StateFlow<GitHubUiState> = combine(
         combine(_searchQuery, _repos, _selectedRepo) { q, r, s -> Triple(q, r, s) },
         combine(mcpRepository.discoveredTools, mcpRepository.executionLogs) { tools, logs -> Pair(tools, logs) },
-        preferencesManager.githubToken
+        preferencesManager.githubToken,
     ) { t1, t2, token ->
         GitHubUiState(
             searchQuery = t1.first,
@@ -62,7 +62,7 @@ class GitHubViewModel(
             mcpLogs = t2.second,
             isMcpConnected = mcpRepository.isConnected.value,
             isGitDiagramOpen = _isGitDiagramOpen.value,
-            token = token
+            token = token,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GitHubUiState())
 

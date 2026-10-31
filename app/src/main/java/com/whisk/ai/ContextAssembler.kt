@@ -9,7 +9,7 @@ data class ContextPayload(
     val selectedNotes: List<Note> = emptyList(),
     val selectedIssue: GitHubIssue? = null,
     val selectedPullRequest: GitHubPullRequest? = null,
-    val additionalSnippet: String? = null
+    val additionalSnippet: String? = null,
 ) {
     fun formatContext(): String {
         val builder = StringBuilder()
@@ -19,18 +19,18 @@ data class ContextPayload(
         }
         if (selectedNotes.isNotEmpty()) {
             builder.append("### Linked / Selected Vault Notes:\n")
-            selectedNotes.forEach { n ->
-                builder.append("#### Note: ").append(n.title).append("\n")
-                builder.append(n.body).append("\n\n")
+            selectedNotes.forEach { (title, body) ->
+                builder.append("#### Note: ").append(title).append("\n")
+                builder.append(body).append("\n\n")
             }
         }
         if (selectedIssue != null) {
             builder.append("### GitHub Issue #").append(selectedIssue.number).append(": ").append(selectedIssue.title).append("\n")
-            builder.append(selectedIssue.body ?: "").append("\n\n")
+            builder.append(selectedIssue.body.orEmpty()).append("\n\n")
         }
         if (selectedPullRequest != null) {
             builder.append("### GitHub Pull Request #").append(selectedPullRequest.number).append(": ").append(selectedPullRequest.title).append("\n")
-            builder.append(selectedPullRequest.body ?: "").append("\n\n")
+            builder.append(selectedPullRequest.body.orEmpty()).append("\n\n")
         }
         if (!additionalSnippet.isNullOrBlank()) {
             builder.append("### Code / Excerpt Snippet:\n")

@@ -149,8 +149,9 @@ class MainActivity : ComponentActivity() {
                     preferencesManager = preferencesManager,
                     isFirstLaunch = isFirstLaunch,
                     onExportZip = { exportZipLauncher.launch("Whisk_Vault_Backup.zip") },
-                    onImportZip = { importZipLauncher.launch(arrayOf("application/zip", "text/plain", "text/markdown")) }
-                )
+                ) {
+                    importZipLauncher.launch(arrayOf("application/zip", "text/plain", "text/markdown"))
+                }
             }
         }
     }
@@ -162,7 +163,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleShareIntent(intent: Intent?) {
-        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+        if ((intent?.action == Intent.ACTION_SEND) && (intent.type == "text/plain")) {
             val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
             val sharedSubject = intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: "Quick Capture"
             if (sharedText.isNotBlank()) {
@@ -170,7 +171,7 @@ class MainActivity : ComponentActivity() {
                     val newNote = Note(
                         title = sharedSubject.ifBlank { "Quick Capture" },
                         body = sharedText,
-                        createdAt = System.currentTimeMillis()
+                        createdAt = System.currentTimeMillis(),
                     )
                     notesRepository.saveNote(newNote)
                     Toast.makeText(this@MainActivity, "Captured quick note to vault", Toast.LENGTH_SHORT).show()
@@ -193,11 +194,11 @@ fun WhiskApp(
     preferencesManager: PreferencesManager,
     isFirstLaunch: Boolean,
     onExportZip: () -> Unit,
-    onImportZip: () -> Unit
+    onImportZip: () -> Unit,
 ) {
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
-    var showCommandPalette by remember { mutableStateOf(false) }
+    var showCommandPalette by remember { mutableStateOf(value = false) }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: "notes"
@@ -230,9 +231,9 @@ fun WhiskApp(
                     }
                 },
                 onNavigate = { route -> navController.navigate(route) },
-                onCloseDrawer = { scope.launch { drawerState.close() } }
+                onCloseDrawer = { scope.launch { drawerState.close() } },
             )
-        }
+        },
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             NavHost(
@@ -242,22 +243,20 @@ fun WhiskApp(
                 enterTransition = {
                     slideInHorizontally(
                         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                        initialOffsetX = { it / 4 }
-                    ) + fadeIn()
+                    ) { it / 4 } + fadeIn()
                 },
                 exitTransition = { fadeOut() },
                 popEnterTransition = { fadeIn() },
                 popExitTransition = {
                     slideOutHorizontally(
                         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                        targetOffsetX = { it / 4 }
-                    ) + fadeOut()
-                }
+                    ) { it / 4 } + fadeOut()
+                },
             ) {
             // 1. Notes List Destination
             composable("notes") {
                 val viewModel: NotesViewModel = viewModel(
-                    factory = viewModelFactory { NotesViewModel(notesRepository) }
+                    factory = viewModelFactory { NotesViewModel(notesRepository) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -276,19 +275,21 @@ fun WhiskApp(
                     showHint = isFirstLaunch && !(hintsDismissed["links"] ?: false),
                     onDismissHint = {
                         scope.launch { preferencesManager.dismissHint("links") }
-                    }
+                    },
                 )
             }
 
             // 2. Note Detail / Editor Destination
             composable(
                 route = "note_detail/{noteId}",
-                arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+                arguments = listOf(
+                    navArgument("noteId") { type = NavType.StringType },
+                ),
             ) { backStackEntry ->
                 val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
                 val viewModel: NoteDetailViewModel = viewModel(
                     key = noteId,
-                    factory = viewModelFactory { NoteDetailViewModel(notesRepository, noteId) }
+                    factory = viewModelFactory { NoteDetailViewModel(notesRepository, noteId) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -308,19 +309,18 @@ fun WhiskApp(
                     onOpenNote = { targetIdOrTitle ->
                         scope.launch {
                             val target = notesRepository.getNoteByTitle(targetIdOrTitle) ?: notesRepository.getNoteById(targetIdOrTitle)
-                            if (target != null) {
-                                navController.navigate("note_detail/${target.id}")
-                            }
+                            target?.let { (id) -> navController.navigate("note_detail/$id") }
                         }
                     },
-                    onOpenAiWithNote = { navController.navigate("ai?noteId=$noteId") }
-                )
+                ) {
+                    navController.navigate("ai?noteId=$noteId")
+                }
             }
 
             // 3. Search Destination
             composable("search") {
                 val viewModel: SearchViewModel = viewModel(
-                    factory = viewModelFactory { SearchViewModel(notesRepository) }
+                    factory = viewModelFactory { SearchViewModel(notesRepository) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -328,14 +328,14 @@ fun WhiskApp(
                     state = state,
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onQueryChange = { q -> viewModel.updateQuery(q) },
-                    onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") }
+                    onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") },
                 )
             }
 
             // 4. Knowledge Graph Destination
             composable("graph") {
                 val viewModel: GraphViewModel = viewModel(
-                    factory = viewModelFactory { GraphViewModel(graphRepository) }
+                    factory = viewModelFactory { GraphViewModel(graphRepository) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -345,14 +345,14 @@ fun WhiskApp(
                     onNodeSelect = { node -> viewModel.selectNode(node) },
                     onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") },
                     onResetGraph = { viewModel.loadGlobalGraph() },
-                    onToggleOrphans = { viewModel.toggleShowOrphans() }
+                    onToggleOrphans = { viewModel.toggleShowOrphans() },
                 )
             }
 
             // 5. Spatial Canvas Destination
             composable("canvas") {
                 val viewModel: CanvasViewModel = viewModel(
-                    factory = viewModelFactory { CanvasViewModel(canvasRepository, notesRepository) }
+                    factory = viewModelFactory { CanvasViewModel(canvasRepository, notesRepository) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -362,14 +362,15 @@ fun WhiskApp(
                     onAddNoteCard = { note -> viewModel.addNoteCard(note) },
                     onUpdateCardPos = { id, x, y -> viewModel.updateCardPosition(id, x, y) },
                     onDeleteCard = { id -> viewModel.deleteCard(id) },
-                    onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") }
-                )
+                ) { noteId ->
+                    navController.navigate("note_detail/$noteId")
+                }
             }
 
             // 6. Tasks Checklist Destination
             composable("tasks") {
                 val viewModel: TasksViewModel = viewModel(
-                    factory = viewModelFactory { TasksViewModel(notesRepository) }
+                    factory = viewModelFactory { TasksViewModel(notesRepository) },
                 )
                 val tasks by viewModel.tasks.collectAsStateWithLifecycle(initialValue = emptyList())
 
@@ -377,18 +378,20 @@ fun WhiskApp(
                     tasks = tasks,
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onToggleTask = { taskId, status -> viewModel.toggleTask(taskId, status) },
-                    onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") }
+                    onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") },
                 )
             }
 
             // 7. AI Workspace Destination
             composable(
                 route = "ai?noteId={noteId}",
-                arguments = listOf(navArgument("noteId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                })
+                arguments = listOf(
+                    navArgument("noteId") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
             ) { backStackEntry ->
                 val context = androidx.compose.ui.platform.LocalContext.current
                 val noteId = backStackEntry.arguments?.getString("noteId")
@@ -400,7 +403,7 @@ fun WhiskApp(
                                 loadNoteContext(notesRepository, noteId)
                             }
                         }
-                    }
+                    },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -419,11 +422,11 @@ fun WhiskApp(
                         scope.launch {
                             val currentNote = state.contextPayload.activeNote
                             if (currentNote != null) {
-                                val cleanEdit = edit.lines()
+                                val cleanEdit = edit.lineSequence()
                                     .filterNot { it.trim().startsWith("```") }
                                     .joinToString("\n")
                                     .trim()
-                                val updatedText = if (cleanEdit.isNotBlank()) cleanEdit else edit
+                                val updatedText = cleanEdit.ifBlank { edit }
                                 val updated = currentNote.copy(body = currentNote.body + "\n\n" + updatedText)
                                 notesRepository.saveNote(updated)
                                 Toast.makeText(context, "Applied edit to '${currentNote.title}'", Toast.LENGTH_SHORT).show()
@@ -435,18 +438,16 @@ fun WhiskApp(
                     onOpenNote = { targetNoteIdOrTitle ->
                         scope.launch {
                             val target = notesRepository.getNoteByTitle(targetNoteIdOrTitle) ?: notesRepository.getNoteById(targetNoteIdOrTitle)
-                            if (target != null) {
-                                navController.navigate("note_detail/${target.id}")
-                            }
+                            target?.let { (id) -> navController.navigate("note_detail/$id") }
                         }
-                    }
+                    },
                 )
             }
 
             // 8. GitHub & MCP Destination
             composable("github") {
                 val viewModel: GitHubViewModel = viewModel(
-                    factory = viewModelFactory { GitHubViewModel(gitHubRepository, mcpRepository, preferencesManager) }
+                    factory = viewModelFactory { GitHubViewModel(gitHubRepository, mcpRepository, preferencesManager) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -455,14 +456,15 @@ fun WhiskApp(
                     onSearchQueryChange = { q -> viewModel.searchRepositories(q) },
                     onSelectRepo = { repo -> viewModel.selectRepository(repo) },
                     onInvokeMcpTool = { name, args -> viewModel.invokeMcpTool(name, args) },
-                    onOpenGitDiagram = { _ -> viewModel.toggleGitDiagram(true) }
-                )
+                ) {
+                    viewModel.toggleGitDiagram(open = true)
+                }
             }
 
             // 9. Settings Destination
             composable("settings") {
                 val viewModel: SettingsViewModel = viewModel(
-                    factory = viewModelFactory { SettingsViewModel(preferencesManager, exportImportRepository) }
+                    factory = viewModelFactory { SettingsViewModel(preferencesManager, exportImportRepository) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -474,13 +476,13 @@ fun WhiskApp(
                     onSaveGitHubToken = { token -> viewModel.saveGitHubToken(token) },
                     onResetOnboarding = { viewModel.resetOnboarding() },
                     onExportBackup = onExportZip,
-                    onImportBackup = onImportZip
+                    onImportBackup = onImportZip,
                 )
             }
         }
 
         // Brutalist Bottom Navigation Bar
-        val isBottomBarVisible = (currentRoute in listOf("notes", "search", "graph", "settings") || currentRoute.startsWith("ai")) && drawerState.isClosed
+        val isBottomBarVisible = ((currentRoute in listOf("notes", "search", "graph", "settings")) || currentRoute.startsWith("ai")) && drawerState.isClosed
         if (isBottomBarVisible) {
             val selectedRoute = if (currentRoute.startsWith("ai")) "ai" else currentRoute
             WhiskBottomBar(
@@ -499,7 +501,7 @@ fun WhiskApp(
                         navController.navigate("note_detail/${newNote.id}")
                     }
                 },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
 
@@ -516,13 +518,12 @@ fun WhiskApp(
                     }
                 },
                 onExportBackup = onExportZip,
-                onCreateTemplateNote = { templateNote ->
-                    scope.launch {
-                        notesRepository.saveNote(templateNote)
-                        navController.navigate("note_detail/${templateNote.id}")
-                    }
+            ) { templateNote ->
+                scope.launch {
+                    notesRepository.saveNote(templateNote)
+                    navController.navigate("note_detail/${templateNote.id}")
                 }
-            )
+            }
         }
     }
 }

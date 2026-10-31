@@ -13,43 +13,43 @@ class GraphRepository(private val noteDao: NoteDao) {
         val notes = noteDao.getAllNotesDirect()
         val nodesMap = mutableMapOf<String, GraphNode>()
         val edges = mutableListOf<GraphEdge>()
-        val linkRegex = Regex("\\[\\[(.*?)\\]\\]")
+        val linkRegex = Regex("\\[\\[(.*?)]]")
 
-        val titleToIdMap = notes.associate { it.title to it.id }
+        val titleToIdMap = notes.associateBy({ it.title }, { it.id })
 
         // 1. Create Note Nodes
         notes.forEach { note ->
             val isOrphan = !linkRegex.containsMatchIn(note.body) &&
-                    notes.none { other -> other.id != note.id && other.body.contains("[[${note.title}]]") }
+                notes.none { other -> (other.id != note.id) && other.body.contains("[[${note.title}]]") }
             val node = GraphNode(
                 id = note.id,
                 label = note.title,
                 type = NodeType.NOTE,
-                subtitle = if (note.tags.isNotEmpty()) note.tags else note.folder,
+                subtitle = note.tags.ifEmpty { note.folder },
                 isOrphan = isOrphan,
                 isArchived = note.isArchived,
-                noteId = note.id
+                noteId = note.id,
             )
             nodesMap[note.id] = node
 
             // Tags
             if (note.tags.isNotBlank()) {
-                val tagsList = note.tags.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                val tagsList = note.tags.split(",").asSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList()
                 tagsList.forEach { tag ->
                     val tagNodeId = "tag_$tag"
                     if (!nodesMap.containsKey(tagNodeId)) {
                         nodesMap[tagNodeId] = GraphNode(
                             id = tagNodeId,
                             label = "#$tag",
-                            type = NodeType.TAG
+                            type = NodeType.TAG,
                         )
                     }
                     edges.add(
                         GraphEdge(
                             sourceId = note.id,
                             targetId = tagNodeId,
-                            type = EdgeType.TAG_MEMBERSHIP
-                        )
+                            type = EdgeType.TAG_MEMBERSHIP,
+                        ),
                     )
                 }
             }
@@ -67,8 +67,8 @@ class GraphRepository(private val noteDao: NoteDao) {
                             sourceId = note.id,
                             targetId = targetId,
                             type = EdgeType.EXPLICIT_LINK,
-                            label = "links to"
-                        )
+                            label = "links to",
+                        ),
                     )
                 }
             }

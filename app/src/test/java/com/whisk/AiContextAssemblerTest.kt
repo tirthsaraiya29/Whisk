@@ -14,7 +14,7 @@ class AiContextAssemblerTest {
     fun testContextFormattingWithActiveNote() {
         val note = Note(
             title = "Room Database Architecture",
-            body = "Room uses SQLite under the hood with reactive StateFlow flows."
+            body = "Room uses SQLite under the hood with reactive StateFlow flows.",
         )
 
         val payload = ContextPayload(activeNote = note)
@@ -32,7 +32,7 @@ class AiContextAssemblerTest {
             body = "Native handles were not freed on process pause.",
             state = "open",
             author = "android-dev",
-            url = "https://github.com/example/repo/issues/42"
+            url = "https://github.com/example/repo/issues/42",
         )
         val pr = GitHubPullRequest(
             number = 43,
@@ -40,7 +40,7 @@ class AiContextAssemblerTest {
             body = "Replaced static reference with weak reference.",
             state = "open",
             author = "android-dev",
-            url = "https://github.com/example/repo/pull/43"
+            url = "https://github.com/example/repo/pull/43",
         )
 
         val payload = ContextPayload(selectedIssue = issue, selectedPullRequest = pr)

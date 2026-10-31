@@ -8,7 +8,7 @@ import com.whisk.domain.model.Folder
 data class FolderEntity(
     @PrimaryKey val id: String,
     val name: String,
-    val parentId: String?
+    val parentId: String?,
 ) {
     fun toDomain(noteCount: Int = 0) = Folder(id = id, name = name, parentId = parentId, noteCount = noteCount)
     companion object {

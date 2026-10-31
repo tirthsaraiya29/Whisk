@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.whisk"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.whisk"
@@ -24,7 +24,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }

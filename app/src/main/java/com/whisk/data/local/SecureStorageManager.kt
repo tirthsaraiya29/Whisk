@@ -2,6 +2,7 @@ package com.whisk.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -18,16 +19,16 @@ class SecureStorageManager(context: Context) {
                 "whisk_secure_vault_prefs",
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Fallback to standard private shared preferences if KeyStore is unavailable (e.g. legacy test environment)
             context.getSharedPreferences("whisk_secure_vault_fallback", Context.MODE_PRIVATE)
         }
     }
 
     fun saveSecret(key: String, value: String) {
-        sharedPreferences.edit().putString(key, value).apply()
+        sharedPreferences.edit { putString(key, value) }
     }
 
     fun getSecret(key: String, defaultValue: String = ""): String {
@@ -35,6 +36,6 @@ class SecureStorageManager(context: Context) {
     }
 
     fun removeSecret(key: String) {
-        sharedPreferences.edit().remove(key).apply()
+        sharedPreferences.edit { remove(key) }
     }
 }

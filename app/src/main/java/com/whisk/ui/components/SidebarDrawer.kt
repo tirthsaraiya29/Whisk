@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material3.HorizontalDivider
@@ -64,7 +63,7 @@ fun SidebarDrawer(
     onNewNote: () -> Unit,
     onNavigate: (String) -> Unit,
     onCloseDrawer: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
     var filterQuery by remember { mutableStateOf("") }
@@ -72,8 +71,8 @@ fun SidebarDrawer(
 
     // Group notes by folder or root
     val filteredNotes = remember(notes, filterQuery) {
-        if (filterQuery.isBlank()) notes else notes.filter {
-            it.title.contains(filterQuery, ignoreCase = true) || (it.folder ?: "").contains(filterQuery, ignoreCase = true)
+        if (filterQuery.isBlank()) notes else notes.filter { note ->
+            note.title.contains(filterQuery, ignoreCase = true) || (note.folder ?: "").contains(filterQuery, ignoreCase = true)
         }
     }
 
@@ -86,7 +85,7 @@ fun SidebarDrawer(
             .fillMaxHeight()
             .fillMaxWidth(0.82f)
             .border(1.dp, MaterialTheme.colorScheme.outline),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier
@@ -94,7 +93,7 @@ fun SidebarDrawer(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             // Header / System Identifier with Close Trigger
             Row(
@@ -102,7 +101,7 @@ fun SidebarDrawer(
                     .fillMaxWidth()
                     .padding(bottom = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
                     Text(
@@ -110,13 +109,13 @@ fun SidebarDrawer(
                         style = MaterialTheme.typography.labelMedium,
                         fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
                         text = "${notes.size} OBJECTS LOADED",
                         style = MaterialTheme.typography.labelSmall,
                         fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -129,14 +128,14 @@ fun SidebarDrawer(
                                 onNewNote()
                                 onCloseDrawer()
                             }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = "+ NEW",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
 
@@ -147,14 +146,14 @@ fun SidebarDrawer(
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onCloseDrawer()
                             }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = "[X]",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
@@ -172,7 +171,7 @@ fun SidebarDrawer(
                         text = "> FILTER FILES...",
                         fontFamily = DotMatrixFontFamily,
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 },
                 textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
@@ -180,13 +179,13 @@ fun SidebarDrawer(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
+                    unfocusedContainerColor = Color.Transparent,
                 ),
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                singleLine = true
+                singleLine = true,
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -196,7 +195,7 @@ fun SidebarDrawer(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 folderGroups.forEach { (folderName, folderNotes) ->
                     val isRoot = folderName == "VAULT_ROOT"
@@ -212,20 +211,20 @@ fun SidebarDrawer(
                                         expandedFolders[folderName] = !isExpanded
                                     }
                                     .padding(vertical = 6.dp, horizontal = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = if (isExpanded) "[-] " else "[+] ",
                                     fontFamily = DotMatrixFontFamily,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary,
                                 )
                                 Icon(
                                     imageVector = if (isExpanded) Icons.Default.FolderOpen else Icons.Default.Folder,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(14.dp),
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
@@ -233,7 +232,7 @@ fun SidebarDrawer(
                                     fontFamily = DotMatrixFontFamily,
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
@@ -248,11 +247,11 @@ fun SidebarDrawer(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .background(
-                                        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                                        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     )
                                     .border(
                                         if (isSelected) 1.dp else 0.dp,
-                                        MaterialTheme.colorScheme.outline
+                                        MaterialTheme.colorScheme.outline,
                                     )
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -260,13 +259,13 @@ fun SidebarDrawer(
                                         onCloseDrawer()
                                     }
                                     .padding(vertical = 8.dp, horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = indent,
                                     fontFamily = VercelMonoFontFamily,
                                     fontSize = 11.sp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
                                     text = note.title.ifBlank { "UNTITLED.MD" },
@@ -274,7 +273,7 @@ fun SidebarDrawer(
                                     style = MaterialTheme.typography.labelMedium,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }
@@ -288,23 +287,35 @@ fun SidebarDrawer(
             // Quick Navigation Destinations Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 DrawerIconButton(
                     label = "SEARCH",
-                    onClick = { onNavigate("search"); onCloseDrawer() }
+                    onClick = {
+                        onNavigate("search")
+                        onCloseDrawer()
+                    },
                 )
                 DrawerIconButton(
                     label = "GRAPH",
-                    onClick = { onNavigate("graph"); onCloseDrawer() }
+                    onClick = {
+                        onNavigate("graph")
+                        onCloseDrawer()
+                    },
                 )
                 DrawerIconButton(
                     label = "AI",
-                    onClick = { onNavigate("ai"); onCloseDrawer() }
+                    onClick = {
+                        onNavigate("ai")
+                        onCloseDrawer()
+                    },
                 )
                 DrawerIconButton(
                     label = "SETTINGS",
-                    onClick = { onNavigate("settings"); onCloseDrawer() }
+                    onClick = {
+                        onNavigate("settings")
+                        onCloseDrawer()
+                    },
                 )
             }
         }
@@ -314,7 +325,7 @@ fun SidebarDrawer(
 @Composable
 private fun DrawerIconButton(
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
     Box(
@@ -324,14 +335,14 @@ private fun DrawerIconButton(
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             }
-            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
         Text(
             text = label,
             fontFamily = DotMatrixFontFamily,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }

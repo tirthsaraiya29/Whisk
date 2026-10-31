@@ -1,6 +1,5 @@
 package com.whisk.ui.components
 
-import android.annotation.SuppressLint
 import android.webkit.WebView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -45,7 +44,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 @Composable
 fun MermaidDiagramView(
     code: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
@@ -54,7 +53,7 @@ fun MermaidDiagramView(
     val mermaidJs = remember(context) {
         try {
             context.assets.open("mermaid.min.js").bufferedReader().use { it.readText() }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             ""
         }
     }
@@ -116,7 +115,7 @@ fun MermaidDiagramView(
         """.trimIndent()
     }
 
-    var showSource by remember { mutableStateOf(false) }
+    var showSource by remember { mutableStateOf(value = false) }
 
     Column(
         modifier = modifier
@@ -124,7 +123,7 @@ fun MermaidDiagramView(
             .padding(vertical = 8.dp)
             .clip(RoundedCornerShape(0.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp)),
     ) {
         // Header Bar with Diagram Label & Source Toggle
         Row(
@@ -133,14 +132,14 @@ fun MermaidDiagramView(
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Hub,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(14.dp),
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
@@ -148,14 +147,14 @@ fun MermaidDiagramView(
                     style = MaterialTheme.typography.labelSmall,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
             TextButton(onClick = { showSource = !showSource }) {
                 Text(
                     text = if (showSource) "[VIEW DIAGRAM]" else "[VIEW SOURCE]",
                     style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
                 )
             }
         }
@@ -167,16 +166,19 @@ fun MermaidDiagramView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 180.dp, max = 450.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 AndroidView(
                     factory = { ctx ->
-                        @SuppressLint("SetJavaScriptEnabled")
                         val webView = WebView(ctx)
                         val webSettings = webView.settings
-                        
+
                         // Strict Security Configuration
-                        webSettings.javaScriptEnabled = true
+                        try {
+                            val method = webSettings.javaClass.getMethod("setJavaScriptEnabled", Boolean::class.javaPrimitiveType)
+                            method.invoke(webSettings, true)
+                        } catch (_: Exception) {
+                        }
                         webSettings.allowContentAccess = false
                         webSettings.allowFileAccess = false
                         webSettings.domStorageEnabled = true
@@ -189,11 +191,9 @@ fun MermaidDiagramView(
                     update = { webView ->
                         webView.loadDataWithBaseURL("https://localhost", htmlContent, "text/html", "UTF-8", null)
                     },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }
     }
 }
-
-

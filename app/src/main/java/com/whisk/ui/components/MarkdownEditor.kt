@@ -1,7 +1,6 @@
 package com.whisk.ui.components
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -22,17 +22,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
-import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.ViewColumn
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,7 +41,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,9 +65,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.core.net.toUri
 import com.whisk.ui.theme.DotMatrixFontFamily
 import com.whisk.ui.theme.VercelMonoFontFamily
 
@@ -83,7 +77,7 @@ class MarkdownVisualTransformation(
     private val primaryColor: Color,
     private val codeColor: Color,
     private val keywordColor: Color,
-    private val headerColor: Color
+    private val headerColor: Color,
 ) : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         val builder = AnnotatedString.Builder(text)
@@ -95,10 +89,10 @@ class MarkdownVisualTransformation(
 
         val keywords = setOf(
             "fun", "val", "var", "class", "import", "return", "if", "else",
-            "function", "let", "const", "def", "select", "from", "where", "async", "await"
+            "function", "let", "const", "def", "select", "from", "where", "async", "await",
         )
         val keywordRegex = Regex("\\b(" + keywords.joinToString("|") + ")\\b", RegexOption.IGNORE_CASE)
-        val linkRegex = Regex("\\[\\[(.*?)\\]\\]")
+        val linkRegex = Regex("\\[\\[(.*?)]]")
         val headerRegex = Regex("^#{1,3}\\s.*")
 
         for (match in linkRegex.findAll(str)) {
@@ -107,7 +101,7 @@ class MarkdownVisualTransformation(
             builder.addStyle(
                 SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
                 start,
-                end
+                end,
             )
         }
 
@@ -121,7 +115,7 @@ class MarkdownVisualTransformation(
                 builder.addStyle(
                     SpanStyle(fontFamily = FontFamily.Monospace, color = codeColor, fontWeight = FontWeight.Bold),
                     currentOffset,
-                    lineEnd
+                    lineEnd,
                 )
             } else if (inCode) {
                 builder.addStyle(SpanStyle(fontFamily = FontFamily.Monospace), currentOffset, lineEnd)
@@ -131,14 +125,14 @@ class MarkdownVisualTransformation(
                     builder.addStyle(
                         SpanStyle(color = keywordColor, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
                         kStart,
-                        kEnd
+                        kEnd,
                     )
                 }
             } else if (headerRegex.matches(line)) {
                 builder.addStyle(
                     SpanStyle(color = headerColor, fontWeight = FontWeight.Bold),
                     currentOffset,
-                    lineEnd
+                    lineEnd,
                 )
             }
             charOffset = lineEnd + 1
@@ -155,7 +149,7 @@ fun MarkdownEditor(
     body: String,
     onBodyChange: (String) -> Unit,
     onLinkClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var mode by remember { mutableStateOf(EditorMode.EDIT) }
 
@@ -212,7 +206,7 @@ fun MarkdownEditor(
         modifier = modifier
             .fillMaxSize()
             .imePadding()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
     ) {
         // Mode Toggle Header
         Row(
@@ -220,14 +214,14 @@ fun MarkdownEditor(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "${wordCount}W // ${charCount}C // ${lineCount}L",
                 style = MaterialTheme.typography.labelSmall,
                 fontFamily = DotMatrixFontFamily,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             // Brutalist Mode Toggle Switcher
@@ -235,7 +229,7 @@ fun MarkdownEditor(
                 listOf(
                     EditorMode.EDIT to "EDIT",
                     EditorMode.SPLIT to "SPLIT",
-                    EditorMode.PREVIEW to "PREVIEW"
+                    EditorMode.PREVIEW to "PREVIEW",
                 ).forEach { (targetMode, label) ->
                     val isSelected = mode == targetMode
                     Box(
@@ -246,14 +240,14 @@ fun MarkdownEditor(
                                 haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                                 mode = targetMode
                             }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
@@ -263,14 +257,14 @@ fun MarkdownEditor(
         HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
         // Formatting Scrollable Toolbar
-        if (mode == EditorMode.EDIT || mode == EditorMode.SPLIT) {
+        if ((mode == EditorMode.EDIT) || (mode == EditorMode.SPLIT)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 12.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 IconButton(onClick = { applyFormattingWithHaptic("# ") }) {
                     Text("H1", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
@@ -285,7 +279,7 @@ fun MarkdownEditor(
                     Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
                 }
                 IconButton(onClick = { applyFormattingWithHaptic("- ") }) {
-                    Icon(Icons.Default.FormatListBulleted, contentDescription = "List")
+                    Icon(Icons.AutoMirrored.Filled.FormatListBulleted, contentDescription = "List")
                 }
                 IconButton(onClick = { applyFormattingWithHaptic("> [!NOTE] ") }) {
                     Icon(Icons.Default.FormatQuote, contentDescription = "Callout Note")
@@ -314,9 +308,9 @@ fun MarkdownEditor(
                 .padding(horizontal = 16.dp, vertical = 6.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent
+                unfocusedBorderColor = Color.Transparent,
             ),
-            singleLine = true
+            singleLine = true,
         )
 
         HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
@@ -327,7 +321,7 @@ fun MarkdownEditor(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f)
+                        .weight(1f),
                 ) {
                     // Line-Number Gutter
                     Column(
@@ -336,17 +330,17 @@ fun MarkdownEditor(
                             .width(36.dp)
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                             .padding(top = 16.dp, end = 6.dp),
-                        horizontalAlignment = Alignment.End
+                        horizontalAlignment = Alignment.End,
                     ) {
                         (1..lineCount.coerceAtMost(100)).forEach { lineNum ->
                             Text(
-                                text = "$lineNum",
+                                text = lineNum.toString(),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
                                     fontFamily = DotMatrixFontFamily,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 ),
-                                maxLines = 1
+                                maxLines = 1,
                             )
                         }
                     }
@@ -368,8 +362,8 @@ fun MarkdownEditor(
                             .padding(horizontal = 12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent
-                        )
+                            unfocusedBorderColor = Color.Transparent,
+                        ),
                     )
                 }
             }
@@ -377,7 +371,7 @@ fun MarkdownEditor(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f)
+                        .weight(1f),
                 ) {
                     // Left Editor Column
                     OutlinedTextField(
@@ -397,15 +391,15 @@ fun MarkdownEditor(
                             .padding(horizontal = 8.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent
-                        )
+                            unfocusedBorderColor = Color.Transparent,
+                        ),
                     )
 
                     Box(
                         modifier = Modifier
                             .width(1.dp)
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
                     )
 
                     // Right Preview Column
@@ -414,7 +408,7 @@ fun MarkdownEditor(
                             .weight(1f)
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 12.dp)
+                            .padding(horizontal = 12.dp),
                     ) {
                         RenderMarkdownPreview(body, onLinkClick, onBodyChange)
                     }
@@ -425,7 +419,7 @@ fun MarkdownEditor(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                     RenderMarkdownPreview(body, onLinkClick, onBodyChange)
                 }
@@ -438,7 +432,7 @@ fun MarkdownEditor(
 fun RenderMarkdownPreview(
     body: String,
     onLinkClick: (String) -> Unit,
-    onBodyChange: (String) -> Unit
+    onBodyChange: (String) -> Unit,
 ) {
     val lines = body.lines()
     var inCodeBlock = false
@@ -472,17 +466,17 @@ fun RenderMarkdownPreview(
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0x22D97706))
+                    colors = CardDefaults.cardColors(containerColor = Color(0x22D97706)),
                 ) {
                     Row(
                         modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = null,
                             tint = Color(0xFFD97706),
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier.padding(end = 8.dp),
                         )
                         RenderFormattedMarkdownLine(text = calloutText, onLinkClick = onLinkClick)
                     }
@@ -496,17 +490,17 @@ fun RenderMarkdownPreview(
                         .fillMaxWidth()
                         .padding(vertical = 4.dp),
                     shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 ) {
                     Row(
                         modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier.padding(end = 8.dp),
                         )
                         RenderFormattedMarkdownLine(text = calloutText, onLinkClick = onLinkClick)
                     }
@@ -519,7 +513,7 @@ fun RenderMarkdownPreview(
                     onLinkClick = onLinkClick,
                     textStyle = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier.padding(vertical = 6.dp),
-                    isHeader = true
+                    isHeader = true,
                 )
                 i++
             }
@@ -529,7 +523,7 @@ fun RenderMarkdownPreview(
                     onLinkClick = onLinkClick,
                     textStyle = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(vertical = 4.dp),
-                    isHeader = true
+                    isHeader = true,
                 )
                 i++
             }
@@ -539,7 +533,7 @@ fun RenderMarkdownPreview(
                     onLinkClick = onLinkClick,
                     textStyle = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(vertical = 4.dp),
-                    isHeader = true
+                    isHeader = true,
                 )
                 i++
             }
@@ -547,28 +541,28 @@ fun RenderMarkdownPreview(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = 4.dp),
                 ) {
                     Box(
                         modifier = Modifier
                             .width(4.dp)
                             .height(24.dp)
-                            .background(MaterialTheme.colorScheme.primary)
+                            .background(MaterialTheme.colorScheme.primary),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     RenderFormattedMarkdownLine(
                         text = line.removePrefix("> "),
                         onLinkClick = onLinkClick,
                         textStyle = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
                 i++
             }
-            line.trim() == "---" || line.trim() == "***" -> {
+            (line.trim() == "---") || (line.trim() == "***") -> {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
                 )
                 i++
             }
@@ -578,7 +572,7 @@ fun RenderMarkdownPreview(
                 val taskText = line.substringAfter("]").trim()
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 2.dp)
+                    modifier = Modifier.padding(vertical = 2.dp),
                 ) {
                     Checkbox(
                         checked = isChecked,
@@ -588,7 +582,7 @@ fun RenderMarkdownPreview(
                             updatedLines[lineIndex] = "$newCheckStr $taskText"
                             onBodyChange(updatedLines.joinToString("\n"))
                         },
-                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary),
                     )
                     RenderFormattedMarkdownLine(text = taskText, onLinkClick = onLinkClick)
                 }
@@ -605,7 +599,7 @@ fun RenderMarkdownPreview(
             }
             line.trim().startsWith("|") && line.trim().endsWith("|") -> {
                 val tableBlock = mutableListOf<String>()
-                while (i < lines.size && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+                while ((i < lines.size) && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
                     tableBlock.add(lines[i])
                     i++
                 }
@@ -633,7 +627,7 @@ fun RenderFormattedMarkdownLine(
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
-    isHeader: Boolean = false
+    isHeader: Boolean = false,
 ) {
     val context = LocalContext.current
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -646,36 +640,37 @@ fun RenderFormattedMarkdownLine(
 
     val style = if (isHeader) textStyle.copy(fontWeight = FontWeight.Bold) else textStyle
 
+    @Suppress("DEPRECATION")
     ClickableText(
         text = annotatedString,
         style = style.copy(color = onBackgroundColor),
         onClick = { offset ->
             annotatedString.getStringAnnotations(tag = "NOTE_LINK", start = offset, end = offset)
-                .firstOrNull()?.let { annotation ->
-                    onLinkClick(annotation.item)
+                .firstOrNull()?.let { (item) ->
+                    onLinkClick(item)
                 }
             annotatedString.getStringAnnotations(tag = "URL_LINK", start = offset, end = offset)
-                .firstOrNull()?.let { annotation ->
+                .firstOrNull()?.let { (item) ->
                     try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                        val intent = Intent(Intent.ACTION_VIEW, item.toUri())
                         context.startActivity(intent)
                     } catch (_: Exception) {}
                 }
         },
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
 @Composable
 fun RenderMarkdownTable(
     tableLines: List<String>,
-    onLinkClick: (String) -> Unit
+    onLinkClick: (String) -> Unit,
 ) {
-    val rows = tableLines.map { line ->
+    val rows = tableLines.asSequence().map { line ->
         line.trim().trim('|').split('|').map { it.trim() }
     }.filter { row ->
-        !row.all { cell -> cell.all { char -> char == '-' || char == ':' || char == ' ' } }
-    }
+        !row.all { cell -> cell.all { char -> (char == '-') || (char == ':') || (char == ' ') } }
+    }.toList()
 
     if (rows.isEmpty()) return
 
@@ -688,7 +683,7 @@ fun RenderMarkdownTable(
             .padding(vertical = 8.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
     ) {
         if (headerRow != null) {
             Row(
@@ -696,7 +691,7 @@ fun RenderMarkdownTable(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 headerRow.forEach { cell ->
                     Box(modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
@@ -712,7 +707,7 @@ fun RenderMarkdownTable(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 row.forEach { cell ->
                     Box(modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
@@ -720,7 +715,7 @@ fun RenderMarkdownTable(
                     }
                 }
             }
-            if (rowIndex < dataRows.size - 1) {
+            if ((rowIndex < (dataRows.size - 1))) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
             }
         }

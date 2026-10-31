@@ -20,7 +20,7 @@ class CanvasRepositoryTest {
             content = "Details",
             x = 100f,
             y = 200f,
-            type = CardType.NOTE_CARD
+            type = CardType.NOTE_CARD,
         )
         val canvas = SpatialCanvas(id = "canvas1", title = "Design Space", cards = listOf(card))
 

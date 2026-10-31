@@ -12,7 +12,7 @@ data class TaskEntity(
     val title: String,
     val isCompleted: Boolean,
     val lineNumber: Int,
-    val tag: String?
+    val tag: String?,
 ) {
     fun toDomain() = TaskItem(
         id = id,
@@ -21,7 +21,7 @@ data class TaskEntity(
         title = title,
         isCompleted = isCompleted,
         lineNumber = lineNumber,
-        tag = tag
+        tag = tag,
     )
 
     companion object {
@@ -32,7 +32,7 @@ data class TaskEntity(
             title = item.title,
             isCompleted = item.isCompleted,
             lineNumber = item.lineNumber,
-            tag = item.tag
+            tag = item.tag,
         )
     }
 }

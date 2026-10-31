@@ -14,9 +14,9 @@ object DeveloperTemplates {
 # Daily Note: $dateStr 📅
 
 ## Top Focus Areas
-- [ ] Task 1: 
-- [ ] Task 2: 
-- [ ] Task 3: 
+- [ ] Task 1:
+- [ ] Task 2:
+- [ ] Task 3:
 
 ## Today's Notes & Learnings
 - 
@@ -29,7 +29,7 @@ object DeveloperTemplates {
 ## Related Vault Notes
 - [[Architecture Overview]]
             """.trimIndent(),
-            tags = listOf("daily-note", "journal")
+            tags = listOf("daily-note", "journal"),
         )
     }
 
@@ -63,7 +63,7 @@ Chosen Option: **Option A** because...
 ## Negative Consequences & Risks
 - 
             """.trimIndent(),
-            tags = listOf("adr", "architecture")
+            tags = listOf("adr", "architecture"),
         )
     }
 
@@ -94,7 +94,7 @@ Explain why the issue occurred.
 // Code fix snippet
 ```
             """.trimIndent(),
-            tags = listOf("debugging", "journal", "bugfix")
+            tags = listOf("debugging", "journal", "bugfix"),
         )
     }
 
@@ -118,7 +118,7 @@ fun example() {
 - Kotlin 2.0+
 - Android SDK 26+
             """.trimIndent(),
-            tags = listOf("snippet", "code")
+            tags = listOf("snippet", "code"),
         )
     }
 }

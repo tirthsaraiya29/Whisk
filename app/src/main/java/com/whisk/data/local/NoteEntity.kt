@@ -18,7 +18,7 @@ data class NoteEntity(
     val sourceMetadata: String?,
     val repoRef: String?,
     val aliases: String = "",
-    val status: String? = "DRAFT"
+    val status: String? = "DRAFT",
 ) {
     fun toDomain(): Note {
         return Note(
@@ -28,13 +28,13 @@ data class NoteEntity(
             createdAt = createdAt,
             updatedAt = updatedAt,
             folder = folder,
-            tags = if (tags.isBlank()) emptyList() else tags.split(",").map { it.trim() }.filter { it.isNotEmpty() },
+            tags = if (tags.isBlank()) emptyList() else tags.split(",").asSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList(),
             isFavorite = isFavorite,
             isArchived = isArchived,
             sourceMetadata = sourceMetadata,
             repoRef = repoRef,
-            aliases = if (aliases.isBlank()) emptyList() else aliases.split(",").map { it.trim() }.filter { it.isNotEmpty() },
-            status = status
+            aliases = if (aliases.isBlank()) emptyList() else aliases.split(",").asSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList(),
+            status = status,
         )
     }
 
@@ -53,7 +53,7 @@ data class NoteEntity(
                 sourceMetadata = note.sourceMetadata,
                 repoRef = note.repoRef,
                 aliases = note.aliases.joinToString(","),
-                status = note.status
+                status = note.status,
             )
         }
     }

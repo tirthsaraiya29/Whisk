@@ -15,7 +15,7 @@ import java.util.zip.ZipOutputStream
 class ExportImportRepository(
     private val context: Context,
     private val noteDao: NoteDao,
-    private val notesRepository: NotesRepository
+    private val notesRepository: NotesRepository,
 ) {
 
     suspend fun exportNoteToMarkdown(note: Note, outputStream: OutputStream) = withContext(Dispatchers.IO) {
@@ -33,17 +33,17 @@ class ExportImportRepository(
     suspend fun exportVaultToZip(outputStream: OutputStream) = withContext(Dispatchers.IO) {
         val notes = noteDao.getAllNotesDirect()
         ZipOutputStream(outputStream).use { zipOut ->
-            notes.forEach { note ->
-                val safeTitle = note.title.replace(Regex("[^a-zA-Z0-9_-]"), "_")
-                val fileName = "${safeTitle}_${note.id.take(6)}.md"
+            notes.forEach { (id, title, body, _, _, _, tags) ->
+                val safeTitle = title.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+                val fileName = "${safeTitle}_${id.take(6)}.md"
                 val entry = ZipEntry(fileName)
                 zipOut.putNextEntry(entry)
                 val content = buildString {
-                    append("# ").append(note.title).append("\n\n")
-                    if (note.tags.isNotBlank()) {
-                        append("Tags: ").append(note.tags).append("\n\n")
+                    append("# ").append(title).append("\n\n")
+                    if (tags.isNotBlank()) {
+                        append("Tags: ").append(tags).append("\n\n")
                     }
-                    append(note.body)
+                    append(body)
                 }
                 zipOut.write(content.toByteArray(Charsets.UTF_8))
                 zipOut.closeEntry()
@@ -66,14 +66,14 @@ class ExportImportRepository(
                     val title = lines.firstOrNull { it.startsWith("# ") }?.removePrefix("# ")?.trim()
                         ?: entryName.removeSuffix(".md").removeSuffix(".txt")
                     val body = if (lines.firstOrNull()?.startsWith("# ") == true) {
-                        lines.drop(1).joinToString("\n").trim()
+                        lines.drop(1).asSequence().joinToString("\n").trim()
                     } else {
                         text
                     }
                     val note = Note(
                         title = title,
                         body = body,
-                        tags = listOf("imported")
+                        tags = listOf("imported"),
                     )
                     notesRepository.saveNote(note)
                     importedCount++

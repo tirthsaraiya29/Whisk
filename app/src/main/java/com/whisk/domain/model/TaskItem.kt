@@ -9,7 +9,7 @@ data class TaskItem(
     val title: String,
     val isCompleted: Boolean = false,
     val lineNumber: Int = 0,
-    val tag: String? = null
+    val tag: String? = null,
 )
 
 data class Template(
@@ -17,5 +17,5 @@ data class Template(
     val name: String,
     val category: String,
     val description: String,
-    val content: String
+    val content: String,
 )

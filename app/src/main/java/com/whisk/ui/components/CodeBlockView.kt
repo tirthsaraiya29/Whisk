@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun CodeBlockView(
     code: String,
-    language: String = "code"
+    language: String = "code",
 ) {
     val isMermaid = language.equals("mermaid", ignoreCase = true) ||
             code.trimStart().startsWith("graph ") ||
@@ -53,7 +53,7 @@ fun CodeBlockView(
             .padding(vertical = 6.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(6.dp)),
     ) {
         // Header Bar
         Row(
@@ -62,12 +62,12 @@ fun CodeBlockView(
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = language.lowercase(),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
             IconButton(
                 onClick = {
@@ -75,12 +75,12 @@ fun CodeBlockView(
                     val clip = ClipData.newPlainText("Code", code)
                     clipboard.setPrimaryClip(clip)
                     Toast.makeText(context, "Code copied", Toast.LENGTH_SHORT).show()
-                }
+                },
             ) {
                 Icon(
                     imageVector = Icons.Default.ContentCopy,
                     contentDescription = "Copy code",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -95,9 +95,9 @@ fun CodeBlockView(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 13.sp,
-                    lineHeight = 18.sp
+                    lineHeight = 18.sp,
                 ),
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

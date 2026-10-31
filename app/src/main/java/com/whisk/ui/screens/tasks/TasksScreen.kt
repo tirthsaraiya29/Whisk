@@ -55,7 +55,7 @@ fun TasksScreen(
     tasks: List<TaskItem>,
     onToggleTask: (String, Boolean) -> Unit,
     onOpenNote: (String) -> Unit,
-    onMenuClick: (() -> Unit)? = null
+    onMenuClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     var activeFilter by remember { mutableStateOf(TaskFilter.ALL) }
@@ -78,16 +78,16 @@ fun TasksScreen(
             WhiskTopBar(
                 title = "VAULT // CHECKLIST",
                 subtitle = "$pendingCount PENDING • $completedCount COMPLETED OF $totalCount TASKS",
-                onMenuClick = onMenuClick
+                onMenuClick = onMenuClick,
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .imePadding()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
         ) {
             // Task Progress Summary Header
             if (totalCount > 0) {
@@ -95,26 +95,26 @@ fun TasksScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                        .padding(14.dp)
+                        .padding(14.dp),
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = "COMPLETION PROGRESS",
                             style = MaterialTheme.typography.labelMedium,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
                             text = "${(progress * 100).toInt()}%",
                             style = MaterialTheme.typography.labelMedium,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
 
@@ -126,7 +126,7 @@ fun TasksScreen(
                             .fillMaxWidth()
                             .height(4.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surface
+                        trackColor = MaterialTheme.colorScheme.surface,
                     )
                 }
             }
@@ -136,27 +136,27 @@ fun TasksScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 item {
                     BrutalistTaskChip(
                         selected = activeFilter == TaskFilter.ALL,
                         label = "ALL ($totalCount)",
-                        onClick = { activeFilter = TaskFilter.ALL }
+                        onClick = { activeFilter = TaskFilter.ALL },
                     )
                 }
                 item {
                     BrutalistTaskChip(
                         selected = activeFilter == TaskFilter.PENDING,
                         label = "PENDING ($pendingCount)",
-                        onClick = { activeFilter = TaskFilter.PENDING }
+                        onClick = { activeFilter = TaskFilter.PENDING },
                     )
                 }
                 item {
                     BrutalistTaskChip(
                         selected = activeFilter == TaskFilter.COMPLETED,
                         label = "DONE ($completedCount)",
-                        onClick = { activeFilter = TaskFilter.COMPLETED }
+                        onClick = { activeFilter = TaskFilter.COMPLETED },
                     )
                 }
             }
@@ -169,7 +169,7 @@ fun TasksScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(32.dp),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = if (totalCount == 0) {
@@ -179,13 +179,13 @@ fun TasksScreen(
                         },
                         style = MaterialTheme.typography.labelMedium,
                         fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp)
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
                 ) {
                     items(filteredTasks, key = { it.id }) { task ->
                         Row(
@@ -196,7 +196,7 @@ fun TasksScreen(
                                     onOpenNote(task.noteId)
                                 }
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Checkbox(
                                 checked = task.isCompleted,
@@ -204,26 +204,26 @@ fun TasksScreen(
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onToggleTask(task.id, task.isCompleted)
                                 },
-                                colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                                colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary),
                             )
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(start = 8.dp)
+                                    .padding(start = 8.dp),
                             ) {
                                 Text(
                                     text = task.title,
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontFamily = VercelMonoFontFamily,
-                                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                                     ),
-                                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
                                     text = "FILE // ${task.noteTitle.uppercase()}",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontFamily = DotMatrixFontFamily,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary,
                                 )
                             }
 
@@ -231,7 +231,7 @@ fun TasksScreen(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                     contentDescription = "Open note",
-                                    tint = MaterialTheme.colorScheme.onSurface
+                                    tint = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
@@ -247,27 +247,27 @@ fun TasksScreen(
 private fun BrutalistTaskChip(
     selected: Boolean,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
     Box(
         modifier = Modifier
             .background(
-                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
+                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
             )
             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
             .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()
             }
-            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             fontFamily = DotMatrixFontFamily,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
         )
     }
 }

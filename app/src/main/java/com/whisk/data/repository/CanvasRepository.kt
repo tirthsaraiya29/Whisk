@@ -15,23 +15,23 @@ class CanvasRepository(private val canvasDao: CanvasDao) {
     private val json = Json { ignoreUnknownKeys = true }
 
     val allCanvases: Flow<List<SpatialCanvas>> = canvasDao.getAllCanvases().map { entities ->
-        entities.map { entity ->
+        entities.map { (id, title, cardsJson, connectionsJson, updatedAt) ->
             val cards: List<CanvasCard> = try {
-                json.decodeFromString(entity.cardsJson)
-            } catch (e: Exception) {
+                json.decodeFromString(cardsJson)
+            } catch (_: Exception) {
                 emptyList()
             }
             val connections: List<CanvasConnection> = try {
-                json.decodeFromString(entity.connectionsJson)
-            } catch (e: Exception) {
+                json.decodeFromString(connectionsJson)
+            } catch (_: Exception) {
                 emptyList()
             }
             SpatialCanvas(
-                id = entity.id,
-                title = entity.title,
+                id = id,
+                title = title,
                 cards = cards,
                 connections = connections,
-                updatedAt = entity.updatedAt
+                updatedAt = updatedAt,
             )
         }
     }
@@ -40,12 +40,12 @@ class CanvasRepository(private val canvasDao: CanvasDao) {
         val entity = canvasDao.getCanvasById(id) ?: return null
         val cards: List<CanvasCard> = try {
             json.decodeFromString(entity.cardsJson)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
         val connections: List<CanvasConnection> = try {
             json.decodeFromString(entity.connectionsJson)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
         return SpatialCanvas(
@@ -53,7 +53,7 @@ class CanvasRepository(private val canvasDao: CanvasDao) {
             title = entity.title,
             cards = cards,
             connections = connections,
-            updatedAt = entity.updatedAt
+            updatedAt = entity.updatedAt,
         )
     }
 
@@ -65,7 +65,7 @@ class CanvasRepository(private val canvasDao: CanvasDao) {
             title = canvas.title,
             cardsJson = cardsJson,
             connectionsJson = connectionsJson,
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         )
         canvasDao.insertCanvas(entity)
     }

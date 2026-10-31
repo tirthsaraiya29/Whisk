@@ -14,5 +14,5 @@ data class FtsNoteEntity(
     val id: String,
     val title: String,
     val body: String,
-    val tags: String
+    val tags: String,
 )

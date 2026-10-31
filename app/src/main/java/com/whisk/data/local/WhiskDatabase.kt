@@ -13,10 +13,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         FtsNoteEntity::class,
         FolderEntity::class,
         CanvasEntity::class,
-        TaskEntity::class
+        TaskEntity::class,
     ],
     version = 3,
-    exportSchema = false
+    exportSchema = false,
 )
 abstract class WhiskDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
@@ -50,7 +50,7 @@ abstract class WhiskDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     WhiskDatabase::class.java,
-                    "whisk_database"
+                    "whisk_database",
                 )
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)

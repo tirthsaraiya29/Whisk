@@ -30,9 +30,8 @@ class TaskSyncTest {
     @Test
     fun testUncheckingTaskInNoteBody() {
         val originalBody = "- [x] Task completed"
-        val line = originalBody
         val newCheck = "- [ ]"
-        val updatedLine = line.replace(Regex("^\\s*-\\s*\\[([ xX])\\]"), newCheck)
+        val updatedLine = originalBody.replace(Regex("^\\s*-\\s*\\[([ xX])]"), newCheck)
 
         assertEquals("- [ ] Task completed", updatedLine)
     }
@@ -43,8 +42,8 @@ class TaskSyncTest {
 
     @Test
     fun testTaskToggleTargetStatusCalculation() {
-        assertEquals(true, resolveTaskStatus(true, false))
-        assertEquals(false, resolveTaskStatus(false, true))
-        assertEquals(true, resolveTaskStatus(null, false))
+        assertEquals(true, resolveTaskStatus(true, currentStatus = false))
+        assertEquals(false, resolveTaskStatus(false, currentStatus = true))
+        assertEquals(true, resolveTaskStatus(null, currentStatus = false))
     }
 }

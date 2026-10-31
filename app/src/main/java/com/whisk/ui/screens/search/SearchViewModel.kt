@@ -14,24 +14,25 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlin.time.Duration.Companion.milliseconds
 
 data class SearchUiState(
     val query: String = "",
     val results: List<Note> = emptyList(),
     val selectedTag: String? = null,
-    val tags: List<Tag> = emptyList()
+    val tags: List<Tag> = emptyList(),
 )
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class SearchViewModel(
-    private val notesRepository: NotesRepository
+    private val notesRepository: NotesRepository,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
     private val _selectedTag = MutableStateFlow<String?>(null)
 
     private val searchResults = _query
-        .debounce(150)
+        .debounce(150.milliseconds)
         .flatMapLatest { query ->
             if (query.isBlank()) {
                 notesRepository.allNotes
@@ -43,16 +44,16 @@ class SearchViewModel(
     val uiState: StateFlow<SearchUiState> = combine(
         _query,
         _selectedTag,
-        searchResults
+        searchResults,
     ) { query, tag, results ->
         val filtered = results.filter { note ->
-            tag == null || note.tags.contains(tag)
+            (tag == null) || note.tags.contains(tag)
         }
 
         SearchUiState(
             query = query,
             results = filtered,
-            selectedTag = tag
+            selectedTag = tag,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SearchUiState())
 

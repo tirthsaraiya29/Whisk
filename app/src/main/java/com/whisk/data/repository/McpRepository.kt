@@ -23,7 +23,7 @@ class McpRepository {
         .readTimeout(15, TimeUnit.SECONDS)
         .build()
 
-    private val _isConnected = MutableStateFlow(false)
+    private val _isConnected = MutableStateFlow(value = false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
     private val _discoveredTools = MutableStateFlow<List<McpTool>>(emptyList())
@@ -64,8 +64,8 @@ class McpRepository {
                             name = name,
                             description = desc,
                             inputSchemaJson = schema,
-                            requiresApproval = isWrite
-                        )
+                            requiresApproval = isWrite,
+                        ),
                     )
                 }
 
@@ -77,7 +77,7 @@ class McpRepository {
                 _isConnected.value = false
                 false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             _discoveredTools.value = emptyList()
             _isConnected.value = false
             false
@@ -87,7 +87,7 @@ class McpRepository {
     suspend fun invokeTool(
         endpointUrl: String,
         toolName: String,
-        argumentsJson: String
+        argumentsJson: String,
     ): String = withContext(Dispatchers.IO) {
         val requestId = UUID.randomUUID().toString()
         val logId = UUID.randomUUID().toString()
@@ -96,10 +96,13 @@ class McpRepository {
             put("jsonrpc", "2.0")
             put("id", requestId)
             put("method", "tools/call")
-            put("params", JSONObject().apply {
-                put("name", toolName)
-                put("arguments", JSONObject(argumentsJson.ifBlank { "{}" }))
-            })
+            put(
+                "params",
+                JSONObject().apply {
+                    put("name", toolName)
+                    put("arguments", JSONObject(argumentsJson.ifBlank { "{}" }))
+                },
+            )
         }
 
         val initialLog = McpToolLog(
@@ -107,7 +110,7 @@ class McpRepository {
             toolName = toolName,
             arguments = argumentsJson,
             status = "PENDING",
-            result = null
+            result = null,
         )
         _executionLogs.value = listOf(initialLog) + _executionLogs.value
 
@@ -123,7 +126,7 @@ class McpRepository {
                     toolName = toolName,
                     arguments = argumentsJson,
                     status = "SUCCESS",
-                    result = respStr.ifBlank { "Tool executed successfully." }
+                    result = respStr.ifBlank { "Tool executed successfully." },
                 )
                 _executionLogs.value = _executionLogs.value.map { if (it.id == logId) updatedLog else it }
                 respStr.ifBlank { "Tool executed successfully." }
@@ -134,7 +137,7 @@ class McpRepository {
                     toolName = toolName,
                     arguments = argumentsJson,
                     status = "FAILED",
-                    result = errorResult
+                    result = errorResult,
                 )
                 _executionLogs.value = _executionLogs.value.map { if (it.id == logId) updatedLog else it }
                 errorResult
@@ -146,7 +149,7 @@ class McpRepository {
                 toolName = toolName,
                 arguments = argumentsJson,
                 status = "FAILED",
-                result = errorResult
+                result = errorResult,
             )
             _executionLogs.value = _executionLogs.value.map { if (it.id == logId) updatedLog else it }
             errorResult

@@ -37,7 +37,7 @@ class RemoteAiManager {
         if (config.providerType == AiProviderType.LOCAL_GEMMA) {
             return@withContext Pair(true, "Local Gemma engine ready.")
         }
-        if (config.apiKey.isBlank() && config.providerType != AiProviderType.CUSTOM_HTTPS) {
+        if (config.apiKey.isBlank() && (config.providerType != AiProviderType.CUSTOM_HTTPS)) {
             return@withContext Pair(false, "API key is required.")
         }
 
@@ -46,9 +46,7 @@ class RemoteAiManager {
                 AiProviderType.OPENAI, AiProviderType.OPENROUTER, AiProviderType.CUSTOM_HTTPS -> {
                     val endpoint = if (config.providerType == AiProviderType.OPENROUTER) {
                         "https://openrouter.ai/api/v1/models"
-                    } else if (config.customEndpoint.isNotBlank()) {
-                        config.customEndpoint
-                    } else {
+                    } else config.customEndpoint.ifBlank {
                         "https://api.openai.com/v1/models"
                     }
 
@@ -71,7 +69,7 @@ class RemoteAiManager {
                         .header("anthropic-version", "2023-06-01")
                     val body = """{"model":"claude-3-haiku-20240307","max_tokens":1,"messages":[{"role":"user","content":"hi"}]}""".toRequestBody("application/json".toMediaType())
                     val response = client.newCall(requestBuilder.post(body).build()).execute()
-                    if (response.isSuccessful || response.code == 400) Pair(true, "Anthropic API connected.") else Pair(false, "Anthropic HTTP ${response.code}")
+                    if (response.isSuccessful || (response.code == 400)) Pair(true, "Anthropic API connected.") else Pair(false, "Anthropic HTTP ${response.code}")
                 }
                 else -> Pair(false, "Unsupported provider type.")
             }
@@ -81,7 +79,7 @@ class RemoteAiManager {
     }
 
     fun generateStream(prompt: String, contextText: String, config: AiConfig): Flow<String> = flow {
-        if (config.apiKey.isBlank() && config.providerType != AiProviderType.CUSTOM_HTTPS && config.providerType != AiProviderType.LOCAL_GEMMA) {
+        if (config.apiKey.isBlank() && (config.providerType != AiProviderType.CUSTOM_HTTPS) && (config.providerType != AiProviderType.LOCAL_GEMMA)) {
             emit("Error: API Key missing for ${config.providerType.name}.")
             return@flow
         }
@@ -111,19 +109,20 @@ class RemoteAiManager {
     private fun generateOpenAiStream(prompt: String, systemPrompt: String, config: AiConfig): Flow<String> = flow {
         val endpoint = if (config.providerType == AiProviderType.OPENROUTER) {
             "https://openrouter.ai/api/v1/chat/completions"
-        } else if (config.customEndpoint.isNotBlank()) {
-            config.customEndpoint
-        } else {
+        } else config.customEndpoint.ifBlank {
             "https://api.openai.com/v1/chat/completions"
         }
 
         val payload = JSONObject().apply {
             put("model", config.selectedModel.ifBlank { "gpt-4o-mini" })
             put("stream", true)
-            put("messages", JSONArray().apply {
-                put(JSONObject().put("role", "system").put("content", systemPrompt))
-                put(JSONObject().put("role", "user").put("content", prompt))
-            })
+            put(
+                "messages",
+                JSONArray().apply {
+                    put(JSONObject().put("role", "system").put("content", systemPrompt))
+                    put(JSONObject().put("role", "user").put("content", prompt))
+                },
+            )
         }
 
         val requestBuilder = Request.Builder()
@@ -150,19 +149,19 @@ class RemoteAiManager {
                 try {
                     val json = JSONObject(data)
                     val choices = json.optJSONArray("choices")
-                    if (choices != null && choices.length() > 0) {
+                    if ((choices != null) && (choices.length() > 0)) {
                         val delta = choices.getJSONObject(0).optJSONObject("delta")
                         val content = delta?.optString("content", "") ?: ""
                         if (content.isNotEmpty()) {
                             emit(content)
                         }
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Ignore line parse errors during SSE streaming
                 }
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     private fun generateGeminiStream(prompt: String, systemPrompt: String, config: AiConfig): Flow<String> = flow {
         val model = config.selectedModel.ifBlank { "gemini-1.5-flash" }
@@ -171,14 +170,22 @@ class RemoteAiManager {
         val fullPromptText = "$systemPrompt\n\nUser Question:\n$prompt"
 
         val payload = JSONObject().apply {
-            put("contents", JSONArray().apply {
-                put(JSONObject().apply {
-                    put("role", "user")
-                    put("parts", JSONArray().apply {
-                        put(JSONObject().put("text", fullPromptText))
-                    })
-                })
-            })
+            put(
+                "contents",
+                JSONArray().apply {
+                    put(
+                        JSONObject().apply {
+                            put("role", "user")
+                            put(
+                                "parts",
+                                JSONArray().apply {
+                                    put(JSONObject().put("text", fullPromptText))
+                                },
+                            )
+                        },
+                    )
+                },
+            )
         }
 
         val request = Request.Builder()
@@ -202,23 +209,23 @@ class RemoteAiManager {
                 try {
                     val json = JSONObject(data)
                     val candidates = json.optJSONArray("candidates")
-                    if (candidates != null && candidates.length() > 0) {
+                    if ((candidates != null) && (candidates.length() > 0)) {
                         val candidate = candidates.getJSONObject(0)
                         val content = candidate.optJSONObject("content")
                         val parts = content?.optJSONArray("parts")
-                        if (parts != null && parts.length() > 0) {
+                        if ((parts != null) && (parts.length() > 0)) {
                             val text = parts.getJSONObject(0).optString("text", "")
                             if (text.isNotEmpty()) {
                                 emit(text)
                             }
                         }
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Ignore line parse errors during SSE streaming
                 }
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     private fun generateAnthropicStream(prompt: String, systemPrompt: String, config: AiConfig): Flow<String> = flow {
         val url = "https://api.anthropic.com/v1/messages"
@@ -229,9 +236,12 @@ class RemoteAiManager {
             put("max_tokens", config.maxTokens)
             put("stream", true)
             put("system", systemPrompt)
-            put("messages", JSONArray().apply {
-                put(JSONObject().put("role", "user").put("content", prompt))
-            })
+            put(
+                "messages",
+                JSONArray().apply {
+                    put(JSONObject().put("role", "user").put("content", prompt))
+                },
+            )
         }
 
         val request = Request.Builder()
@@ -264,10 +274,10 @@ class RemoteAiManager {
                             emit(text)
                         }
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Ignore line parse errors during SSE streaming
                 }
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }

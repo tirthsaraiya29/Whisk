@@ -11,6 +11,7 @@ import com.whisk.domain.model.Note
 import com.whisk.domain.model.SpatialCanvas
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,12 +23,12 @@ import java.util.UUID
 data class CanvasUiState(
     val currentCanvas: SpatialCanvas = SpatialCanvas(title = "Idea Canvas"),
     val allNotes: List<Note> = emptyList(),
-    val selectedCardId: String? = null
+    val selectedCardId: String? = null,
 )
 
 class CanvasViewModel(
     private val canvasRepository: CanvasRepository,
-    private val notesRepository: NotesRepository
+    notesRepository: NotesRepository,
 ) : ViewModel() {
 
     private val _currentCanvas = MutableStateFlow(SpatialCanvas(title = "Idea Canvas"))
@@ -37,12 +38,12 @@ class CanvasViewModel(
     val uiState: StateFlow<CanvasUiState> = combine(
         _currentCanvas,
         notesRepository.allNotes,
-        _selectedCardId
+        _selectedCardId,
     ) { canvas, notes, selectedId ->
         CanvasUiState(
             currentCanvas = canvas,
             allNotes = notes,
-            selectedCardId = selectedId
+            selectedCardId = selectedId,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CanvasUiState())
 
@@ -54,7 +55,7 @@ class CanvasViewModel(
             content = note.body.take(120),
             x = x,
             y = y,
-            type = CardType.NOTE_CARD
+            type = CardType.NOTE_CARD,
         )
         val updatedCards = _currentCanvas.value.cards + newCard
         val updated = _currentCanvas.value.copy(cards = updatedCards)
@@ -69,7 +70,7 @@ class CanvasViewModel(
             content = content,
             x = x,
             y = y,
-            type = CardType.TEXT_BLOCK
+            type = CardType.TEXT_BLOCK,
         )
         val updatedCards = _currentCanvas.value.cards + newCard
         val updated = _currentCanvas.value.copy(cards = updatedCards)
@@ -90,7 +91,7 @@ class CanvasViewModel(
         val newConn = CanvasConnection(
             id = UUID.randomUUID().toString(),
             fromCardId = fromCardId,
-            toCardId = toCardId
+            toCardId = toCardId,
         )
         val updatedConns = _currentCanvas.value.connections + newConn
         val updated = _currentCanvas.value.copy(connections = updatedConns)
@@ -99,8 +100,8 @@ class CanvasViewModel(
     }
 
     fun deleteCard(cardId: String) {
-        val updatedCards = _currentCanvas.value.cards.filter { it.id != cardId }
-        val updatedConns = _currentCanvas.value.connections.filter { it.fromCardId != cardId && it.toCardId != cardId }
+        val updatedCards = _currentCanvas.value.cards.filter { (id) -> id != cardId }
+        val updatedConns = _currentCanvas.value.connections.filter { (_, fromCardId, toCardId) -> (fromCardId != cardId) && (toCardId != cardId) }
         val updated = _currentCanvas.value.copy(cards = updatedCards, connections = updatedConns)
         _currentCanvas.value = updated
         saveCanvasImmediately(updated)
@@ -113,7 +114,7 @@ class CanvasViewModel(
     private fun debounceSaveCanvas(canvas: SpatialCanvas) {
         debouncedSaveJob?.cancel()
         debouncedSaveJob = viewModelScope.launch {
-            delay(300)
+            delay(300.milliseconds)
             canvasRepository.saveCanvas(canvas)
         }
     }

@@ -17,7 +17,7 @@ data class AiMessage(
     val role: AiRole,
     val content: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val contextPreview: String? = null
+    val contextPreview: String? = null,
 )
 
 data class LocalModelStatus(
@@ -29,7 +29,7 @@ data class LocalModelStatus(
     val totalBytes: Long = 0L,
     val downloadSpeedKbps: Float = 0f,
     val isLoaded: Boolean = false,
-    val loadError: String? = null
+    val loadError: String? = null,
 )
 
 data class AiConfig(
@@ -41,5 +41,5 @@ data class AiConfig(
     val temperature: Float = 0.7f,
     val hfModelUrl: String = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm",
     val hfApiToken: String = "",
-    val useGpuAccelerator: Boolean = true
+    val useGpuAccelerator: Boolean = true,
 )

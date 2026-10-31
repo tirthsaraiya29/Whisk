@@ -7,7 +7,7 @@ data class GitHubRepo(
     val description: String?,
     val defaultBranch: String = "main",
     val isPrivate: Boolean = false,
-    val stars: Int = 0
+    val stars: Int = 0,
 )
 
 data class GitHubIssue(
@@ -16,7 +16,7 @@ data class GitHubIssue(
     val body: String?,
     val state: String,
     val author: String,
-    val url: String
+    val url: String,
 )
 
 data class GitHubPullRequest(
@@ -26,21 +26,21 @@ data class GitHubPullRequest(
     val state: String,
     val author: String,
     val url: String,
-    val diffUrl: String? = null
+    val diffUrl: String? = null,
 )
 
 data class GitHubCommit(
     val sha: String,
     val message: String,
     val author: String,
-    val date: String
+    val date: String,
 )
 
 data class McpTool(
     val name: String,
     val description: String,
     val inputSchemaJson: String,
-    val requiresApproval: Boolean = false
+    val requiresApproval: Boolean = false,
 )
 
 data class McpToolLog(
@@ -49,5 +49,5 @@ data class McpToolLog(
     val arguments: String,
     val status: String,
     val result: String?,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
 )

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class TasksViewModel(
-    private val notesRepository: NotesRepository
+    private val notesRepository: NotesRepository,
 ) : ViewModel() {
 
     val tasks: StateFlow<List<TaskItem>> = notesRepository.allTasks

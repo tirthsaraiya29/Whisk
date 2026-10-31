@@ -1,7 +1,6 @@
 package com.whisk.ui.screens.github
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.whisk.domain.model.GitHubRepo
 import com.whisk.domain.model.McpTool
 import com.whisk.ui.components.WhiskTopBar
@@ -57,7 +57,7 @@ fun GitHubBrowserScreen(
     onSearchQueryChange: (String) -> Unit,
     onSelectRepo: (GitHubRepo) -> Unit,
     onInvokeMcpTool: (String, String) -> Unit,
-    onOpenGitDiagram: (String) -> Unit
+    onOpenGitDiagram: (String) -> Unit,
 ) {
     val context = LocalContext.current
     var selectedTabIndex by remember { mutableIntStateOf(0) }
@@ -68,14 +68,14 @@ fun GitHubBrowserScreen(
         topBar = {
             WhiskTopBar(
                 title = "GitHub & MCP Integration",
-                subtitle = state.selectedRepo?.fullName ?: "Search or select a repository"
+                subtitle = state.selectedRepo?.fullName ?: "Search or select a repository",
             )
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
             // Search Repositories Bar
             OutlinedTextField(
@@ -86,7 +86,7 @@ fun GitHubBrowserScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 6.dp),
-                singleLine = true
+                singleLine = true,
             )
 
             // Category Navigation Tabs
@@ -114,7 +114,7 @@ fun GitHubBrowserScreen(
                             .fillMaxSize()
                             .padding(16.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         items(state.repos, key = { it.fullName }) { repo ->
                             Card(
@@ -122,22 +122,22 @@ fun GitHubBrowserScreen(
                                     .fillMaxWidth()
                                     .clickable { onSelectRepo(repo) },
                                 shape = RoundedCornerShape(10.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Text(
                                             text = repo.fullName,
                                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                            color = MaterialTheme.colorScheme.onSurface
+                                            color = MaterialTheme.colorScheme.onSurface,
                                         )
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                                            Text("${repo.stars}", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 2.dp))
+                                            Text(repo.stars.toString(), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 2.dp))
                                         }
                                     }
                                     if (!repo.description.isNullOrBlank()) {
@@ -145,22 +145,23 @@ fun GitHubBrowserScreen(
                                             text = repo.description,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(top = 4.dp)
+                                            modifier = Modifier.padding(top = 4.dp),
                                         )
                                     }
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(top = 8.dp),
-                                        horizontalArrangement = Arrangement.End
+                                        horizontalArrangement = Arrangement.End,
                                     ) {
                                         Button(
                                             onClick = {
+                                                onOpenGitDiagram(repo.fullName)
                                                 val gitDiagramUrl = "https://gitdiagram.com/${repo.fullName}"
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(gitDiagramUrl))
+                                                val intent = Intent(Intent.ACTION_VIEW, gitDiagramUrl.toUri())
                                                 context.startActivity(intent)
                                             },
-                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                         ) {
                                             Icon(Icons.Default.AccountTree, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
                                             Text("GitDiagram")
@@ -178,24 +179,24 @@ fun GitHubBrowserScreen(
                             .fillMaxSize()
                             .padding(16.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(state.issues, key = { it.number }) { issue ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
                                         text = "#${issue.number} ${issue.title}",
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
                                         text = "Author: ${issue.author} • Status: ${issue.state}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
@@ -209,24 +210,24 @@ fun GitHubBrowserScreen(
                             .fillMaxSize()
                             .padding(16.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(state.pullRequests, key = { it.number }) { pr ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
                                         text = "PR #${pr.number} ${pr.title}",
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
                                         text = "Author: ${pr.author} • State: ${pr.state}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
@@ -240,7 +241,7 @@ fun GitHubBrowserScreen(
                             .fillMaxSize()
                             .padding(16.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         items(state.mcpTools, key = { it.name }) { tool ->
                             Card(
@@ -248,26 +249,26 @@ fun GitHubBrowserScreen(
                                     .fillMaxWidth()
                                     .clickable { selectedTool = tool },
                                 shape = RoundedCornerShape(10.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(14.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = tool.name,
                                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                            color = MaterialTheme.colorScheme.onSurface
+                                            color = MaterialTheme.colorScheme.onSurface,
                                         )
                                         Text(
                                             text = tool.description,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(top = 2.dp)
+                                            modifier = Modifier.padding(top = 2.dp),
                                         )
                                     }
                                     IconButton(onClick = { selectedTool = tool }) {
@@ -283,24 +284,23 @@ fun GitHubBrowserScreen(
     }
 
     // MCP Tool Invocation Dialog / Bottom Sheet
-    if (selectedTool != null) {
-        val tool = selectedTool!!
+    selectedTool?.let { tool ->
         ModalBottomSheet(onDismissRequest = { selectedTool = null }) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(20.dp),
             ) {
                 Text(
                     text = "Invoke MCP Tool: ${tool.name}",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = tool.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
                 )
 
                 OutlinedTextField(
@@ -308,7 +308,7 @@ fun GitHubBrowserScreen(
                     onValueChange = { toolArgsJson = it },
                     label = { Text("Tool Arguments (JSON)") },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
+                    minLines = 3,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -319,7 +319,7 @@ fun GitHubBrowserScreen(
                         selectedTool = null
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.padding(end = 6.dp))
                     Text("Execute Tool via MCP")

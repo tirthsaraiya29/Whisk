@@ -1,94 +1,145 @@
-# Whisk 🚀
+<div align="center">
 
-> **A Premium, Minimalist Developer Knowledge Workspace for Android**
+# WHISK
+### *The Ultimate Local-First Developer Knowledge Workspace & AI-Augmented IDE for Android*
 
-Whisk is a local-first, developer-centric knowledge and productivity system built natively for Android in **Kotlin** and **Jetpack Compose**. It combines the power of personal knowledge management (bidirectional links, interactive 2D knowledge graphs, spatial canvas) with developer utilities (syntax-aware code blocks, checklist aggregators, GitHub integration, Model Context Protocol client, and on-device AI).
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Jetpack Compose](https://img.shields.io/badge/Compose-BOM_2026.09-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![Android SDK](https://img.shields.io/badge/Android-SDK_37-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
+[![LiteRT-LM](https://img.shields.io/badge/LiteRT-Gemma_4_E2B-FF6F00?style=flat-square)](https://ai.google.dev)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL_3.0-blue.svg?style=flat-square)](https://github.com/whisk/whisk/blob/main/LICENSE)
+
+<p align="center">
+  <b>Whisk</b> is a high-performance, offline-first personal knowledge management (PKM) system and developer suite built natively for Android in Kotlin and Jetpack Compose. It bridges the gap between mobile computing and desktop-class developer tooling by integrating bidirectional linking, interactive 2D knowledge graphs, infinite spatial canvases, an MCP JSON-RPC client, and zero-latency on-device AI inference via LiteRT-LM & MediaPipe.
+</p>
+
+</div>
 
 ---
 
-## 🌟 Key Features
+## Table of Contents
 
-### 1. Markdown Notes & Code Editor
-- **Dual-Mode Editor**: Seamlessly toggle between **Edit** and **Formatted Preview** modes.
-- **Rich Syntax Support**: Headings, bold, italic, bullet points, interactive checklists (`- [ ]`, `- [x]`), blockquotes, and internal `[[Note Title]]` links.
-- **Syntax-Aware Code Blocks**: Dedicated code blocks with language labels, copy action, line numbers, and preserved indentation for Kotlin, Java, Python, JS, TS, C, Rust, Go, SQL, Bash, and JSON.
-- **Automatic Autosave**: Debounced background persistence ensures no edits are ever lost.
-- **Backlinks & Link Resolution**: Automatic incoming/outgoing relationship detection and broken link discovery.
+- [Core Capabilities](#core-capabilities)
+- [On-Device AI & Hybrid LLM Workspace](#on-device-ai--hybrid-llm-workspace)
+- [GitHub Explorer & Model Context Protocol (MCP) Client](#github-explorer--model-context-protocol-mcp-client)
+- [Data Security & Vault Portability](#data-security--vault-portability)
+- [Architecture & Tech Stack](#architecture--tech-stack)
+- [Quick Start & Build](#quick-start--build)
+- [Design System & Philosophy](#design-system--philosophy)
+- [License](#license)
 
-### 2. Interactive Knowledge Graph
-- **Global & Local Views**: Explore your entire vault or center around a specific note.
-- **2D Canvas Rendering**: Interactive pan, pinch-to-zoom, and tap node selection.
-- **Node Classification**: Clear visual distinction for Notes, Tags, and Folders.
-- **Node Inspector**: Bottom sheet displaying node details and quick jump links.
-- **Orphan Filtering**: Quickly locate unlinked notes.
+---
 
-### 3. Spatial Visual Canvas
-- **Deliberate Layouts**: Separate from the auto-derived graph—arrange ideas, note cards, and text blocks on an infinite 2D canvas.
-- **Card Connections**: Draw connection lines between related cards.
-- **Persistent Layout**: Card coordinates are persisted independently without altering note content.
+## Core Capabilities
 
-### 4. Vault Checklist Aggregator
+### Advanced Markdown & Code Studio
+- **Dual-Mode Editor**: Seamlessly toggle between distraction-free raw Markdown and live formatted preview.
+- **Syntax-Aware Code Blocks**: Dedicated code blocks with language labels, copy actions, line numbers, and preserved indentation for Kotlin, Java, Python, Rust, Go, SQL, Bash, and JSON.
+- **Backlinks & Resolution**: Automatic incoming/outgoing relationship discovery and broken-link detection.
+- **Autosave**: Robust background persistence ensuring zero data loss.
+
+### Interactive 2D Knowledge Graph
+- **Global & Local Views**: Explore your entire vault graph or center focus around a specific note node.
+- **Fluid Gestures**: Interactive pan, pinch-to-zoom, and smooth node selection.
+- **Smart Classification**: Clear visual distinction between Notes, Tags, and Folders.
+- **Orphan Finder**: Instantly isolate unlinked notes in your vault.
+
+### Infinite Spatial Canvas
+- **Visual Thinking**: Separate from linear markdown—freely arrange idea cards, notes, and containers on an infinite 2D coordinate plane.
+- **Vector Connections**: Draw direct connection lines between related concept cards.
+- **Independent Persistence**: Card coordinates are saved locally without altering underlying note contents.
+
+### Vault Checklist Aggregator
 - **Automated Extraction**: Scans all vault notes for Markdown checklists (`- [ ]` / `- [x]`).
 - **Interactive Toggling**: Complete tasks directly from the master checklist view.
-- **Source Links**: Tap any task to jump straight to its source note.
-
-### 5. AI Workspace (Local Gemma & Remote LLMs)
-- **Local Gemma 4 E2B**: On-device generative AI via LiteRT-LM runtime with storage validation, progress reporting, and zero cloud dependency.
-- **Remote Providers**: Native support for OpenAI, Google Gemini API, Anthropic Claude, OpenRouter, and custom HTTPS endpoints.
-- **Context Assembly**: Inject active notes, linked notes, or code blocks into AI prompts with token estimates and privacy disclosure.
-- **Edit Previews**: Preview AI-generated code edits before applying them to your notes.
-
-### 6. GitHub, MCP Client & GitDiagram
-- **Repository Exploration**: Search public/private repos, browse issues, pull requests, and commits.
-- **GitHub MCP Client**: Full JSON-RPC 2.0 Model Context Protocol (MCP) implementation for tool discovery and execution.
-- **GitDiagram Integration**: One-tap architecture visualization route for any GitHub repository.
-
-### 7. Storage, Security & Backups
-- **Storage Access Framework (SAF)**: Native Android SAF integration for single-note export and vault backup.
-- **ZIP Vault Import/Export**: Full vault backup to ZIP with Zip-Slip path sanitization protection against path traversal attacks.
-- **Data Protection**: Local-first storage using Room database and DataStore preferences with Keystore backing.
+- **Deep Linking**: Tap any aggregated task to jump directly to its source note.
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## On-Device AI & Hybrid LLM Workspace
 
-- **Language**: 100% Kotlin
-- **UI Framework**: Jetpack Compose with Material 3 foundation
-- **Database**: Room Database (SQLite)
-- **Preferences**: DataStore Preferences
-- **Async Runtime**: Kotlin Coroutines & StateFlow
-- **Networking**: OkHttp 4
-- **Serialization**: Kotlinx Serialization JSON
-- **Build System**: Gradle Kotlin DSL with Version Catalog (`libs.versions.toml`) and AGP 9 built-in Kotlin
+Whisk empowers mobile engineering with a robust hybrid AI architecture:
+
+- **Local Gemma / LiteRT-LM**: Run open-weight models (`Gemma 4 E2B`) directly on-device using the MediaPipe Tasks GenAI and LiteRT-LM runtime (`com.google.ai.edge.litertlm`) with zero cloud latency and complete offline privacy.
+- **Multi-Provider Cloud Integration**: Native connectivity for OpenAI, Google Gemini API, Anthropic Claude, OpenRouter, and custom HTTPS endpoints.
+- **Context Assembly**: Dynamically inject active notes, linked documentation, or code snippets into prompt contexts with live token estimation.
+- **Pre-Execution Diffs**: Review AI-generated code edits or note refactorings before committing changes to your vault.
 
 ---
 
-## 🚀 Building & Running
+## GitHub Explorer & Model Context Protocol (MCP) Client
 
-### Build Commands
+- **Repository Explorer**: Search and browse public/private repositories, inspect issues, review pull requests, and trace recent commit histories.
+- **MCP JSON-RPC 2.0 Client**: Full Model Context Protocol implementation (`tools/list`, `tools/call`) for discovering and executing remote/local MCP tools directly from Android.
+- **Write-Tool Safety Guards**: Automatic detection of write/destructive operations requiring user confirmation before tool execution.
+- **GitDiagram Integration**: One-tap architecture and dependency visualization route for any target GitHub repository.
+
+---
+
+## Data Security & Vault Portability
+
+- **Zero-Trust Local Storage**: Built on Room Database with Full-Text Search (FTS5) and DataStore Preferences.
+- **Encrypted Storage**: Sensitive credentials and API tokens secured via AndroidX Security Crypto (`EncryptedSharedPreferences` backed by Android KeyStore).
+- **Safe ZIP Vault Import/Export**: Full vault backup and restoration with strict **Zip-Slip path traversal sanitization** (`!entryName.contains("..")`) ensuring absolute file system safety.
+
+---
+
+## Architecture & Tech Stack
+
+Whisk adheres to rigorous modern Android design principles (Clean Architecture, MVVM, reactive streams via Kotlin Coroutines & StateFlow):
+
+```mermaid
+graph TD
+    UI[Jetpack Compose UI & ViewModels] --> Domain[Domain Models & Use Cases]
+    Domain --> Repo[Repositories & MCP Client]
+    Repo --> Room[(Room DB & FTS5)]
+    Repo --> DS[(DataStore Preferences)]
+    Repo --> AI[LiteRT-LM & MediaPipe Tasks GenAI]
+    Repo --> Sec[EncryptedSharedPreferences & KeyStore]
+```
+
+### Technology Stack Breakdown
+- **Language**: Kotlin `2.2.10`
+- **UI Framework**: Jetpack Compose (`BOM 2026.09.00`) + Material 3 + Haze Glass Blur (`dev.chrisbanes.haze`)
+- **Persistence**: Room Database (`2.8.5`) + DataStore Preferences (`1.3.0`)
+- **Async Runtime**: Kotlin Coroutines & `StateFlow` (`1.9.0`)
+- **Networking**: OkHttp 4 (`4.12.0`) with TLS Certificate Pinning & Logging Interceptors
+- **Security**: AndroidX Security Crypto (`1.1.0`)
+- **AI & ML Runtimes**: Google MediaPipe Tasks GenAI (`0.10.35`) & LiteRT-LM (`0.19.0`)
+
+---
+
+## Quick Start & Build
+
+Prerequisites: **Android Studio Ladybug+**, **Android SDK 37**, and JDK 17.
+
 ```bash
-# Clean and assemble debug APK
+# Clone the repository
+git clone https://github.com/whisk/whisk.git
+cd Whisk
+
+# Build debug APK
 ./gradlew :app:assembleDebug
 
 # Run unit test suite
 ./gradlew :app:testDebugUnitTest
 
-# Install on connected device/emulator
+# Install directly on a connected device or emulator
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -n com.whisk/com.whisk.MainActivity
 ```
 
 ---
 
-## 🎨 Theme & Design Philosophy
+## Design Philosophy
 
-Whisk follows an unbranded, quiet, professional design philosophy:
-- **Minimal Light Theme**: Warm beige background (`#FBF9F6`), subdued surface cards, dark slate text.
-- **Charcoal Dark Theme**: Deep charcoal background (`#131417`), comfortable contrast, muted slate accent.
-- **No Decorative Clutter**: Clean typography, compact bottom navigation bar, searchable Command Palette (`Ctrl/Cmd+K` trigger).
+Whisk adopts a quiet, utilitarian, and high-performance developer aesthetic:
+- **Warm Light Theme**: Soft beige base (`#FBF9F6`), clean surface cards, and deep slate typography.
+- **Charcoal Dark Theme**: Deep matte charcoal (`#131417`), high-contrast readability, and muted slate accents.
+- **Zero Clutter**: Compact bottom navigation, distraction-free editing, and a lightning-fast Command Palette (`Ctrl/Cmd + K`).
 
 ---
 
-## 📄 License
+## License
 
-Licensed under the [GPL-3.0 License](LICENSE).
+Whisk is open-source software licensed under the [GPL-3.0 License](LICENSE).

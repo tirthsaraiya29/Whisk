@@ -43,6 +43,12 @@ import com.whisk.ai.LocalGemmaManager
 import com.whisk.ai.RemoteAiManager
 import com.whisk.data.local.PreferencesManager
 import com.whisk.data.local.WhiskDatabase
+import com.whisk.data.rag.embedding.EmbeddingModelManager
+import com.whisk.data.rag.indexer.DocumentIndexer
+import com.whisk.data.rag.repository.IndexingRepository
+import com.whisk.data.rag.repository.RelatedKnowledgeRepository
+import com.whisk.data.rag.repository.VectorRepository
+import com.whisk.domain.rag.retrieval.HybridSearchEngine
 import com.whisk.data.repository.CanvasRepository
 import com.whisk.data.repository.ChatRepository
 import com.whisk.data.repository.DailyNotesRepository
@@ -114,6 +120,12 @@ class MainActivity : ComponentActivity() {
     private lateinit var dailyNotesRepository: DailyNotesRepository
     private lateinit var localGemmaManager: LocalGemmaManager
     private lateinit var remoteAiManager: RemoteAiManager
+    private lateinit var vectorRepository: VectorRepository
+    private lateinit var indexingRepository: IndexingRepository
+    private lateinit var embeddingModelManager: EmbeddingModelManager
+    private lateinit var documentIndexer: DocumentIndexer
+    private lateinit var hybridSearchEngine: HybridSearchEngine
+    private lateinit var relatedKnowledgeRepository: RelatedKnowledgeRepository
 
     private var exportZipLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         uri?.let {
@@ -158,6 +170,13 @@ class MainActivity : ComponentActivity() {
         localGemmaManager = LocalGemmaManager(this)
         remoteAiManager = RemoteAiManager()
 
+        vectorRepository = VectorRepository(database.documentChunkDao(), database.embeddingVectorDao())
+        indexingRepository = IndexingRepository(database.indexingStateDao(), database.documentChunkDao())
+        embeddingModelManager = EmbeddingModelManager(this)
+        documentIndexer = DocumentIndexer(database.noteDao(), database.relationshipDao(), vectorRepository, indexingRepository, embeddingModelManager)
+        hybridSearchEngine = HybridSearchEngine(database.noteDao(), vectorRepository, embeddingModelManager.getActiveProvider())
+        relatedKnowledgeRepository = RelatedKnowledgeRepository(database.noteDao(), database.relationshipDao(), vectorRepository, embeddingModelManager.getActiveProvider())
+
         handleShareIntent(intent)
 
         setContent {
@@ -181,6 +200,11 @@ class MainActivity : ComponentActivity() {
                     localGemmaManager = localGemmaManager,
                     remoteAiManager = remoteAiManager,
                     preferencesManager = preferencesManager,
+                    documentIndexer = documentIndexer,
+                    hybridSearchEngine = hybridSearchEngine,
+                    indexingRepository = indexingRepository,
+                    embeddingModelManager = embeddingModelManager,
+                    relatedKnowledgeRepository = relatedKnowledgeRepository,
                     isFirstLaunch = isFirstLaunch,
                     onExportZip = { exportZipLauncher.launch("Whisk_Vault_Backup.zip") },
                 ) {
@@ -232,6 +256,11 @@ fun WhiskApp(
     localGemmaManager: LocalGemmaManager,
     remoteAiManager: RemoteAiManager,
     preferencesManager: PreferencesManager,
+    documentIndexer: DocumentIndexer,
+    hybridSearchEngine: HybridSearchEngine,
+    indexingRepository: IndexingRepository,
+    embeddingModelManager: EmbeddingModelManager,
+    relatedKnowledgeRepository: RelatedKnowledgeRepository,
     isFirstLaunch: Boolean,
     onExportZip: () -> Unit,
     onImportZip: () -> Unit,
@@ -336,6 +365,7 @@ fun WhiskApp(
                             propertyRepository = propertyRepository,
                             objectTypeRepository = objectTypeRepository,
                             relationshipRepository = relationshipRepository,
+                            relatedKnowledgeRepository = relatedKnowledgeRepository,
                             noteId = noteId,
                         )
                     },
@@ -468,7 +498,15 @@ fun WhiskApp(
                 val viewModel: AiViewModel = viewModel(
                     key = noteId ?: "ai_global",
                     factory = viewModelFactory {
-                        AiViewModel(localGemmaManager, remoteAiManager, preferencesManager, chatRepository).apply {
+                        AiViewModel(
+                            localGemmaManager = localGemmaManager,
+                            remoteAiManager = remoteAiManager,
+                            preferencesManager = preferencesManager,
+                            chatRepository = chatRepository,
+                            hybridSearchEngine = hybridSearchEngine,
+                            documentIndexer = documentIndexer,
+                            indexingRepository = indexingRepository,
+                        ).apply {
                             if (!noteId.isNullOrBlank()) {
                                 loadNoteContext(notesRepository, noteId)
                             }
@@ -488,6 +526,8 @@ fun WhiskApp(
                     onStartNewSession = { viewModel.startNewSession() },
                     onLoadSession = { session -> viewModel.loadSession(session) },
                     onDeleteSession = { id -> viewModel.deleteSession(id) },
+                    onToggleRag = { enabled -> viewModel.toggleVaultRag(enabled) },
+                    onSetScopeType = { scopeType -> viewModel.setSearchScope(scopeType) },
                     onApplyEdit = { edit ->
                         scope.launch {
                             val currentNote = state.contextPayload.activeNote
@@ -534,7 +574,7 @@ fun WhiskApp(
             // 9. Settings Destination
             composable("settings") {
                 val viewModel: SettingsViewModel = viewModel(
-                    factory = viewModelFactory { SettingsViewModel(preferencesManager, exportImportRepository) },
+                    factory = viewModelFactory { SettingsViewModel(preferencesManager, exportImportRepository, documentIndexer, embeddingModelManager) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -547,6 +587,8 @@ fun WhiskApp(
                     onResetOnboarding = { viewModel.resetOnboarding() },
                     onExportBackup = onExportZip,
                     onImportBackup = onImportZip,
+                    onIndexWorkspace = { force -> viewModel.indexWorkspace(force) },
+                    onClearRagIndex = { viewModel.clearRagIndex() },
                     onNavigateToProperties = { navController.navigate("properties") },
                     onNavigateToTypes = { navController.navigate("object_types") },
                 )

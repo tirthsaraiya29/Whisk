@@ -26,6 +26,9 @@ import java.util.UUID
 import com.whisk.domain.model.BrokenLinkItem
 import com.whisk.domain.model.UnlinkedMention
 
+import com.whisk.data.rag.repository.RelatedKnowledgeItem
+import com.whisk.data.rag.repository.RelatedKnowledgeRepository
+
 enum class SaveState {
     IDLE, SAVING, SAVED, ERROR
 }
@@ -35,6 +38,7 @@ data class NoteDetailUiState(
     val backlinks: List<Backlink> = emptyList(),
     val unlinkedMentions: List<UnlinkedMention> = emptyList(),
     val brokenLinks: List<BrokenLinkItem> = emptyList(),
+    val relatedKnowledge: List<RelatedKnowledgeItem> = emptyList(),
     val saveState: SaveState = SaveState.IDLE,
     val isDeleted: Boolean = false,
     val propertyItems: List<NotePropertyItem> = emptyList(),
@@ -48,6 +52,7 @@ class NoteDetailViewModel(
     private val propertyRepository: PropertyRepository,
     private val objectTypeRepository: ObjectTypeRepository? = null,
     private val relationshipRepository: RelationshipRepository? = null,
+    private val relatedKnowledgeRepository: RelatedKnowledgeRepository? = null,
     private val noteId: String,
 ) : ViewModel() {
 
@@ -69,11 +74,13 @@ class NoteDetailViewModel(
                 val backlinks = notesRepository.getBacklinksForNote(note.title, note.id, note.aliases)
                 val unlinkedMentions = notesRepository.getUnlinkedMentionsForNote(note)
                 val brokenLinks = notesRepository.getBrokenLinks().filter { it.sourceNoteId == note.id }
+                val related = relatedKnowledgeRepository?.getRelatedKnowledgeForNote(note.id, limit = 5) ?: emptyList()
                 _uiState.value = _uiState.value.copy(
                     note = note,
                     backlinks = backlinks,
                     unlinkedMentions = unlinkedMentions,
                     brokenLinks = brokenLinks,
+                    relatedKnowledge = related,
                 )
             }
         }

@@ -94,6 +94,8 @@ fun AiWorkspaceScreen(
     onDeleteSession: (String) -> Unit = {},
     onApplyEdit: (String) -> Unit,
     onDismissEdit: () -> Unit,
+    onToggleRag: ((Boolean) -> Unit)? = null,
+    onSetScopeType: ((String?) -> Unit)? = null,
     onOpenNote: (String) -> Unit = {},
     onMenuClick: (() -> Unit)? = null,
 ) {
@@ -215,6 +217,100 @@ fun AiWorkspaceScreen(
                 .imePadding()
                 .background(MaterialTheme.colorScheme.background),
         ) {
+            // RAG Vault Scope & Toggle Selector Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onToggleRag?.invoke(!state.isVaultRagEnabled)
+                    },
+                ) {
+                    Text(
+                        text = if (state.isVaultRagEnabled) "[*] VAULT RAG ACTIVE" else "[ ] RAG OFF",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = if (state.isVaultRagEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val scopes = listOf(null to "ALL", "note" to "NOTES", "project" to "PROJECTS", "repository" to "REPOS", "task" to "TASKS")
+                    items(scopes) { (scopeType, label) ->
+                        val isSelected = state.selectedSearchScopeTypeId == scopeType
+                        Box(
+                            modifier = Modifier
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onSetScopeType?.invoke(scopeType)
+                                }
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                fontSize = 9.sp,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Retrieved Evidence Source Chips
+            if (state.retrievedSources.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .padding(8.dp),
+                ) {
+                    Text(
+                        text = "SOURCES CITED (${state.retrievedSources.size}):",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 10.sp,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(state.retrievedSources) { cite ->
+                            Box(
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onOpenNote(cite.sourceObjectId)
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                            ) {
+                                Text(
+                                    text = "[${cite.index}] ${cite.sourceTitle} > ${cite.headingPath}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = VercelMonoFontFamily,
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Provider Switcher Selector Bar
             LazyRow(
                 modifier = Modifier

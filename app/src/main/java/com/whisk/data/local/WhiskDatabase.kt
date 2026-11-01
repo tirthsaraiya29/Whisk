@@ -7,6 +7,13 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+import com.whisk.data.local.rag.DocumentChunkDao
+import com.whisk.data.local.rag.DocumentChunkEntity
+import com.whisk.data.local.rag.EmbeddingVectorDao
+import com.whisk.data.local.rag.EmbeddingVectorEntity
+import com.whisk.data.local.rag.IndexingStateDao
+import com.whisk.data.local.rag.IndexingStateEntity
+
 @Database(
     entities = [
         NoteEntity::class,
@@ -23,8 +30,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         DatabaseViewEntity::class,
         DailyNoteMetadataEntity::class,
         ActivityEventEntity::class,
+        DocumentChunkEntity::class,
+        EmbeddingVectorEntity::class,
+        IndexingStateEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 abstract class WhiskDatabase : RoomDatabase() {
@@ -39,6 +49,9 @@ abstract class WhiskDatabase : RoomDatabase() {
     abstract fun databaseViewDao(): DatabaseViewDao
     abstract fun dailyNoteDao(): DailyNoteDao
     abstract fun activityEventDao(): ActivityEventDao
+    abstract fun documentChunkDao(): DocumentChunkDao
+    abstract fun embeddingVectorDao(): EmbeddingVectorDao
+    abstract fun indexingStateDao(): IndexingStateDao
 
     companion object {
         @Volatile
@@ -248,6 +261,63 @@ abstract class WhiskDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `document_chunks` (
+                        `id` TEXT NOT NULL,
+                        `sourceObjectId` TEXT NOT NULL,
+                        `sourceObjectType` TEXT NOT NULL,
+                        `sourceTitle` TEXT NOT NULL,
+                        `headingPath` TEXT NOT NULL,
+                        `content` TEXT NOT NULL,
+                        `contentHash` TEXT NOT NULL,
+                        `sequence` INTEGER NOT NULL,
+                        `startOffset` INTEGER NOT NULL,
+                        `endOffset` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_document_chunks_sourceObjectId` ON `document_chunks` (`sourceObjectId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_document_chunks_sourceObjectType` ON `document_chunks` (`sourceObjectType`)")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `embedding_vectors` (
+                        `chunkId` TEXT NOT NULL,
+                        `sourceObjectId` TEXT NOT NULL,
+                        `modelId` TEXT NOT NULL,
+                        `dimensions` INTEGER NOT NULL,
+                        `vectorBlob` BLOB NOT NULL,
+                        `contentHash` TEXT NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`chunkId`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_embedding_vectors_sourceObjectId` ON `embedding_vectors` (`sourceObjectId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_embedding_vectors_modelId` ON `embedding_vectors` (`modelId`)")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `indexing_states` (
+                        `objectId` TEXT NOT NULL,
+                        `objectType` TEXT NOT NULL,
+                        `contentHash` TEXT NOT NULL,
+                        `status` TEXT NOT NULL,
+                        `chunkCount` INTEGER NOT NULL,
+                        `lastIndexedAt` INTEGER NOT NULL,
+                        `failureReason` TEXT,
+                        PRIMARY KEY(`objectId`)
+                    )
+                    """.trimIndent(),
+                )
+            }
+        }
+
         fun getDatabase(context: Context): WhiskDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -255,7 +325,7 @@ abstract class WhiskDatabase : RoomDatabase() {
                     WhiskDatabase::class.java,
                     "whisk_database",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
                     .build()
                 INSTANCE = instance

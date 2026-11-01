@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -70,6 +71,8 @@ fun SettingsScreen(
     onResetOnboarding: () -> Unit,
     onExportBackup: () -> Unit,
     onImportBackup: () -> Unit,
+    onIndexWorkspace: ((force: Boolean) -> Unit)? = null,
+    onClearRagIndex: (() -> Unit)? = null,
     onNavigateToProperties: (() -> Unit)? = null,
     onNavigateToTypes: (() -> Unit)? = null,
     onMenuClick: (() -> Unit)? = null,
@@ -90,7 +93,7 @@ fun SettingsScreen(
         topBar = {
             WhiskTopBar(
                 title = "WHISK // SETTINGS",
-                subtitle = "THEME, AI ENGINES & VAULT BACKUPS",
+                subtitle = "THEME, RAG INTELLIGENCE & VAULT BACKUPS",
                 onMenuClick = onMenuClick,
             )
         },
@@ -105,6 +108,125 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // Vault Intelligence & RAG Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                    .padding(16.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Psychology, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = "VAULT INTELLIGENCE // LOCAL RAG INDEX",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Local-first knowledge retrieval index for Ask Your Vault & semantic search.",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = DotMatrixFontFamily,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "EMBEDDING MODEL: ${state.embeddingStatus.modelId} (${state.embeddingStatus.dimensions}D)",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = VercelMonoFontFamily,
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+
+                Text(
+                    text = "STATUS: ${state.embeddingStatus.statusText}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = VercelMonoFontFamily,
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+
+                if (state.indexingProgress.isIndexing) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "INDEXING IN PROGRESS: ${state.indexingProgress.currentObjectTitle} (${state.indexingProgress.indexedCount} / ${state.indexingProgress.totalEligible})",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onIndexWorkspace?.invoke(false)
+                        },
+                        shape = RoundedCornerShape(0.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = "INDEX NOW",
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onIndexWorkspace?.invoke(true)
+                        },
+                        shape = RoundedCornerShape(0.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = "REBUILD INDEX",
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onClearRagIndex?.invoke()
+                        }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "CLEAR RAG INDEX",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+
             // Theme Mode Section
             Column(
                 modifier = Modifier

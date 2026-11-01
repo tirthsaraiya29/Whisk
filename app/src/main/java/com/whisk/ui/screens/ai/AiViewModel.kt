@@ -2,10 +2,14 @@ package com.whisk.ui.screens.ai
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.whisk.ai.CitationReference
 import com.whisk.ai.ContextPayload
 import com.whisk.ai.LocalGemmaManager
 import com.whisk.ai.RemoteAiManager
 import com.whisk.data.local.PreferencesManager
+import com.whisk.data.rag.indexer.DocumentIndexer
+import com.whisk.data.rag.indexer.IndexingProgress
+import com.whisk.data.rag.repository.IndexingRepository
 import com.whisk.data.repository.ChatRepository
 import com.whisk.domain.model.AiConfig
 import com.whisk.domain.model.AiMessage
@@ -13,6 +17,8 @@ import com.whisk.domain.model.AiProviderType
 import com.whisk.domain.model.AiRole
 import com.whisk.domain.model.LocalModelStatus
 import com.whisk.domain.model.Note
+import com.whisk.domain.rag.retrieval.HybridSearchEngine
+import com.whisk.domain.rag.retrieval.RetrievalFilter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +48,11 @@ data class AiUiState(
     val generatedEditPreview: String? = null,
     val historySessions: List<ChatSession> = emptyList(),
     val activeSessionTitle: String = "NEW CHAT",
+    val isVaultRagEnabled: Boolean = true,
+    val selectedSearchScopeTypeId: String? = null,
+    val isSearchingVault: Boolean = false,
+    val retrievedSources: List<CitationReference> = emptyList(),
+    val indexingProgress: IndexingProgress = IndexingProgress(),
 )
 
 class AiViewModel(
@@ -49,6 +60,9 @@ class AiViewModel(
     private val remoteAiManager: RemoteAiManager,
     private val preferencesManager: PreferencesManager,
     private val chatRepository: ChatRepository,
+    private val hybridSearchEngine: HybridSearchEngine? = null,
+    private val documentIndexer: DocumentIndexer? = null,
+    private val indexingRepository: IndexingRepository? = null,
 ) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<AiMessage>>(emptyList())
@@ -58,6 +72,11 @@ class AiViewModel(
     private val _historySessions = MutableStateFlow<List<ChatSession>>(emptyList())
     private val _activeSessionId = MutableStateFlow<String?>(null)
     private val _activeSessionTitle = MutableStateFlow("NEW CHAT")
+
+    private val _isVaultRagEnabled = MutableStateFlow(true)
+    private val _selectedSearchScopeTypeId = MutableStateFlow<String?>(null)
+    private val _isSearchingVault = MutableStateFlow(false)
+    private val _retrievedSources = MutableStateFlow<List<CitationReference>>(emptyList())
 
     private var generationJob: Job? = null
     private var messageObserveJob: Job? = null
@@ -112,13 +131,35 @@ class AiViewModel(
         }
     }
 
+    private val dummyIndexerProgress = MutableStateFlow(IndexingProgress())
+
     val uiState: StateFlow<AiUiState> = combine(
-        combine(preferencesManager.aiConfig, localGemmaManager.modelStatus) { config, localStatus -> Pair(config, localStatus) },
-        combine(_messages, _isGenerating) { messages, isGenerating -> Pair(messages, isGenerating) },
-        combine(_contextPayload, _generatedEditPreview, _historySessions, _activeSessionTitle) { contextPayload, editPreview, historySessions, title ->
-            Quadruple(contextPayload, editPreview, historySessions, title)
+        combine(
+            preferencesManager.aiConfig,
+            localGemmaManager.modelStatus,
+            _messages,
+            _isGenerating,
+        ) { config, localStatus, messages, isGenerating ->
+            Tuple4(config, localStatus, messages, isGenerating)
         },
-    ) { (config, localStatus), (messages, isGenerating), (contextPayload, editPreview, historySessions, title) ->
+        combine(
+            _contextPayload,
+            _generatedEditPreview,
+            _historySessions,
+            _activeSessionTitle,
+        ) { contextPayload, editPreview, historySessions, title ->
+            Tuple4(contextPayload, editPreview, historySessions, title)
+        },
+        combine(
+            _isVaultRagEnabled,
+            _selectedSearchScopeTypeId,
+            _isSearchingVault,
+            _retrievedSources,
+            documentIndexer?.progress ?: dummyIndexerProgress,
+        ) { ragEnabled, scopeType, isSearching, sources, indexProgress ->
+            Tuple5(ragEnabled, scopeType, isSearching, sources, indexProgress)
+        },
+    ) { (config, localStatus, messages, isGenerating), (contextPayload, editPreview, historySessions, title), (ragEnabled, scopeType, isSearching, sources, indexProgress) ->
         AiUiState(
             config = config,
             localStatus = localStatus,
@@ -128,8 +169,33 @@ class AiViewModel(
             generatedEditPreview = editPreview,
             historySessions = historySessions,
             activeSessionTitle = title,
+            isVaultRagEnabled = ragEnabled,
+            selectedSearchScopeTypeId = scopeType,
+            isSearchingVault = isSearching,
+            retrievedSources = sources,
+            indexingProgress = indexProgress,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AiUiState())
+
+    fun toggleVaultRag(enabled: Boolean) {
+        _isVaultRagEnabled.value = enabled
+    }
+
+    fun setSearchScope(typeId: String?) {
+        _selectedSearchScopeTypeId.value = typeId
+    }
+
+    fun triggerWorkspaceIndexing(forceReindex: Boolean = false) {
+        viewModelScope.launch {
+            documentIndexer?.indexWorkspace(forceReindex = forceReindex)
+        }
+    }
+
+    fun clearIndex() {
+        viewModelScope.launch {
+            documentIndexer?.clearIndex()
+        }
+    }
 
     fun setContextNote(note: Note?) {
         _contextPayload.value = _contextPayload.value.copy(activeNote = note)
@@ -193,7 +259,7 @@ class AiViewModel(
 
     fun sendMessage(userText: String) {
         if (userText.isBlank()) return
-        if (_isGenerating.value) return // Guard against concurrent generations
+        if (_isGenerating.value) return
 
         if (_messages.value.isEmpty() || _activeSessionId.value == null) {
             val autoTitle = generateAutomaticTitle(userText)
@@ -219,21 +285,43 @@ class AiViewModel(
 
         val config = uiState.value.config
 
-        val historyContext = buildString {
-            if (existingHistory.isNotEmpty()) {
-                append("Previous Conversation:\n")
-                existingHistory.takeLast(6).forEach { (_, role, content) ->
-                    val sender = if (role == AiRole.USER) "User" else "Assistant"
-                    if (content.isNotBlank()) {
-                        append("$sender: ").append(content.take(200)).append("\n")
-                    }
-                }
-                append("\n")
-            }
-            append(_contextPayload.value.formatContext())
-        }
-
         generationJob = viewModelScope.launch {
+            // Run RAG hybrid retrieval if enabled
+            val retrievedChunks = if (_isVaultRagEnabled.value && hybridSearchEngine != null) {
+                _isSearchingVault.value = true
+                try {
+                    hybridSearchEngine.search(
+                        query = userText,
+                        topK = 8,
+                        filter = RetrievalFilter(typeId = _selectedSearchScopeTypeId.value),
+                    )
+                } catch (_: Exception) {
+                    emptyList()
+                } finally {
+                    _isSearchingVault.value = false
+                }
+            } else {
+                emptyList()
+            }
+
+            val currentPayload = _contextPayload.value.copy(retrievedChunks = retrievedChunks)
+            val (ragContextText, citations) = currentPayload.formatContextWithCitations()
+            _retrievedSources.value = citations
+
+            val historyContext = buildString {
+                if (existingHistory.isNotEmpty()) {
+                    append("Previous Conversation:\n")
+                    existingHistory.takeLast(6).forEach { (_, role, content) ->
+                        val sender = if (role == AiRole.USER) "User" else "Assistant"
+                        if (content.isNotBlank()) {
+                            append("$sender: ").append(content.take(200)).append("\n")
+                        }
+                    }
+                    append("\n")
+                }
+                append(ragContextText)
+            }
+
             val streamFlow: Flow<String> = if (config.providerType == AiProviderType.LOCAL_GEMMA) {
                 val isLoaded = localGemmaManager.initializeEngine(config)
                 if (isLoaded) {
@@ -298,6 +386,7 @@ class AiViewModel(
         _activeSessionTitle.value = "NEW CHAT"
         _messages.value = emptyList()
         _generatedEditPreview.value = null
+        _retrievedSources.value = emptyList()
         loadMessagesForActiveSession(newSessionId)
         viewModelScope.launch {
             localGemmaManager.resetConversation(newSessionId)
@@ -309,6 +398,7 @@ class AiViewModel(
         _activeSessionId.value = session.id
         _activeSessionTitle.value = session.title
         _generatedEditPreview.value = null
+        _retrievedSources.value = emptyList()
         loadMessagesForActiveSession(session.id)
         viewModelScope.launch {
             localGemmaManager.resetConversation(session.id)
@@ -328,6 +418,7 @@ class AiViewModel(
                 _activeSessionTitle.value = "NEW CHAT"
                 _messages.value = emptyList()
                 _generatedEditPreview.value = null
+                _retrievedSources.value = emptyList()
                 loadMessagesForActiveSession(newSessionId)
                 localGemmaManager.resetConversation(newSessionId)
             }
@@ -350,9 +441,17 @@ class AiViewModel(
     }
 }
 
-private data class Quadruple<A, B, C, D>(
+private data class Tuple4<A, B, C, D>(
     val first: A,
     val second: B,
     val third: C,
     val fourth: D,
+)
+
+private data class Tuple5<A, B, C, D, E>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D,
+    val fifth: E,
 )

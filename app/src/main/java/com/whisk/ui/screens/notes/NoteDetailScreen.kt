@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -309,6 +310,62 @@ fun NoteDetailScreen(
                     onRemoveRelationship = onRemoveRelationship,
                     onOpenObject = onOpenNote,
                 )
+            }
+
+            // Related Knowledge Section
+            if (state.relatedKnowledge.isNotEmpty()) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Psychology, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        Text(
+                            text = "RELATED KNOWLEDGE // DISCOVERED",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    state.relatedKnowledge.forEach { item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onOpenNote(item.note.id) }
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "${item.note.title} [${item.note.typeId.uppercase()}]",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = DotMatrixFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    text = item.explanation,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            Text(
+                                text = "${(item.score * 100).toInt()}%",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)

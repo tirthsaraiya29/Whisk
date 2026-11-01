@@ -4,8 +4,13 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.whisk.data.local.PreferencesManager
+import com.whisk.data.rag.embedding.EmbeddingModelManager
+import com.whisk.data.rag.embedding.EmbeddingModelStatus
+import com.whisk.data.rag.indexer.DocumentIndexer
+import com.whisk.data.rag.indexer.IndexingProgress
 import com.whisk.data.repository.ExportImportRepository
 import com.whisk.domain.model.AiConfig
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -19,24 +24,51 @@ data class SettingsUiState(
     val githubToken: String = "",
     val isExporting: Boolean = false,
     val importResultText: String? = null,
+    val indexingProgress: IndexingProgress = IndexingProgress(),
+    val embeddingStatus: EmbeddingModelStatus = EmbeddingModelStatus(),
 )
 
 class SettingsViewModel(
     private val preferencesManager: PreferencesManager,
     private val exportImportRepository: ExportImportRepository,
+    private val documentIndexer: DocumentIndexer? = null,
+    private val embeddingModelManager: EmbeddingModelManager? = null,
 ) : ViewModel() {
 
+    private val dummyProgress = MutableStateFlow(IndexingProgress())
+    private val dummyEmbedding = MutableStateFlow(EmbeddingModelStatus())
+
     val uiState: StateFlow<SettingsUiState> = combine(
-        preferencesManager.themeMode,
-        preferencesManager.aiConfig,
-        preferencesManager.githubToken,
-    ) { theme, aiConfig, ghToken ->
+        combine(preferencesManager.themeMode, preferencesManager.aiConfig, preferencesManager.githubToken) { theme, aiConfig, ghToken ->
+            Triple(theme, aiConfig, ghToken)
+        },
+        combine(
+            documentIndexer?.progress ?: dummyProgress,
+            embeddingModelManager?.status ?: dummyEmbedding,
+        ) { progress, embeddingStatus ->
+            Pair(progress, embeddingStatus)
+        },
+    ) { (theme, aiConfig, ghToken), (progress, embeddingStatus) ->
         SettingsUiState(
             themeMode = theme,
             aiConfig = aiConfig,
             githubToken = ghToken,
+            indexingProgress = progress,
+            embeddingStatus = embeddingStatus,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
+
+    fun indexWorkspace(forceReindex: Boolean = false) {
+        viewModelScope.launch {
+            documentIndexer?.indexWorkspace(forceReindex = forceReindex)
+        }
+    }
+
+    fun clearRagIndex() {
+        viewModelScope.launch {
+            documentIndexer?.clearIndex()
+        }
+    }
 
     fun setThemeMode(mode: String) {
         viewModelScope.launch {

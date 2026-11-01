@@ -1,10 +1,17 @@
 package com.whisk.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.whisk.domain.model.Note
 
-@Entity(tableName = "notes")
+@Entity(
+    tableName = "notes",
+    indices = [
+        Index(value = ["typeId"]),
+    ],
+)
 data class NoteEntity(
     @PrimaryKey val id: String,
     val title: String,
@@ -17,12 +24,12 @@ data class NoteEntity(
     val isArchived: Boolean,
     val sourceMetadata: String?,
     val repoRef: String?,
-    val aliases: String = "",
-    val status: String? = "DRAFT",
-    val typeId: String = "note",
-    val description: String? = null,
-    val icon: String? = null,
-    val coverImage: String? = null,
+    @ColumnInfo(defaultValue = "''") val aliases: String = "",
+    @ColumnInfo(defaultValue = "'DRAFT'") val status: String? = "DRAFT",
+    @ColumnInfo(defaultValue = "'note'") val typeId: String = "note",
+    @ColumnInfo(defaultValue = "NULL") val description: String? = null,
+    @ColumnInfo(defaultValue = "NULL") val icon: String? = null,
+    @ColumnInfo(defaultValue = "NULL") val coverImage: String? = null,
 ) {
     fun toDomain(): Note {
         return Note(

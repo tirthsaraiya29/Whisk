@@ -3,14 +3,19 @@ package com.whisk.ui.screens.notes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.whisk.data.repository.NotesRepository
+import com.whisk.data.repository.PropertyRepository
 import com.whisk.domain.model.Backlink
 import com.whisk.domain.model.Note
+import com.whisk.domain.model.NotePropertyItem
+import com.whisk.domain.model.NotePropertyValue
+import com.whisk.domain.model.PropertyDefinition
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 enum class SaveState {
     IDLE, SAVING, SAVED, ERROR
@@ -21,10 +26,13 @@ data class NoteDetailUiState(
     val backlinks: List<Backlink> = emptyList(),
     val saveState: SaveState = SaveState.IDLE,
     val isDeleted: Boolean = false,
+    val propertyItems: List<NotePropertyItem> = emptyList(),
+    val allDefinitions: List<PropertyDefinition> = emptyList(),
 )
 
 class NoteDetailViewModel(
     private val notesRepository: NotesRepository,
+    private val propertyRepository: PropertyRepository,
     private val noteId: String,
 ) : ViewModel() {
 
@@ -35,6 +43,7 @@ class NoteDetailViewModel(
 
     init {
         loadNote()
+        observeProperties()
     }
 
     fun loadNote() {
@@ -47,6 +56,49 @@ class NoteDetailViewModel(
                     backlinks = backlinks,
                 )
             }
+        }
+    }
+
+    private fun observeProperties() {
+        viewModelScope.launch {
+            propertyRepository.getPropertyItemsForNote(noteId).collect { items ->
+                _uiState.value = _uiState.value.copy(propertyItems = items)
+            }
+        }
+        viewModelScope.launch {
+            propertyRepository.nonArchivedPropertyDefinitions.collect { defs ->
+                _uiState.value = _uiState.value.copy(allDefinitions = defs)
+            }
+        }
+    }
+
+    fun updatePropertyValue(
+        definitionId: String,
+        textValue: String? = null,
+        numberValue: Double? = null,
+        booleanValue: Boolean? = null,
+        listValue: List<String> = emptyList(),
+    ) {
+        viewModelScope.launch {
+            val existingItem = _uiState.value.propertyItems.find { it.definition.id == definitionId }
+            val valueId = existingItem?.value?.id ?: UUID.randomUUID().toString()
+
+            val newValue = NotePropertyValue(
+                id = valueId,
+                noteId = noteId,
+                propertyDefinitionId = definitionId,
+                textValue = textValue,
+                numberValue = numberValue,
+                booleanValue = booleanValue,
+                listValue = listValue,
+            )
+            propertyRepository.saveNotePropertyValue(newValue)
+        }
+    }
+
+    fun deletePropertyValue(definitionId: String) {
+        viewModelScope.launch {
+            propertyRepository.deleteNotePropertyValue(noteId, definitionId)
         }
     }
 

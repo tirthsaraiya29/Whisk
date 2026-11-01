@@ -57,6 +57,9 @@ import com.whisk.ui.screens.github.GitHubViewModel
 import com.whisk.ui.screens.graph.GraphViewModel
 import com.whisk.ui.screens.graph.KnowledgeGraphScreen
 import com.whisk.ui.screens.notes.NoteDetailScreen
+import com.whisk.data.repository.PropertyRepository
+import com.whisk.ui.screens.properties.PropertyManagementScreen
+import com.whisk.ui.screens.properties.PropertyManagementViewModel
 import com.whisk.ui.screens.notes.NoteDetailViewModel
 import com.whisk.ui.screens.notes.NotesListScreen
 import com.whisk.ui.screens.notes.NotesViewModel
@@ -86,6 +89,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var database: WhiskDatabase
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var notesRepository: NotesRepository
+    private lateinit var propertyRepository: PropertyRepository
     private lateinit var graphRepository: GraphRepository
     private lateinit var canvasRepository: CanvasRepository
     private lateinit var gitHubRepository: GitHubRepository
@@ -124,6 +128,7 @@ class MainActivity : ComponentActivity() {
         database = WhiskDatabase.getDatabase(this)
         preferencesManager = PreferencesManager(this)
         notesRepository = NotesRepository(database.noteDao(), database.folderDao(), database.taskDao())
+        propertyRepository = PropertyRepository(database.propertyDao(), database.noteDao())
         graphRepository = GraphRepository(database.noteDao())
         canvasRepository = CanvasRepository(database.canvasDao())
         gitHubRepository = GitHubRepository()
@@ -142,6 +147,7 @@ class MainActivity : ComponentActivity() {
             WhiskTheme(themeMode = themeMode) {
                 WhiskApp(
                     notesRepository = notesRepository,
+                    propertyRepository = propertyRepository,
                     graphRepository = graphRepository,
                     canvasRepository = canvasRepository,
                     gitHubRepository = gitHubRepository,
@@ -188,6 +194,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WhiskApp(
     notesRepository: NotesRepository,
+    propertyRepository: PropertyRepository,
     graphRepository: GraphRepository,
     canvasRepository: CanvasRepository,
     gitHubRepository: GitHubRepository,
@@ -294,7 +301,7 @@ fun WhiskApp(
                 val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
                 val viewModel: NoteDetailViewModel = viewModel(
                     key = noteId,
-                    factory = viewModelFactory { NoteDetailViewModel(notesRepository, noteId) },
+                    factory = viewModelFactory { NoteDetailViewModel(notesRepository, propertyRepository, noteId) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -317,15 +324,20 @@ fun WhiskApp(
                             target?.let { (id) -> navController.navigate("note_detail/$id") }
                         }
                     },
-                ) {
-                    navController.navigate("ai?noteId=$noteId")
-                }
+                    onOpenAiWithNote = { navController.navigate("ai?noteId=$noteId") },
+                    onUpdatePropertyValue = { defId, textVal, numVal, boolVal, listVal ->
+                        viewModel.updatePropertyValue(defId, textVal, numVal, boolVal, listVal)
+                    },
+                    onDeletePropertyValue = { defId -> viewModel.deletePropertyValue(defId) },
+                    onManageProperties = { navController.navigate("properties") },
+                    allNotes = allNotes,
+                )
             }
 
             // 3. Search Destination
             composable("search") {
                 val viewModel: SearchViewModel = viewModel(
-                    factory = viewModelFactory { SearchViewModel(notesRepository) },
+                    factory = viewModelFactory { SearchViewModel(notesRepository, propertyRepository) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -333,6 +345,7 @@ fun WhiskApp(
                     state = state,
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onQueryChange = { q -> viewModel.updateQuery(q) },
+                    onSetPropertyFilter = { filter -> viewModel.setPropertyFilter(filter) },
                     onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") },
                 )
             }
@@ -485,6 +498,30 @@ fun WhiskApp(
                     onResetOnboarding = { viewModel.resetOnboarding() },
                     onExportBackup = onExportZip,
                     onImportBackup = onImportZip,
+                    onNavigateToProperties = { navController.navigate("properties") },
+                )
+            }
+
+            // 10. Properties Management Destination
+            composable("properties") {
+                val viewModel: PropertyManagementViewModel = viewModel(
+                    factory = viewModelFactory { PropertyManagementViewModel(propertyRepository) },
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                PropertyManagementScreen(
+                    state = state,
+                    onBackClick = { navController.popBackStack() },
+                    onOpenCreateDialog = { viewModel.openCreateDialog() },
+                    onCloseCreateDialog = { viewModel.closeCreateDialog() },
+                    onCreateProperty = { name, type, desc, options -> viewModel.createProperty(name, type, desc, options) },
+                    onOpenEditDialog = { prop -> viewModel.openEditDialog(prop) },
+                    onCloseEditDialog = { viewModel.closeEditDialog() },
+                    onUpdateProperty = { id, name, type, desc, options, archived -> viewModel.updateProperty(id, name, type, desc, options, archived) },
+                    onOpenDeleteConfirmation = { prop -> viewModel.openDeleteConfirmation(prop) },
+                    onCloseDeleteConfirmation = { viewModel.closeDeleteConfirmation() },
+                    onDeleteProperty = { id -> viewModel.deleteProperty(id) },
+                    onToggleArchive = { prop -> viewModel.toggleArchive(prop) },
                 )
             }
         }

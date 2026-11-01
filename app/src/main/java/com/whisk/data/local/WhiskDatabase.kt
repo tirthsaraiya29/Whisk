@@ -16,8 +16,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TaskEntity::class,
         ChatSessionEntity::class,
         ChatMessageEntity::class,
+        PropertyDefinitionEntity::class,
+        NotePropertyValueEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class WhiskDatabase : RoomDatabase() {
@@ -26,6 +28,7 @@ abstract class WhiskDatabase : RoomDatabase() {
     abstract fun canvasDao(): CanvasDao
     abstract fun taskDao(): TaskDao
     abstract fun chatDao(): ChatDao
+    abstract fun propertyDao(): PropertyDao
 
     companion object {
         @Volatile
@@ -84,6 +87,50 @@ abstract class WhiskDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `property_definitions` (
+                        `id` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `type` TEXT NOT NULL,
+                        `description` TEXT,
+                        `optionsJson` TEXT,
+                        `position` INTEGER NOT NULL,
+                        `isArchived` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `note_property_values` (
+                        `id` TEXT NOT NULL,
+                        `noteId` TEXT NOT NULL,
+                        `propertyDefinitionId` TEXT NOT NULL,
+                        `textValue` TEXT,
+                        `numberValue` REAL,
+                        `booleanValue` INTEGER,
+                        `listValueJson` TEXT,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`),
+                        FOREIGN KEY(`noteId`) REFERENCES `notes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+                        FOREIGN KEY(`propertyDefinitionId`) REFERENCES `property_definitions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_note_property_values_noteId` ON `note_property_values` (`noteId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_note_property_values_propertyDefinitionId` ON `note_property_values` (`propertyDefinitionId`)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_note_property_values_noteId_propertyDefinitionId` ON `note_property_values` (`noteId`, `propertyDefinitionId`)")
+            }
+        }
+
         fun getDatabase(context: Context): WhiskDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -91,7 +138,7 @@ abstract class WhiskDatabase : RoomDatabase() {
                     WhiskDatabase::class.java,
                     "whisk_database",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
                     .build()
                 INSTANCE = instance

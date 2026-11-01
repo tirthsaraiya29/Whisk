@@ -8,6 +8,8 @@ import com.whisk.data.local.ChatMessageEntity
 import com.whisk.data.local.ChatSessionEntity
 import com.whisk.data.local.FolderEntity
 import com.whisk.data.local.NoteEntity
+import com.whisk.data.local.NotePropertyValueEntity
+import com.whisk.data.local.PropertyDefinitionEntity
 import com.whisk.data.local.TaskEntity
 import com.whisk.data.local.WhiskDatabase
 import com.whisk.domain.model.Note
@@ -39,6 +41,8 @@ data class BackupData(
     val tasks: List<TaskDto> = emptyList(),
     val chatSessions: List<ChatSessionDto> = emptyList(),
     val chatMessages: List<ChatMessageDto> = emptyList(),
+    val propertyDefinitions: List<PropertyDefinitionDto> = emptyList(),
+    val notePropertyValues: List<NotePropertyValueDto> = emptyList(),
 )
 
 @Serializable
@@ -105,6 +109,32 @@ data class ChatMessageDto(
     val contextPreview: String?,
 )
 
+@Serializable
+data class PropertyDefinitionDto(
+    val id: String,
+    val name: String,
+    val type: String,
+    val description: String?,
+    val optionsJson: String?,
+    val position: Int,
+    val isArchived: Boolean,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+@Serializable
+data class NotePropertyValueDto(
+    val id: String,
+    val noteId: String,
+    val propertyDefinitionId: String,
+    val textValue: String?,
+    val numberValue: Double?,
+    val booleanValue: Boolean?,
+    val listValueJson: String?,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
 class ExportImportRepository(
     private val context: Context,
     private val database: WhiskDatabase,
@@ -144,8 +174,14 @@ class ExportImportRepository(
         val chatMessages = database.chatDao().getAllMessagesDirect().map {
             ChatMessageDto(it.id, it.sessionId, it.role, it.content, it.timestamp, it.contextPreview)
         }
+        val propertyDefinitions = database.propertyDao().getAllPropertyDefinitionsDirect().map {
+            PropertyDefinitionDto(it.id, it.name, it.type, it.description, it.optionsJson, it.position, it.isArchived, it.createdAt, it.updatedAt)
+        }
+        val notePropertyValues = database.propertyDao().getAllNotePropertyValuesDirect().map {
+            NotePropertyValueDto(it.id, it.noteId, it.propertyDefinitionId, it.textValue, it.numberValue, it.booleanValue, it.listValueJson, it.createdAt, it.updatedAt)
+        }
 
-        val backupData = BackupData(notes, folders, canvases, tasks, chatSessions, chatMessages)
+        val backupData = BackupData(notes, folders, canvases, tasks, chatSessions, chatMessages, propertyDefinitions, notePropertyValues)
         val dataJsonString = json.encodeToString(backupData)
         val dataBytes = dataJsonString.toByteArray(Charsets.UTF_8)
 
@@ -252,13 +288,20 @@ class ExportImportRepository(
                 val canvasDao = database.canvasDao()
                 val taskDao = database.taskDao()
                 val chatDao = database.chatDao()
+                val propertyDao = database.propertyDao()
 
+                backupData.propertyDefinitions.forEach { pd ->
+                    propertyDao.insertPropertyDefinition(PropertyDefinitionEntity(pd.id, pd.name, pd.type, pd.description, pd.optionsJson, pd.position, pd.isArchived, pd.createdAt, pd.updatedAt))
+                }
                 backupData.folders.forEach { f ->
                     folderDao.insertFolder(FolderEntity(f.id, f.name, f.parentId))
                 }
                 backupData.notes.forEach { n ->
                     noteDao.insertNote(NoteEntity(n.id, n.title, n.body, n.createdAt, n.updatedAt, n.folder, n.tags, n.isFavorite, n.isArchived, n.sourceMetadata, n.repoRef, n.aliases, n.status))
                     importedCount++
+                }
+                backupData.notePropertyValues.forEach { pv ->
+                    propertyDao.insertNotePropertyValue(NotePropertyValueEntity(pv.id, pv.noteId, pv.propertyDefinitionId, pv.textValue, pv.numberValue, pv.booleanValue, pv.listValueJson, pv.createdAt, pv.updatedAt))
                 }
                 backupData.canvases.forEach { c ->
                     canvasDao.insertCanvas(CanvasEntity(c.id, c.title, c.cardsJson, c.connectionsJson, c.updatedAt))

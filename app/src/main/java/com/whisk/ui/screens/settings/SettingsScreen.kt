@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Code
@@ -27,6 +28,8 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +69,7 @@ fun SettingsScreen(
     onResetOnboarding: () -> Unit,
     onExportBackup: () -> Unit,
     onImportBackup: () -> Unit,
+    onNavigateToProperties: (() -> Unit)? = null,
     onMenuClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -149,6 +153,52 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
+                }
+            }
+
+            // Property Schemas Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                    .padding(16.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = "PROPERTIES // WORKSPACE SCHEMAS",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Configure custom properties, metadata schemas, option lists, and note relations across your vault.",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = DotMatrixFontFamily,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onNavigateToProperties?.invoke()
+                    },
+                    shape = RoundedCornerShape(0.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Text(
+                        text = "MANAGE PROPERTY SCHEMAS",
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             }
 

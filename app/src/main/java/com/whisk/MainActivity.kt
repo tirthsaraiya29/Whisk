@@ -39,6 +39,7 @@ import com.whisk.ai.RemoteAiManager
 import com.whisk.data.local.PreferencesManager
 import com.whisk.data.local.WhiskDatabase
 import com.whisk.data.repository.CanvasRepository
+import com.whisk.data.repository.ChatRepository
 import com.whisk.data.repository.ExportImportRepository
 import com.whisk.data.repository.GitHubRepository
 import com.whisk.data.repository.GraphRepository
@@ -90,6 +91,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var gitHubRepository: GitHubRepository
     private lateinit var mcpRepository: McpRepository
     private lateinit var exportImportRepository: ExportImportRepository
+    private lateinit var chatRepository: ChatRepository
     private lateinit var localGemmaManager: LocalGemmaManager
     private lateinit var remoteAiManager: RemoteAiManager
 
@@ -126,7 +128,8 @@ class MainActivity : ComponentActivity() {
         canvasRepository = CanvasRepository(database.canvasDao())
         gitHubRepository = GitHubRepository()
         mcpRepository = McpRepository()
-        exportImportRepository = ExportImportRepository(this, database.noteDao(), notesRepository)
+        exportImportRepository = ExportImportRepository(this, database, notesRepository)
+        chatRepository = ChatRepository(database.chatDao())
         localGemmaManager = LocalGemmaManager(this)
         remoteAiManager = RemoteAiManager()
 
@@ -144,6 +147,7 @@ class MainActivity : ComponentActivity() {
                     gitHubRepository = gitHubRepository,
                     mcpRepository = mcpRepository,
                     exportImportRepository = exportImportRepository,
+                    chatRepository = chatRepository,
                     localGemmaManager = localGemmaManager,
                     remoteAiManager = remoteAiManager,
                     preferencesManager = preferencesManager,
@@ -189,6 +193,7 @@ fun WhiskApp(
     gitHubRepository: GitHubRepository,
     mcpRepository: McpRepository,
     exportImportRepository: ExportImportRepository,
+    chatRepository: ChatRepository,
     localGemmaManager: LocalGemmaManager,
     remoteAiManager: RemoteAiManager,
     preferencesManager: PreferencesManager,
@@ -401,7 +406,7 @@ fun WhiskApp(
                 val viewModel: AiViewModel = viewModel(
                     key = noteId ?: "ai_global",
                     factory = viewModelFactory {
-                        AiViewModel(localGemmaManager, remoteAiManager, preferencesManager).apply {
+                        AiViewModel(localGemmaManager, remoteAiManager, preferencesManager, chatRepository).apply {
                             if (!noteId.isNullOrBlank()) {
                                 loadNoteContext(notesRepository, noteId)
                             }

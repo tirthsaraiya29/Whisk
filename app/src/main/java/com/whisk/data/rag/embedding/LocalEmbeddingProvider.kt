@@ -58,7 +58,7 @@ class LocalEmbeddingProvider(
     }
 
     private fun addWordHashToVector(term: String, vector: FloatArray, weight: Float) {
-        val md = MessageDigest.getInstance("MD5")
+        val md = MessageDigest.getInstance("SHA-256")
         val hashBytes = md.digest(term.toByteArray())
 
         // Map hash bytes into multiple dimension indices deterministically

@@ -94,7 +94,8 @@ class SearchViewModel(
 
         var filtered = results.filter { note ->
             ((tag == null) || note.tags.contains(tag)) &&
-                ((typeId == null) || note.typeId == typeId)
+                ((typeId == null) || note.typeId == typeId) &&
+                (query.isBlank() || note.title.contains(query, ignoreCase = true) || note.body.contains(query, ignoreCase = true) || note.aliases.any { it.contains(query, ignoreCase = true) })
         }
 
         if (propFilter != null) {

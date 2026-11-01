@@ -51,8 +51,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whisk.ui.theme.DotMatrixFontFamily
 
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.TableChart
+
 sealed class NavDestination(val route: String, val label: String, val icon: ImageVector) {
     data object Notes : NavDestination("notes", "NOTES", Icons.Default.Description)
+    data object Views : NavDestination("database_views", "VIEWS", Icons.Default.TableChart)
+    data object Daily : NavDestination("daily_notes", "DAILY", Icons.Default.CalendarToday)
     data object Search : NavDestination("search", "SEARCH", Icons.Default.Search)
     data object Graph : NavDestination("graph", "GRAPH", Icons.Default.Hub)
     data object AI : NavDestination("ai", "AI", Icons.Default.AutoAwesome)
@@ -78,6 +83,8 @@ fun WhiskBottomBar(
     val destinations = remember {
         listOf(
             NavDestination.Notes,
+            NavDestination.Views,
+            NavDestination.Daily,
             NavDestination.Search,
             NavDestination.Graph,
             NavDestination.AI,

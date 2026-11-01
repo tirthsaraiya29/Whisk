@@ -45,6 +45,8 @@ import com.whisk.data.local.PreferencesManager
 import com.whisk.data.local.WhiskDatabase
 import com.whisk.data.repository.CanvasRepository
 import com.whisk.data.repository.ChatRepository
+import com.whisk.data.repository.DailyNotesRepository
+import com.whisk.data.repository.DatabaseViewRepository
 import com.whisk.data.repository.ExportImportRepository
 import com.whisk.data.repository.GitHubRepository
 import com.whisk.data.repository.GraphRepository
@@ -61,6 +63,8 @@ import com.whisk.ui.screens.ai.AiViewModel
 import com.whisk.ui.screens.ai.AiWorkspaceScreen
 import com.whisk.ui.screens.canvas.CanvasViewModel
 import com.whisk.ui.screens.canvas.SpatialCanvasScreen
+import com.whisk.ui.screens.daily.DailyNotesScreen
+import com.whisk.ui.screens.daily.DailyNotesViewModel
 import com.whisk.ui.screens.github.GitHubBrowserScreen
 import com.whisk.ui.screens.github.GitHubViewModel
 import com.whisk.ui.screens.graph.GraphViewModel
@@ -81,6 +85,8 @@ import com.whisk.ui.screens.tasks.TasksScreen
 import com.whisk.ui.screens.tasks.TasksViewModel
 import com.whisk.ui.screens.types.ObjectTypeManagementScreen
 import com.whisk.ui.screens.types.ObjectTypeManagementViewModel
+import com.whisk.ui.screens.views.DatabaseViewsScreen
+import com.whisk.ui.screens.views.DatabaseViewsViewModel
 import com.whisk.ui.theme.WhiskTheme
 import kotlinx.coroutines.launch
 
@@ -104,6 +110,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var mcpRepository: McpRepository
     private lateinit var exportImportRepository: ExportImportRepository
     private lateinit var chatRepository: ChatRepository
+    private lateinit var databaseViewRepository: DatabaseViewRepository
+    private lateinit var dailyNotesRepository: DailyNotesRepository
     private lateinit var localGemmaManager: LocalGemmaManager
     private lateinit var remoteAiManager: RemoteAiManager
 
@@ -145,6 +153,8 @@ class MainActivity : ComponentActivity() {
         mcpRepository = McpRepository()
         exportImportRepository = ExportImportRepository(this, database, notesRepository)
         chatRepository = ChatRepository(database.chatDao())
+        databaseViewRepository = DatabaseViewRepository(database.databaseViewDao())
+        dailyNotesRepository = DailyNotesRepository(database, database.dailyNoteDao(), database.activityEventDao(), database.noteDao(), database.taskDao())
         localGemmaManager = LocalGemmaManager(this)
         remoteAiManager = RemoteAiManager()
 
@@ -166,6 +176,8 @@ class MainActivity : ComponentActivity() {
                     mcpRepository = mcpRepository,
                     exportImportRepository = exportImportRepository,
                     chatRepository = chatRepository,
+                    databaseViewRepository = databaseViewRepository,
+                    dailyNotesRepository = dailyNotesRepository,
                     localGemmaManager = localGemmaManager,
                     remoteAiManager = remoteAiManager,
                     preferencesManager = preferencesManager,
@@ -215,6 +227,8 @@ fun WhiskApp(
     mcpRepository: McpRepository,
     exportImportRepository: ExportImportRepository,
     chatRepository: ChatRepository,
+    databaseViewRepository: DatabaseViewRepository,
+    dailyNotesRepository: DailyNotesRepository,
     localGemmaManager: LocalGemmaManager,
     remoteAiManager: RemoteAiManager,
     preferencesManager: PreferencesManager,
@@ -358,6 +372,12 @@ fun WhiskApp(
                     onRemoveRelationship = { relId -> viewModel.removeRelationship(relId) },
                     onQueryObjects = { query, typeId -> viewModel.queryObjectsForPicker(query, typeId) },
                     onOpenProjectWorkspace = { projectId -> navController.navigate("project_workspace/$projectId") },
+                    onConvertUnlinkedMention = { matchedText, targetTitle -> viewModel.convertUnlinkedMention(matchedText, targetTitle) },
+                    onCreateNoteFromBrokenLink = { targetTitle ->
+                        viewModel.createNoteFromBrokenLink(targetTitle) { createdId ->
+                            navController.navigate("note_detail/$createdId")
+                        }
+                    },
                     allNotes = allNotes,
                 )
             }
@@ -614,10 +634,62 @@ fun WhiskApp(
                     onOpenAiSession = { sessionId -> navController.navigate("ai?noteId=$projectId") },
                 )
             }
+
+            // 13. Database Views Destination
+            composable("database_views") {
+                val viewModel: DatabaseViewsViewModel = viewModel(
+                    factory = viewModelFactory {
+                        DatabaseViewsViewModel(databaseViewRepository, notesRepository, propertyRepository)
+                    },
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                DatabaseViewsScreen(
+                    state = state,
+                    onSelectView = { view -> viewModel.selectView(view) },
+                    onCreateView = { name, viewType -> viewModel.createView(name, viewType) },
+                    onDuplicateView = { viewId -> viewModel.duplicateView(viewId) },
+                    onDeleteView = { viewId -> viewModel.deleteView(viewId) },
+                    onOpenNote = { id -> navController.navigate("note_detail/$id") },
+                    onUpdatePropertyValue = { noteId, defId, textVal, numVal, boolVal, listVal ->
+                        viewModel.updatePropertyValue(noteId, defId, textVal, numVal, boolVal, listVal)
+                    },
+                    onMoveNoteToGroup = { noteId, newGroup -> viewModel.updateNoteGroupStatus(noteId, newGroup) },
+                    onCreateInGroup = { group -> viewModel.createNoteInGroup(group) },
+                    onCreateOnDate = { dateKey -> viewModel.createNoteOnDate(dateKey) },
+                    onMenuClick = { scope.launch { drawerState.open() } },
+                )
+            }
+
+            // 14. Daily Notes Destination
+            composable("daily_notes") {
+                val viewModel: DailyNotesViewModel = viewModel(
+                    factory = viewModelFactory {
+                        DailyNotesViewModel(dailyNotesRepository, notesRepository, localGemmaManager, remoteAiManager)
+                    },
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                DailyNotesScreen(
+                    state = state,
+                    onDateSelect = { dateKey -> viewModel.loadDate(dateKey) },
+                    onPrevDay = { viewModel.goToPreviousDay() },
+                    onNextDay = { viewModel.goToNextDay() },
+                    onGoToToday = { viewModel.goToToday() },
+                    onUpdateJournal = { title, body -> viewModel.updateJournalContent(title, body) },
+                    onToggleTask = { taskId, chk -> viewModel.toggleTask(taskId, chk) },
+                    onGenerateAiReflection = { viewModel.generateDailyReflection() },
+                    onApplyAiSuggestion = { viewModel.applyAiSuggestion() },
+                    onDismissAiSuggestion = { viewModel.dismissAiSuggestion() },
+                    onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") },
+                    onMenuClick = { scope.launch { drawerState.open() } },
+                    allNotes = allNotes,
+                )
+            }
         }
 
         // Brutalist Bottom Navigation Bar
-        val isBottomBarVisible = ((currentRoute in listOf("notes", "search", "graph", "settings")) || currentRoute.startsWith("ai")) && drawerState.isClosed
+        val isBottomBarVisible = ((currentRoute in listOf("notes", "search", "graph", "settings", "database_views", "daily_notes")) || currentRoute.startsWith("ai")) && drawerState.isClosed
         if (isBottomBarVisible) {
             val selectedRoute = if (currentRoute.startsWith("ai")) "ai" else currentRoute
             WhiskBottomBar(

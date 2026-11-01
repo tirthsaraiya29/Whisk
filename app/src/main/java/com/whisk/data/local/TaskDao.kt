@@ -11,6 +11,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks ORDER BY isCompleted ASC, id DESC")
     fun getAllTasks(): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks ORDER BY isCompleted ASC, id DESC")
+    suspend fun getAllTasksDirect(): List<TaskEntity>
+
     @Query("SELECT * FROM tasks WHERE noteId = :noteId")
     suspend fun getTasksForNote(noteId: String): List<TaskEntity>
 

@@ -69,8 +69,12 @@ fun CommandPalette(
                 onNewNote()
                 onDismiss()
             },
-            CommandItem("daily_note", "Daily Note", "Create today's developer journal", "⌘D", Icons.Default.CalendarToday) {
-                onCreateTemplateNote?.invoke(DeveloperTemplates.createDailyNote())
+            CommandItem("daily_notes_workspace", "Daily Notes Workspace", "Canonical daily notes workspace & activity log", "⌘D", Icons.Default.CalendarToday) {
+                onNavigate("daily_notes")
+                onDismiss()
+            },
+            CommandItem("database_views", "Database Views", "Table, Board, Calendar, Gallery & List views", "⌘V", Icons.Default.Description) {
+                onNavigate("database_views")
                 onDismiss()
             },
             CommandItem("adr_note", "Architecture Decision Record", "Document an architectural decision (ADR)", "⌘A", Icons.Default.Gavel) {

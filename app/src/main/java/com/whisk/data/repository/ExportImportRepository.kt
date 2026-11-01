@@ -3,9 +3,12 @@ package com.whisk.data.repository
 import android.content.Context
 import android.net.Uri
 import androidx.room.withTransaction
+import com.whisk.data.local.ActivityEventEntity
 import com.whisk.data.local.CanvasEntity
 import com.whisk.data.local.ChatMessageEntity
 import com.whisk.data.local.ChatSessionEntity
+import com.whisk.data.local.DailyNoteMetadataEntity
+import com.whisk.data.local.DatabaseViewEntity
 import com.whisk.data.local.FolderEntity
 import com.whisk.data.local.NoteEntity
 import com.whisk.data.local.NotePropertyValueEntity
@@ -19,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.InputStream
 import java.io.OutputStream
@@ -47,6 +49,9 @@ data class BackupData(
     val notePropertyValues: List<NotePropertyValueDto> = emptyList(),
     val objectTypeDefinitions: List<ObjectTypeDefinitionDto> = emptyList(),
     val objectRelationships: List<ObjectRelationshipDto> = emptyList(),
+    val databaseViews: List<DatabaseViewDto> = emptyList(),
+    val dailyNotes: List<DailyNoteMetadataDto> = emptyList(),
+    val activityEvents: List<ActivityEventDto> = emptyList(),
 )
 
 @Serializable
@@ -166,6 +171,42 @@ data class ObjectRelationshipDto(
     val createdAt: Long,
 )
 
+@Serializable
+data class DatabaseViewDto(
+    val id: String,
+    val targetTypeId: String?,
+    val name: String,
+    val viewType: String,
+    val visiblePropertiesJson: String?,
+    val filterConfigJson: String?,
+    val sortConfigJson: String?,
+    val groupPropertyId: String?,
+    val datePropertyId: String?,
+    val cardSize: String,
+    val position: Int,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+@Serializable
+data class DailyNoteMetadataDto(
+    val noteId: String,
+    val dateKey: String,
+    val timezone: String,
+    val createdAt: Long,
+)
+
+@Serializable
+data class ActivityEventDto(
+    val id: String,
+    val eventType: String,
+    val timestamp: Long,
+    val dateKey: String,
+    val relatedObjectId: String?,
+    val relatedObjectTitle: String?,
+    val metadata: String?,
+)
+
 class ExportImportRepository(
     private val context: Context,
     private val database: WhiskDatabase,
@@ -235,6 +276,15 @@ class ExportImportRepository(
         val objectRelationships = database.relationshipDao().getAllRelationshipsDirect().map {
             ObjectRelationshipDto(it.id, it.sourceObjectId, it.targetObjectId, it.relationshipType, it.createdAt)
         }
+        val databaseViews = database.databaseViewDao().getAllViewsDirect().map {
+            DatabaseViewDto(it.id, it.targetTypeId, it.name, it.viewType, it.visiblePropertiesJson, it.filterConfigJson, it.sortConfigJson, it.groupPropertyId, it.datePropertyId, it.cardSize, it.position, it.createdAt, it.updatedAt)
+        }
+        val dailyNotes = database.dailyNoteDao().getAllDailyNotesDirect().map {
+            DailyNoteMetadataDto(it.noteId, it.dateKey, it.timezone, it.createdAt)
+        }
+        val activityEvents = database.activityEventDao().getAllEventsDirect().map {
+            ActivityEventDto(it.id, it.eventType, it.timestamp, it.dateKey, it.relatedObjectId, it.relatedObjectTitle, it.metadata)
+        }
 
         val backupData = BackupData(
             notes = notes,
@@ -247,6 +297,9 @@ class ExportImportRepository(
             notePropertyValues = notePropertyValues,
             objectTypeDefinitions = objectTypeDefinitions,
             objectRelationships = objectRelationships,
+            databaseViews = databaseViews,
+            dailyNotes = dailyNotes,
+            activityEvents = activityEvents,
         )
         val dataJsonString = json.encodeToString(backupData)
         val dataBytes = dataJsonString.toByteArray(Charsets.UTF_8)
@@ -357,6 +410,9 @@ class ExportImportRepository(
                 val propertyDao = database.propertyDao()
                 val objectTypeDao = database.objectTypeDao()
                 val relationshipDao = database.relationshipDao()
+                val databaseViewDao = database.databaseViewDao()
+                val dailyNoteDao = database.dailyNoteDao()
+                val activityEventDao = database.activityEventDao()
 
                 backupData.objectTypeDefinitions.forEach { otd ->
                     objectTypeDao.insertObjectTypeDefinition(ObjectTypeDefinitionEntity(otd.id, otd.name, otd.description, otd.icon, otd.isBuiltIn, otd.configurationJson, otd.position, otd.isArchived, otd.createdAt, otd.updatedAt))
@@ -410,6 +466,15 @@ class ExportImportRepository(
                 if (backupData.chatMessages.isNotEmpty()) {
                     val msgEntities = backupData.chatMessages.map { cm -> ChatMessageEntity(cm.id, cm.sessionId, cm.role, cm.content, cm.timestamp, cm.contextPreview) }
                     chatDao.insertMessages(msgEntities)
+                }
+                backupData.databaseViews.forEach { v ->
+                    databaseViewDao.insertView(DatabaseViewEntity(v.id, v.targetTypeId, v.name, v.viewType, v.visiblePropertiesJson, v.filterConfigJson, v.sortConfigJson, v.groupPropertyId, v.datePropertyId, v.cardSize, v.position, v.createdAt, v.updatedAt))
+                }
+                backupData.dailyNotes.forEach { dn ->
+                    dailyNoteDao.insertDailyNoteMetadata(DailyNoteMetadataEntity(dn.noteId, dn.dateKey, dn.timezone, dn.createdAt))
+                }
+                backupData.activityEvents.forEach { ev ->
+                    activityEventDao.insertEvent(ActivityEventEntity(ev.id, ev.eventType, ev.timestamp, ev.dateKey, ev.relatedObjectId, ev.relatedObjectTitle, ev.metadata))
                 }
             }
             importedCount

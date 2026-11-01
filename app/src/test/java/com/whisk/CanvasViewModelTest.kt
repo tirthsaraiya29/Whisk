@@ -123,6 +123,7 @@ class FakeFolderDao : FolderDao {
 class FakeTaskDao : TaskDao {
     private val _tasks = MutableStateFlow<List<TaskEntity>>(emptyList())
     override fun getAllTasks(): Flow<List<TaskEntity>> = _tasks
+    override suspend fun getAllTasksDirect(): List<TaskEntity> = _tasks.value
     override suspend fun getTasksForNote(noteId: String): List<TaskEntity> = _tasks.value.filter { it.noteId == noteId }
     override suspend fun insertTasks(tasks: List<TaskEntity>) {
         _tasks.value = _tasks.value + tasks

@@ -290,6 +290,20 @@ fun SidebarDrawer(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 DrawerIconButton(
+                    label = "DAILY",
+                    onClick = {
+                        onNavigate("daily_notes")
+                        onCloseDrawer()
+                    },
+                )
+                DrawerIconButton(
+                    label = "VIEWS",
+                    onClick = {
+                        onNavigate("database_views")
+                        onCloseDrawer()
+                    },
+                )
+                DrawerIconButton(
                     label = "SEARCH",
                     onClick = {
                         onNavigate("search")
@@ -300,13 +314,6 @@ fun SidebarDrawer(
                     label = "GRAPH",
                     onClick = {
                         onNavigate("graph")
-                        onCloseDrawer()
-                    },
-                )
-                DrawerIconButton(
-                    label = "AI",
-                    onClick = {
-                        onNavigate("ai")
                         onCloseDrawer()
                     },
                 )

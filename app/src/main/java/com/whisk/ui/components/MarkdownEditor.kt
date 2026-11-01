@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -66,6 +69,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import com.whisk.domain.model.Note
 import com.whisk.ui.theme.DotMatrixFontFamily
 import com.whisk.ui.theme.VercelMonoFontFamily
 
@@ -150,6 +154,7 @@ fun MarkdownEditor(
     onBodyChange: (String) -> Unit,
     onLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    allNotes: List<Note> = emptyList(),
 ) {
     var mode by remember { mutableStateOf(EditorMode.EDIT) }
 
@@ -318,53 +323,129 @@ fun MarkdownEditor(
         // Body Content Rendering according to EditorMode
         when (mode) {
             EditorMode.EDIT -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f),
-                ) {
-                    // Line-Number Gutter
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(36.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                            .padding(top = 16.dp, end = 6.dp),
-                        horizontalAlignment = Alignment.End,
-                    ) {
-                        (1..lineCount.coerceAtMost(100)).forEach { lineNum ->
-                            Text(
-                                text = lineNum.toString(),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 11.sp,
+                val cursor = textFieldValue.selection.start
+                val textUpToCursor = if (cursor in 0..textFieldValue.text.length) textFieldValue.text.substring(0, cursor) else ""
+                val lastOpenBracket = textUpToCursor.lastIndexOf("[[")
+                val showAutocomplete = lastOpenBracket != -1 && !textUpToCursor.substring(lastOpenBracket).contains("]]")
+                val autocompleteQuery = if (showAutocomplete) textUpToCursor.substring(lastOpenBracket + 2) else ""
+
+                val matchingNotes = if (showAutocomplete && allNotes.isNotEmpty()) {
+                    allNotes.filter { note ->
+                        note.title.contains(autocompleteQuery, ignoreCase = true) ||
+                            note.aliases.any { it.contains(autocompleteQuery, ignoreCase = true) }
+                    }.take(6)
+                } else emptyList()
+
+                Column(modifier = Modifier.fillMaxSize().weight(1f)) {
+                    if (matchingNotes.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp)),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text(
+                                    text = "LINK OBJECT // MATCHES (${matchingNotes.size})",
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontFamily = DotMatrixFontFamily,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                ),
-                                maxLines = 1,
-                            )
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(bottom = 4.dp),
+                                )
+                                matchingNotes.forEach { targetNote ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                val before = textUpToCursor.substring(0, lastOpenBracket)
+                                                val after = if (cursor < textFieldValue.text.length) textFieldValue.text.substring(cursor) else ""
+                                                val inserted = "[[" + targetNote.title + "]]"
+                                                val newFullText = before + inserted + after
+                                                val newCursor = before.length + inserted.length
+                                                val updatedTfv = TextFieldValue(text = newFullText, selection = TextRange(newCursor))
+                                                textFieldValue = updatedTfv
+                                                onBodyChange(newFullText)
+                                            }
+                                            .padding(vertical = 4.dp, horizontal = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Icon(
+                                            imageVector = getIconForObjectType(targetNote.typeId),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = targetNote.title,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontFamily = VercelMonoFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "[${targetNote.typeId.uppercase()}]",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontFamily = DotMatrixFontFamily,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    OutlinedTextField(
-                        value = textFieldValue,
-                        onValueChange = { newValue ->
-                            textFieldValue = newValue
-                            if (newValue.text != body) {
-                                onBodyChange(newValue.text)
-                            }
-                        },
-                        placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge, fontFamily = VercelMonoFontFamily) },
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = VercelMonoFontFamily, lineHeight = 24.sp),
-                        visualTransformation = visualTransformation,
+                    Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .weight(1f)
-                            .padding(horizontal = 12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                        ),
-                    )
+                            .weight(1f),
+                    ) {
+                        // Line-Number Gutter
+                        Column(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(36.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                .padding(top = 16.dp, end = 6.dp),
+                            horizontalAlignment = Alignment.End,
+                        ) {
+                            (1..lineCount.coerceAtMost(100)).forEach { lineNum ->
+                                Text(
+                                    text = lineNum.toString(),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 11.sp,
+                                        fontFamily = DotMatrixFontFamily,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    ),
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+
+                        OutlinedTextField(
+                            value = textFieldValue,
+                            onValueChange = { newValue ->
+                                textFieldValue = newValue
+                                if (newValue.text != body) {
+                                    onBodyChange(newValue.text)
+                                }
+                            },
+                            placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge, fontFamily = VercelMonoFontFamily) },
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = VercelMonoFontFamily, lineHeight = 24.sp),
+                            visualTransformation = visualTransformation,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f)
+                                .padding(horizontal = 12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                            ),
+                        )
+                    }
                 }
             }
             EditorMode.SPLIT -> {

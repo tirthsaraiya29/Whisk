@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
+import com.whisk.domain.model.BrokenLinkItem
+import com.whisk.domain.model.UnlinkedMention
+
 class NotesRepository(
     private val noteDao: NoteDao,
     private val folderDao: FolderDao,
@@ -127,14 +130,23 @@ class NotesRepository(
         return links
     }
 
-    suspend fun getBacklinksForNote(noteTitle: String, noteId: String): List<Backlink> {
-        val all = noteDao.getAllNotesDirect()
+    suspend fun getBacklinksForNote(noteTitle: String, noteId: String, aliases: List<String> = emptyList()): List<Backlink> {
+        val allEntities = noteDao.getAllNotesDirect()
+        val allNotes = allEntities.map { it.toDomain() }
         val backlinks = mutableListOf<Backlink>()
-        val linkRegex = Regex("\\[\\[${Regex.escape(noteTitle)}]]", RegexOption.IGNORE_CASE)
-        for (n in all) {
+
+        val targets = mutableListOf(noteTitle)
+        targets.addAll(aliases.filter { it.isNotBlank() })
+
+        for (n in allNotes) {
             if (n.id == noteId) continue
-            if (linkRegex.containsMatchIn(n.body) || n.body.contains(noteTitle, ignoreCase = true)) {
-                val line = n.body.lines().find { it.contains(noteTitle, ignoreCase = true) } ?: ""
+            val wikilinks = WikilinkParser.parseWikilinks(n.body)
+            val matches = wikilinks.filter { link ->
+                targets.any { t -> link.targetTitle.equals(t, ignoreCase = true) }
+            }
+
+            if (matches.isNotEmpty()) {
+                val line = n.body.lines().find { l -> matches.any { m -> l.contains(m.targetTitle, ignoreCase = true) } } ?: ""
                 backlinks.add(
                     Backlink(
                         sourceNoteId = n.id,
@@ -145,7 +157,60 @@ class NotesRepository(
                 )
             }
         }
-        return backlinks
+        return backlinks.sortedByDescending { it.updatedAt }
+    }
+
+    suspend fun getUnlinkedMentionsForNote(note: Note): List<UnlinkedMention> {
+        val allNotes = noteDao.getAllNotesDirect().map { it.toDomain() }
+        return UnlinkedMentionDetector.findUnlinkedMentions(note, allNotes)
+    }
+
+    suspend fun getBrokenLinks(): List<BrokenLinkItem> {
+        val allNotes = noteDao.getAllNotesDirect().map { it.toDomain() }
+        val brokenLinks = mutableListOf<BrokenLinkItem>()
+
+        for (note in allNotes) {
+            val parsed = WikilinkParser.parseWikilinks(note.body)
+            for (link in parsed) {
+                val resolved = WikilinkParser.resolveWikilink(link.targetTitle, allNotes)
+                if (resolved == null) {
+                    brokenLinks.add(
+                        BrokenLinkItem(
+                            id = java.util.UUID.randomUUID().toString(),
+                            sourceNoteId = note.id,
+                            sourceNoteTitle = note.title,
+                            rawWikilinkText = link.rawText,
+                            targetTitle = link.targetTitle,
+                            updatedAt = note.updatedAt,
+                        ),
+                    )
+                }
+            }
+        }
+        return brokenLinks
+    }
+
+    suspend fun convertUnlinkedMentionToLink(sourceNoteId: String, matchedText: String, targetTitle: String) {
+        val note = getNoteById(sourceNoteId) ?: return
+        val updatedBody = UnlinkedMentionDetector.convertMentionToWikilink(note.body, matchedText, targetTitle)
+        if (updatedBody != note.body) {
+            saveNote(note.copy(body = updatedBody, updatedAt = System.currentTimeMillis()))
+        }
+    }
+
+    suspend fun createNoteFromBrokenLink(targetTitle: String): Note {
+        val existing = getNoteByTitle(targetTitle)
+        if (existing != null) return existing
+
+        val newNote = Note(
+            id = java.util.UUID.randomUUID().toString(),
+            title = targetTitle,
+            body = "# $targetTitle\n\n",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+        )
+        saveNote(newNote)
+        return newNote
     }
 
     suspend fun getTagsWithCounts(): List<Tag> {

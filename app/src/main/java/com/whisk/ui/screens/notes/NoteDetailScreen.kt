@@ -64,6 +64,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -77,7 +78,6 @@ import com.whisk.domain.model.PropertyDefinition
 import com.whisk.domain.model.PropertyType
 import com.whisk.ui.components.MarkdownEditor
 import com.whisk.ui.components.WhiskTopBar
-import com.whisk.domain.model.ObjectTypeDefinition
 import com.whisk.domain.model.RelationshipType
 import com.whisk.ui.components.RelationshipSection
 import com.whisk.ui.components.getIconForObjectType
@@ -102,6 +102,8 @@ fun NoteDetailScreen(
     onRemoveRelationship: ((relationshipId: String) -> Unit)? = null,
     onQueryObjects: (suspend (String, String?) -> List<Note>)? = null,
     onOpenProjectWorkspace: ((String) -> Unit)? = null,
+    onConvertUnlinkedMention: ((matchedText: String, targetTitle: String) -> Unit)? = null,
+    onCreateNoteFromBrokenLink: ((targetTitle: String) -> Unit)? = null,
     allNotes: List<Note> = emptyList(),
 ) {
     val note = state.note ?: return
@@ -318,11 +320,12 @@ fun NoteDetailScreen(
                 onBodyChange = { newBody -> onTitleChange(note.title, newBody) },
                 onLinkClick = onOpenNote,
                 modifier = Modifier.fillMaxSize(),
+                allNotes = allNotes,
             )
         }
     }
 
-    // Backlinks Bottom Sheet
+    // Backlinks & Mentions Bottom Sheet
     if (showBacklinksSheet) {
         ModalBottomSheet(
             onDismissRequest = { showBacklinksSheet = false },
@@ -335,56 +338,178 @@ fun NoteDetailScreen(
                     .padding(20.dp),
             ) {
                 Text(
-                    text = "BACKLINKS // [${state.backlinks.size}]",
+                    text = "CONNECTIONS & MENTIONS // '${note.title.uppercase()}'",
                     style = MaterialTheme.typography.labelMedium,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                Text(
-                    text = "OBJECTS LINKING TO '${note.title.uppercase()}'",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp),
-                )
 
-                if (state.backlinks.isEmpty()) {
-                    Text(
-                        text = "NO INBOUND BACKLINKS DETECTED. USE [[${note.title}]] IN OTHER NOTES TO CREATE LINKS.",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 16.dp),
-                    )
-                } else {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(state.backlinks) { backlink ->
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        showBacklinksSheet = false
-                                        onOpenNote(backlink.sourceNoteId)
-                                    }
-                                    .padding(12.dp),
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    // 1. Explicit Backlinks
+                    item {
+                        Text(
+                            text = "EXPLICIT BACKLINKS (${state.backlinks.size})",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 6.dp),
+                        )
+                        if (state.backlinks.isEmpty()) {
+                            Text(
+                                text = "NO INBOUND BACKLINKS DETECTED.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    items(state.backlinks) { backlink ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    showBacklinksSheet = false
+                                    onOpenNote(backlink.sourceNoteId)
+                                }
+                                .padding(10.dp),
+                        ) {
+                            Text(
+                                text = backlink.sourceNoteTitle.uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontFamily = DotMatrixFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            if (backlink.snippet.isNotBlank()) {
+                                Text(
+                                    text = backlink.snippet,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(top = 2.dp),
+                                )
+                            }
+                        }
+                    }
+
+                    // 2. Unlinked Mentions
+                    item {
+                        Text(
+                            text = "UNLINKED MENTIONS (${state.unlinkedMentions.size})",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFD97706),
+                            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp),
+                        )
+                        if (state.unlinkedMentions.isEmpty()) {
+                            Text(
+                                text = "NO UNLINKED MENTIONS DETECTED.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    items(state.unlinkedMentions) { mention ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, Color(0xFFD97706), RoundedCornerShape(0.dp))
+                                .padding(10.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
-                                    text = backlink.sourceNoteTitle.uppercase(),
+                                    text = "IN: ${mention.sourceNoteTitle.uppercase()}",
                                     style = MaterialTheme.typography.labelMedium,
-                                    fontFamily = FontFamily.Monospace,
+                                    fontFamily = DotMatrixFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
-                                if (backlink.snippet.isNotBlank()) {
+                                Button(
+                                    onClick = {
+                                        onConvertUnlinkedMention?.invoke(mention.matchedText, mention.targetNoteTitle)
+                                    },
+                                    shape = RoundedCornerShape(0.dp),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                                ) {
                                     Text(
-                                        text = backlink.snippet,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(top = 4.dp),
+                                        text = "+ LINK",
+                                        fontFamily = DotMatrixFontFamily,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
                                     )
+                                }
+                            }
+                            Text(
+                                text = mention.snippet,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        }
+                    }
+
+                    // 3. Broken Links
+                    if (state.brokenLinks.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "UNRESOLVED / BROKEN LINKS (${state.brokenLinks.size})",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFDC2626),
+                                modifier = Modifier.padding(top = 8.dp, bottom = 6.dp),
+                            )
+                        }
+
+                        items(state.brokenLinks) { broken ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(1.dp, Color(0xFFDC2626), RoundedCornerShape(0.dp))
+                                    .padding(10.dp),
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "[[${broken.targetTitle}]]",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontFamily = DotMatrixFontFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFDC2626),
+                                    )
+                                    Button(
+                                        onClick = {
+                                            onCreateNoteFromBrokenLink?.invoke(broken.targetTitle)
+                                        },
+                                        shape = RoundedCornerShape(0.dp),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                                    ) {
+                                        Text(
+                                            text = "CREATE OBJECT",
+                                            fontFamily = DotMatrixFontFamily,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
                                 }
                             }
                         }

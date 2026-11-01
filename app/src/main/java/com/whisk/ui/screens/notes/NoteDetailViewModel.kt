@@ -22,6 +22,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+import com.whisk.domain.model.BrokenLinkItem
+import com.whisk.domain.model.UnlinkedMention
+
 enum class SaveState {
     IDLE, SAVING, SAVED, ERROR
 }
@@ -29,6 +32,8 @@ enum class SaveState {
 data class NoteDetailUiState(
     val note: Note? = null,
     val backlinks: List<Backlink> = emptyList(),
+    val unlinkedMentions: List<UnlinkedMention> = emptyList(),
+    val brokenLinks: List<BrokenLinkItem> = emptyList(),
     val saveState: SaveState = SaveState.IDLE,
     val isDeleted: Boolean = false,
     val propertyItems: List<NotePropertyItem> = emptyList(),
@@ -60,12 +65,32 @@ class NoteDetailViewModel(
         viewModelScope.launch {
             val note = notesRepository.getNoteById(noteId)
             if (note != null) {
-                val backlinks = notesRepository.getBacklinksForNote(note.title, note.id)
+                val backlinks = notesRepository.getBacklinksForNote(note.title, note.id, note.aliases)
+                val unlinkedMentions = notesRepository.getUnlinkedMentionsForNote(note)
+                val brokenLinks = notesRepository.getBrokenLinks().filter { it.sourceNoteId == note.id }
                 _uiState.value = _uiState.value.copy(
                     note = note,
                     backlinks = backlinks,
+                    unlinkedMentions = unlinkedMentions,
+                    brokenLinks = brokenLinks,
                 )
             }
+        }
+    }
+
+    fun convertUnlinkedMention(matchedText: String, targetTitle: String) {
+        val currentNote = _uiState.value.note ?: return
+        viewModelScope.launch {
+            notesRepository.convertUnlinkedMentionToLink(currentNote.id, matchedText, targetTitle)
+            loadNote()
+        }
+    }
+
+    fun createNoteFromBrokenLink(targetTitle: String, onNoteCreated: (String) -> Unit) {
+        viewModelScope.launch {
+            val newNote = notesRepository.createNoteFromBrokenLink(targetTitle)
+            loadNote()
+            onNoteCreated(newNote.id)
         }
     }
 

@@ -20,8 +20,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         NotePropertyValueEntity::class,
         ObjectTypeDefinitionEntity::class,
         ObjectRelationshipEntity::class,
+        DatabaseViewEntity::class,
+        DailyNoteMetadataEntity::class,
+        ActivityEventEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 abstract class WhiskDatabase : RoomDatabase() {
@@ -33,6 +36,9 @@ abstract class WhiskDatabase : RoomDatabase() {
     abstract fun propertyDao(): PropertyDao
     abstract fun objectTypeDao(): ObjectTypeDao
     abstract fun relationshipDao(): RelationshipDao
+    abstract fun databaseViewDao(): DatabaseViewDao
+    abstract fun dailyNoteDao(): DailyNoteDao
+    abstract fun activityEventDao(): ActivityEventDao
 
     companion object {
         @Volatile
@@ -182,6 +188,66 @@ abstract class WhiskDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `database_views` (
+                        `id` TEXT NOT NULL,
+                        `targetTypeId` TEXT,
+                        `name` TEXT NOT NULL,
+                        `viewType` TEXT NOT NULL,
+                        `visiblePropertiesJson` TEXT,
+                        `filterConfigJson` TEXT,
+                        `sortConfigJson` TEXT,
+                        `groupPropertyId` TEXT,
+                        `datePropertyId` TEXT,
+                        `cardSize` TEXT NOT NULL,
+                        `position` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `daily_note_metadata` (
+                        `noteId` TEXT NOT NULL,
+                        `dateKey` TEXT NOT NULL,
+                        `timezone` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`noteId`),
+                        FOREIGN KEY(`noteId`) REFERENCES `notes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_daily_note_metadata_dateKey` ON `daily_note_metadata` (`dateKey`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_daily_note_metadata_noteId` ON `daily_note_metadata` (`noteId`)")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `activity_events` (
+                        `id` TEXT NOT NULL,
+                        `eventType` TEXT NOT NULL,
+                        `timestamp` INTEGER NOT NULL,
+                        `dateKey` TEXT NOT NULL,
+                        `relatedObjectId` TEXT,
+                        `relatedObjectTitle` TEXT,
+                        `metadata` TEXT,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_activity_events_dateKey` ON `activity_events` (`dateKey`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_activity_events_timestamp` ON `activity_events` (`timestamp`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_activity_events_relatedObjectId` ON `activity_events` (`relatedObjectId`)")
+            }
+        }
+
         fun getDatabase(context: Context): WhiskDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -189,7 +255,7 @@ abstract class WhiskDatabase : RoomDatabase() {
                     WhiskDatabase::class.java,
                     "whisk_database",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
                     .build()
                 INSTANCE = instance

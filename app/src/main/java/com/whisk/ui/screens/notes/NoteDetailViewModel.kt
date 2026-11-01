@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import java.util.UUID
 
 import com.whisk.domain.model.BrokenLinkItem
@@ -198,7 +199,7 @@ class NoteDetailViewModel(
         // Debounced autosave
         autoSaveJob?.cancel()
         autoSaveJob = viewModelScope.launch {
-            delay(600)
+            delay(600.milliseconds)
             try {
                 notesRepository.saveNote(updated)
                 val backlinks = notesRepository.getBacklinksForNote(updated.title, updated.id)

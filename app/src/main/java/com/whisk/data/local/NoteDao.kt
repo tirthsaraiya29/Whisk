@@ -27,9 +27,11 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE folder = :folder AND isArchived = 0 ORDER BY updatedAt DESC")
     fun getNotesByFolder(folder: String): Flow<List<NoteEntity>>
 
+    @Suppress("Unused", "UNUSED_PARAMETER")
     @Query("SELECT * FROM notes WHERE title LIKE '%' || :query || '%' OR body LIKE '%' || :query || '%' OR tags LIKE '%' || :query || '%' ORDER BY updatedAt DESC")
     fun searchNotes(query: String): Flow<List<NoteEntity>>
 
+    @Suppress("Unused", "UNUSED_PARAMETER")
     @Query(
         """
         SELECT notes.* FROM notes

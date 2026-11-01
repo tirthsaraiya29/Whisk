@@ -45,11 +45,11 @@ import com.whisk.ui.theme.VercelMonoFontFamily
 @Composable
 fun BoardView(
     notes: List<Note>,
-    columns: List<String> = listOf("Draft", "In Progress", "In Review", "Done", "Unassigned"),
     onOpenNote: (String) -> Unit,
     onMoveNoteToGroup: (noteId: String, newGroup: String) -> Unit,
     onCreateInGroup: (group: String) -> Unit,
     modifier: Modifier = Modifier,
+    columns: List<String> = listOf("Draft", "In Progress", "In Review", "Done", "Unassigned"),
 ) {
     val scrollState = rememberScrollState()
 

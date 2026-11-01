@@ -1,0 +1,98 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/NoteDao.kt</file>
+  <line>31</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.NoteDao kotlinx.coroutines.flow.Flow&lt;java.util.List&lt;com.whisk.data.local.NoteEntity&gt;&gt; searchNotes(java.lang.String query)" />
+  <problem_class id="unused" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused declaration</problem_class>
+  <hints>
+    <hint value="query" />
+  </hints>
+  <description>Parameter &lt;code&gt;query&lt;/code&gt; is not used in any implementation</description>
+  <highlighted_element>query</highlighted_element>
+  <language>kotlin</language>
+  <offset>20</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/NoteDao.kt</file>
+  <line>41</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.NoteDao kotlinx.coroutines.flow.Flow&lt;java.util.List&lt;com.whisk.data.local.NoteEntity&gt;&gt; searchNotesFts(java.lang.String query)" />
+  <problem_class id="unused" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused declaration</problem_class>
+  <hints>
+    <hint value="query" />
+  </hints>
+  <description>Parameter &lt;code&gt;query&lt;/code&gt; is not used in any implementation</description>
+  <highlighted_element>query</highlighted_element>
+  <language>kotlin</language>
+  <offset>23</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/ViewEngine.kt</file>
+  <line>52</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.ViewEngine boolean evaluateFilterRule(com.whisk.domain.model.Note note, java.util.List&lt;com.whisk.domain.model.NotePropertyValue&gt; noteValues, java.util.Map&lt;java.lang.String,com.whisk.domain.model.PropertyDefinition&gt; propertyDefs, com.whisk.domain.model.FilterRule rule)" />
+  <problem_class id="unused" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused declaration</problem_class>
+  <hints>
+    <hint value="propertyDefs" />
+  </hints>
+  <description>Parameter &lt;code&gt;propertyDefs&lt;/code&gt; is not used</description>
+  <highlighted_element>propertyDefs</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/views/TableView.kt</file>
+  <line>219</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.components.views</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.components.views.TableViewKt void TableCellEditor(com.whisk.domain.model.Note note, com.whisk.domain.model.PropertyDefinition definition, com.whisk.domain.model.NotePropertyValue value, kotlin.jvm.functions.Function4&lt;? super java.lang.String,? super java.lang.Double,? super java.lang.Boolean,? super java.util.List&lt;java.lang.String&gt;,kotlin.Unit&gt; onUpdate)" />
+  <problem_class id="unused" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused declaration</problem_class>
+  <hints>
+    <hint value="note" />
+  </hints>
+  <description>Parameter &lt;code&gt;note&lt;/code&gt; is not used</description>
+  <highlighted_element>note</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/daily/DailyNotesViewModel.kt</file>
+  <line>35</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.daily</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.daily.DailyNotesViewModel DailyNotesViewModel(com.whisk.data.repository.DailyNotesRepository dailyNotesRepository, com.whisk.data.repository.NotesRepository notesRepository, com.whisk.ai.LocalGemmaManager localGemmaManager, com.whisk.ai.RemoteAiManager remoteAiManager)" />
+  <problem_class id="unused" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused declaration</problem_class>
+  <hints>
+    <hint value="localGemmaManager" />
+  </hints>
+  <description>Parameter &lt;code&gt;localGemmaManager&lt;/code&gt; is not used</description>
+  <highlighted_element>localGemmaManager</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/daily/DailyNotesViewModel.kt</file>
+  <line>36</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.daily</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.daily.DailyNotesViewModel DailyNotesViewModel(com.whisk.data.repository.DailyNotesRepository dailyNotesRepository, com.whisk.data.repository.NotesRepository notesRepository, com.whisk.ai.LocalGemmaManager localGemmaManager, com.whisk.ai.RemoteAiManager remoteAiManager)" />
+  <problem_class id="unused" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused declaration</problem_class>
+  <hints>
+    <hint value="remoteAiManager" />
+  </hints>
+  <description>Parameter &lt;code&gt;remoteAiManager&lt;/code&gt; is not used</description>
+  <highlighted_element>remoteAiManager</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>15</length>
+</problem>
+</problems>

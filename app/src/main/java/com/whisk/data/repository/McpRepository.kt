@@ -129,7 +129,7 @@ class McpRepository {
             val listResponse = client.newCall(listRequest).execute()
 
             if (listResponse.isSuccessful) {
-                val respStr = listResponse.body?.string() ?: ""
+                val respStr = listResponse.body.string()
                 val respJson = JSONObject(respStr)
                 val result = respJson.optJSONObject("result")
                 val toolsArray = result?.optJSONArray("tools") ?: JSONArray()
@@ -219,7 +219,7 @@ class McpRepository {
             val body = payload.toString().toRequestBody("application/json".toMediaType())
             val request = Request.Builder().url(endpointUrl).post(body).build()
             val response = client.newCall(request).execute()
-            val respStr = response.body?.string() ?: ""
+            val respStr = response.body.string()
 
             if (response.isSuccessful) {
                 val updatedLog = McpToolLog(

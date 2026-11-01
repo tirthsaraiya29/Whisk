@@ -8,7 +8,6 @@ import com.whisk.data.repository.DailyNoteMetadataDto
 import com.whisk.domain.model.ActivityEvent
 import com.whisk.domain.model.ActivityType
 import com.whisk.domain.model.DailyNoteMetadata
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

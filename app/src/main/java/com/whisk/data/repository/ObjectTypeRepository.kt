@@ -10,7 +10,6 @@ import com.whisk.domain.model.ObjectTypeDefinition
 import com.whisk.domain.model.PropertyType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.util.UUID
 
 enum class CustomTypeDeleteAction {
     CONVERT_TO_NOTES,

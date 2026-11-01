@@ -1,0 +1,15 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/CodeBlockView.kt</file>
+  <line>76</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.components</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.components.CodeBlockViewKt void CodeBlockView(java.lang.String code, java.lang.String language)" />
+  <problem_class id="UsePropertyAccessSyntax" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Accessor call that can be replaced with property access syntax</problem_class>
+  <description>Use of setter method instead of property access syntax</description>
+  <highlighted_element>setPrimaryClip(clip)</highlighted_element>
+  <language>kotlin</language>
+  <offset>30</offset>
+  <length>20</length>
+</problem>
+</problems>

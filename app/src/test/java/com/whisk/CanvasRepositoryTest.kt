@@ -3,7 +3,6 @@ package com.whisk
 import com.whisk.domain.model.CanvasCard
 import com.whisk.domain.model.CardType
 import com.whisk.domain.model.SpatialCanvas
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Test

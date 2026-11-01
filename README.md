@@ -1,4 +1,4 @@
-<div align="center">
+<div style="text-align: center;">
 
 # WHISK
 ### *The Ultimate Local-First Developer Knowledge Workspace & AI-Augmented IDE for Android*
@@ -9,7 +9,7 @@
 [![LiteRT-LM](https://img.shields.io/badge/LiteRT-Gemma_4_E2B-FF6F00?style=flat-square)](https://ai.google.dev)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL_3.0-blue.svg?style=flat-square)](https://github.com/whisk/whisk/blob/main/LICENSE)
 
-<p align="center">
+<p style="text-align: center;">
   <b>Whisk</b> is a high-performance, offline-first personal knowledge management (PKM) system and developer suite built natively for Android in Kotlin and Jetpack Compose. It bridges the gap between mobile computing and desktop-class developer tooling by integrating bidirectional linking, interactive 2D knowledge graphs, infinite spatial canvases, an MCP JSON-RPC client, and zero-latency on-device AI inference via LiteRT-LM & MediaPipe.
 </p>
 
@@ -25,7 +25,7 @@
 - [Data Security & Vault Portability](#data-security--vault-portability)
 - [Architecture & Tech Stack](#architecture--tech-stack)
 - [Quick Start & Build](#quick-start--build)
-- [Design System & Philosophy](#design-system--philosophy)
+- [Design Philosophy](#design-philosophy)
 - [License](#license)
 
 ---
@@ -45,7 +45,7 @@
 - **Orphan Finder**: Instantly isolate unlinked notes in your vault.
 
 ### Infinite Spatial Canvas
-- **Visual Thinking**: Separate from linear markdown—freely arrange idea cards, notes, and containers on an infinite 2D coordinate plane.
+- **Visual Thinking**: Separate from linear Markdown—freely arrange idea cards, notes, and containers on an infinite 2D coordinate plane.
 - **Vector Connections**: Draw direct connection lines between related concept cards.
 - **Independent Persistence**: Card coordinates are saved locally without altering underlying note contents.
 

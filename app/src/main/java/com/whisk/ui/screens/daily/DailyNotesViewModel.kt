@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 data class DailyNotesUiState(
     val dateKey: String = "",
@@ -29,11 +30,11 @@ data class DailyNotesUiState(
     val isSaving: Boolean = false,
 )
 
-class DailyNotesViewModel(
+class DailyNotesViewModel @Suppress("UNUSED_PARAMETER") constructor(
     private val dailyNotesRepository: DailyNotesRepository,
     private val notesRepository: NotesRepository,
-    private val localGemmaManager: LocalGemmaManager? = null,
-    private val remoteAiManager: RemoteAiManager? = null,
+    localGemmaManager: LocalGemmaManager? = null,
+    remoteAiManager: RemoteAiManager? = null,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DailyNotesUiState())
@@ -106,7 +107,7 @@ class DailyNotesViewModel(
         _uiState.value = state.copy(isAiThinking = true)
 
         viewModelScope.launch {
-            delay(600)
+            delay(600.milliseconds)
             val reflection = fallbackReflection(state)
             _uiState.value = _uiState.value.copy(
                 isAiThinking = false,

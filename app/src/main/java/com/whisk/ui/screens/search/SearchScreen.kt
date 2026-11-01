@@ -226,7 +226,7 @@ fun SearchScreen(
                 } else {
                     val filterProp = state.availablePropertyDefinitions.find { it.id == state.activePropertyFilter.propertyDefinitionId }
                     val filterName = filterProp?.name?.uppercase() ?: "PROPERTY"
-                    val filterText = "${filterName} ${state.activePropertyFilter.operator.name} '${state.activePropertyFilter.value ?: ""}'"
+                    val filterText = "$filterName ${state.activePropertyFilter.operator.name} '${state.activePropertyFilter.value ?: ""}'"
 
                     Row(
                         modifier = Modifier

@@ -1,0 +1,15 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/ExportImportRepository.kt</file>
+  <line>383</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.ExportImportRepository java.lang.Object importVaultFromZip(android.net.Uri uri, kotlin.coroutines.Continuation&lt;? super java.lang.Integer&gt; $completion)" />
+  <problem_class id="RedundantAsSequence" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Redundant 'asSequence' call</problem_class>
+  <description>Redundant 'asSequence' call</description>
+  <highlighted_element>asSequence</highlighted_element>
+  <language>kotlin</language>
+  <offset>46</offset>
+  <length>10</length>
+</problem>
+</problems>

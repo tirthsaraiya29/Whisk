@@ -10,7 +10,6 @@ import com.whisk.domain.model.PropertyDefinition
 import com.whisk.domain.model.PropertyFilter
 import com.whisk.domain.model.PropertyOperator
 import com.whisk.domain.model.PropertyType
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

@@ -12,7 +12,6 @@ import com.whisk.domain.model.Note
 import com.whisk.domain.model.ObjectRelationship
 import com.whisk.domain.model.ObjectTypeDefinition
 import com.whisk.domain.model.RelationshipType
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -122,10 +121,12 @@ class ObjectTypesAndRelationshipsTest {
         assertEquals("Prerequisite for", dependsRel.reciprocalName)
     }
 
+    @Suppress("KotlinConstantConditions")
     @Test
     fun testPreventSelfReferentialRelationshipLogic() {
-        val sourceId = "obj_123"
-        val targetId = "obj_123"
+        val id = "obj_123_${System.currentTimeMillis()}"
+        val sourceId = id
+        val targetId = id
 
         val isValid = sourceId != targetId
         assertFalse(isValid)

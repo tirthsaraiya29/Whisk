@@ -252,11 +252,7 @@ class PropertyRepository(
                 PropertyOperator.IS_NOT_EMPTY -> propertyDao.getNoteIdsMatchingIsNotEmpty(propId)
             }
 
-            matchingIds = if (matchingIds == null) {
-                idsForFilter.toSet()
-            } else {
-                matchingIds.intersect(idsForFilter.toSet())
-            }
+            matchingIds = matchingIds?.intersect(idsForFilter.toSet()) ?: idsForFilter.toSet()
 
             if (matchingIds.isEmpty()) break
         }

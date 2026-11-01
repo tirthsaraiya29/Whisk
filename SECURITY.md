@@ -13,7 +13,7 @@ Whisk is actively maintained. Security updates are provided for the latest stabl
 
 We take the security of Whisk and our users' data very seriously. If you discover a security vulnerability within Whisk, please do **not** open a public issue. 
 
-Instead, please send an email to the project maintainers (or use GitHub Security Advisories if enabled on this repository). 
+Instead, please email the project maintainers (or use GitHub Security Advisories if enabled on this repository). 
 We will acknowledge receipt of your vulnerability report within 48 hours and strive to send you regular updates about our progress.
 
 ### What to include in your report:

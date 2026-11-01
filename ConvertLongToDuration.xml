@@ -1,0 +1,41 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/daily/DailyNotesViewModel.kt</file>
+  <line>90</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.daily</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.daily.DailyNotesViewModel void updateJournalContent(java.lang.String title, java.lang.String body)" />
+  <problem_class id="ConvertLongToDuration" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Long overload to Duration conversion</problem_class>
+  <description>Legacy Long overload can be converted to Duration</description>
+  <highlighted_element>delay(500)</highlighted_element>
+  <language>kotlin</language>
+  <offset>12</offset>
+  <length>10</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/daily/DailyNotesViewModel.kt</file>
+  <line>109</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.daily</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.daily.DailyNotesViewModel void generateDailyReflection()" />
+  <problem_class id="ConvertLongToDuration" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Long overload to Duration conversion</problem_class>
+  <description>Legacy Long overload can be converted to Duration</description>
+  <highlighted_element>delay(600)</highlighted_element>
+  <language>kotlin</language>
+  <offset>12</offset>
+  <length>10</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/notes/NoteDetailViewModel.kt</file>
+  <line>201</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.notes</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.notes.NoteDetailViewModel void updateContent(java.lang.String title, java.lang.String body)" />
+  <problem_class id="ConvertLongToDuration" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Long overload to Duration conversion</problem_class>
+  <description>Legacy Long overload can be converted to Duration</description>
+  <highlighted_element>delay(600)</highlighted_element>
+  <language>kotlin</language>
+  <offset>12</offset>
+  <length>10</length>
+</problem>
+</problems>

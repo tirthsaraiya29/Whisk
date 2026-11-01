@@ -56,5 +56,5 @@ To fully test the on-device AI features:
 
 ## Troubleshooting
 
-- **Gradle Sync Fails**: Double-check that your Android Studio is pointing to JDK 17 (Settings -> Build, Execution, Deployment -> Build Tools -> Gradle -> Gradle JDK).
+- **Gradle Sync Fails**: Double-check that your Android Studio is pointing to JDK 17 (Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK).
 - **Out of Memory on Build**: You may need to increase the Gradle heap size in `gradle.properties` (e.g., `org.gradle.jvmargs=-Xmx4g`).

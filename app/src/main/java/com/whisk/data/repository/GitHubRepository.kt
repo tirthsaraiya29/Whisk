@@ -37,7 +37,7 @@ class GitHubRepository {
         try {
             val response = client.newCall(requestBuilder.build()).execute()
             if (!response.isSuccessful) return@withContext emptyList()
-            val bodyStr = response.body?.string() ?: return@withContext emptyList()
+            val bodyStr = response.body.string()
             val json = JSONObject(bodyStr)
             val items = json.optJSONArray("items") ?: JSONArray()
             val repos = mutableListOf<GitHubRepo>()
@@ -72,7 +72,7 @@ class GitHubRepository {
         try {
             val response = client.newCall(requestBuilder.build()).execute()
             if (!response.isSuccessful) return@withContext null
-            val bodyStr = response.body?.string() ?: return@withContext null
+            val bodyStr = response.body.string()
             val item = JSONObject(bodyStr)
             GitHubRepo(
                 fullName = item.getString("full_name"),
@@ -99,7 +99,7 @@ class GitHubRepository {
         try {
             val response = client.newCall(requestBuilder.build()).execute()
             if (!response.isSuccessful) return@withContext emptyList()
-            val bodyStr = response.body?.string() ?: return@withContext emptyList()
+            val bodyStr = response.body.string()
             val array = JSONArray(bodyStr)
             val issues = mutableListOf<GitHubIssue>()
             for (i in 0 until array.length()) {
@@ -133,7 +133,7 @@ class GitHubRepository {
         try {
             val response = client.newCall(requestBuilder.build()).execute()
             if (!response.isSuccessful) return@withContext emptyList()
-            val bodyStr = response.body?.string() ?: return@withContext emptyList()
+            val bodyStr = response.body.string()
             val array = JSONArray(bodyStr)
             val prs = mutableListOf<GitHubPullRequest>()
             for (i in 0 until array.length()) {
@@ -167,7 +167,7 @@ class GitHubRepository {
         try {
             val response = client.newCall(requestBuilder.build()).execute()
             if (!response.isSuccessful) return@withContext emptyList()
-            val bodyStr = response.body?.string() ?: return@withContext emptyList()
+            val bodyStr = response.body.string()
             val array = JSONArray(bodyStr)
             val commits = mutableListOf<GitHubCommit>()
             for (i in 0 until array.length()) {

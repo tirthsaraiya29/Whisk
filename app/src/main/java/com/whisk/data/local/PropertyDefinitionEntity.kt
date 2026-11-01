@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.whisk.domain.model.PropertyDefinition
 import com.whisk.domain.model.PropertyType
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Entity(tableName = "property_definitions")

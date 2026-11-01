@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -197,7 +196,6 @@ fun TableView(
                                 .padding(end = 8.dp),
                         ) {
                             TableCellEditor(
-                                note = note,
                                 definition = def,
                                 value = pVal,
                                 onUpdate = { textVal, numVal, boolVal, listVal ->
@@ -216,7 +214,6 @@ fun TableView(
 
 @Composable
 private fun TableCellEditor(
-    note: Note,
     definition: PropertyDefinition,
     value: NotePropertyValue?,
     onUpdate: (textVal: String?, numVal: Double?, boolVal: Boolean?, listVal: List<String>) -> Unit,

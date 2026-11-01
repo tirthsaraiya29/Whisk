@@ -62,7 +62,6 @@ import com.whisk.domain.model.PropertyType
 import com.whisk.ui.components.WhiskTopBar
 import com.whisk.ui.theme.DotMatrixFontFamily
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PropertyManagementScreen(
     state: PropertyManagementUiState,
@@ -377,7 +376,6 @@ fun TypeBadge(type: PropertyType) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PropertyEditModal(
     title: String,

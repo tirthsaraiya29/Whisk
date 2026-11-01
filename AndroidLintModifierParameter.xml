@@ -1,0 +1,30 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/views/BoardView.kt</file>
+  <line>52</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.components.views</package>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/views/BoardView.kt" />
+  <problem_class id="AndroidLintModifierParameter" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Guidelines for Modifier parameters in a Composable function</problem_class>
+  <hints />
+  <description>&lt;html&gt;Modifier parameter should be the first optional parameter&lt;/html&gt;</description>
+  <highlighted_element>modifier</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/views/CalendarView.kt</file>
+  <line>60</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.components.views</package>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/views/CalendarView.kt" />
+  <problem_class id="AndroidLintModifierParameter" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Guidelines for Modifier parameters in a Composable function</problem_class>
+  <hints />
+  <description>&lt;html&gt;Modifier parameter should be the first optional parameter&lt;/html&gt;</description>
+  <highlighted_element>modifier</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>8</length>
+</problem>
+</problems>

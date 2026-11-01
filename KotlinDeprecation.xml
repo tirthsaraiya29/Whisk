@@ -1,0 +1,223 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>137</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.RemoteAiManager kotlinx.coroutines.flow.Flow&lt;java.lang.String&gt; generateOpenAiStream(java.lang.String prompt, java.lang.String systemPrompt, com.whisk.domain.model.AiConfig config)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>142</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.RemoteAiManager kotlinx.coroutines.flow.Flow&lt;java.lang.String&gt; generateOpenAiStream(java.lang.String prompt, java.lang.String systemPrompt, com.whisk.domain.model.AiConfig config)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.byteStream()</highlighted_element>
+  <language>kotlin</language>
+  <offset>54</offset>
+  <length>27</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>198</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.RemoteAiManager kotlinx.coroutines.flow.Flow&lt;java.lang.String&gt; generateGeminiStream(java.lang.String prompt, java.lang.String systemPrompt, com.whisk.domain.model.AiConfig config)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>203</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.RemoteAiManager kotlinx.coroutines.flow.Flow&lt;java.lang.String&gt; generateGeminiStream(java.lang.String prompt, java.lang.String systemPrompt, com.whisk.domain.model.AiConfig config)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.byteStream()</highlighted_element>
+  <language>kotlin</language>
+  <offset>54</offset>
+  <length>27</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>256</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.RemoteAiManager kotlinx.coroutines.flow.Flow&lt;java.lang.String&gt; generateAnthropicStream(java.lang.String prompt, java.lang.String systemPrompt, com.whisk.domain.model.AiConfig config)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>261</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.RemoteAiManager kotlinx.coroutines.flow.Flow&lt;java.lang.String&gt; generateAnthropicStream(java.lang.String prompt, java.lang.String systemPrompt, com.whisk.domain.model.AiConfig config)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.byteStream()</highlighted_element>
+  <language>kotlin</language>
+  <offset>54</offset>
+  <length>27</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/GitHubRepository.kt</file>
+  <line>40</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.GitHubRepository java.lang.Object searchRepositories(java.lang.String query, java.lang.String token, kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.GitHubRepo&gt;&gt; $completion)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/GitHubRepository.kt</file>
+  <line>75</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.GitHubRepository java.lang.Object getRepository(java.lang.String owner, java.lang.String name, java.lang.String token, kotlin.coroutines.Continuation&lt;? super com.whisk.domain.model.GitHubRepo&gt; $completion)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/GitHubRepository.kt</file>
+  <line>102</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.GitHubRepository java.lang.Object getIssues(java.lang.String repoFullName, java.lang.String token, kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.GitHubIssue&gt;&gt; $completion)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/GitHubRepository.kt</file>
+  <line>136</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.GitHubRepository java.lang.Object getPullRequests(java.lang.String repoFullName, java.lang.String token, kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.GitHubPullRequest&gt;&gt; $completion)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/GitHubRepository.kt</file>
+  <line>170</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.GitHubRepository java.lang.Object getCommits(java.lang.String repoFullName, java.lang.String token, kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.GitHubCommit&gt;&gt; $completion)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>132</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository java.lang.Object connectAndDiscoverTools(java.lang.String endpointUrl, kotlin.coroutines.Continuation&lt;? super java.lang.Boolean&gt; $completion)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>listResponse.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>30</offset>
+  <length>27</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>222</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository java.lang.Object invokeTool(java.lang.String endpointUrl, java.lang.String toolName, java.lang.String argumentsJson, kotlin.coroutines.Continuation&lt;? super java.lang.String&gt; $completion)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Unnecessary safe call on a non-null receiver of type 'ResponseBody'.</description>
+  <highlighted_element>response.body?.string()</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/github/GitHubBrowserScreen.kt</file>
+  <line>35</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.github</package>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/github/GitHubBrowserScreen.kt" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Remove deprecated symbol import</description>
+  <highlighted_element>import androidx.compose.material3.TabRow</highlighted_element>
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>40</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/github/GitHubBrowserScreen.kt</file>
+  <line>93</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.github</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.github.GitHubBrowserScreenKt void GitHubBrowserScreen(com.whisk.ui.screens.github.GitHubUiState state, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onSearchQueryChange, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.GitHubRepo,kotlin.Unit&gt; onSelectRepo, kotlin.jvm.functions.Function2&lt;? super java.lang.String,? super java.lang.String,kotlin.Unit&gt; onInvokeMcpTool, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenGitDiagram)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>'fun TabRow(selectedTabIndex: Int, modifier: Modifier = ..., containerColor: Color = ..., contentColor: Color = ..., indicator: ComposableFunction1&lt;List&lt;TabPosition&gt;, Unit&gt; = ..., divider: ComposableFunction0&lt;Unit&gt; = ..., tabs: ComposableFunction0&lt;Unit&gt;): Unit' is deprecated. Replaced with PrimaryTabRow and SecondaryTabRow.</description>
+  <highlighted_element>TabRow</highlighted_element>
+  <language>kotlin</language>
+  <offset>12</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/projects/ProjectWorkspaceScreen.kt</file>
+  <line>46</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.projects</package>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/projects/ProjectWorkspaceScreen.kt" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>Remove deprecated symbol import</description>
+  <highlighted_element>import androidx.compose.material3.TabRow</highlighted_element>
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>40</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/projects/ProjectWorkspaceScreen.kt</file>
+  <line>145</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.projects</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.projects.ProjectWorkspaceScreenKt void ProjectWorkspaceScreen(com.whisk.ui.screens.projects.ProjectWorkspaceUiState state, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onBackClick, kotlin.jvm.functions.Function3&lt;? super java.lang.String,? super java.lang.String,? super java.lang.String,kotlin.Unit&gt; onUpdateContent, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onUpdateStatus, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onUpdateRepoRef, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onCreateTask, kotlin.jvm.functions.Function2&lt;? super java.lang.String,? super java.lang.Boolean,kotlin.Unit&gt; onToggleTask, kotlin.jvm.functions.Function2&lt;? super java.lang.String,? super com.whisk.domain.model.RelationshipType,kotlin.Unit&gt; onAddRelationship, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onRemoveRelationship, kotlin.jvm.functions.Function3&lt;? super java.lang.String,? super java.lang.String,? super kotlin.coroutines.Continuation&lt;? super java.util.List&lt;? extends com.whisk.domain.model.Note&gt;&gt;,? extends java.lang.Object&gt; onQueryObjects, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenObject, kotlin.jvm.functions.Function1&lt;? super kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt;,kotlin.Unit&gt; onStartAiSession, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenAiSession)" />
+  <problem_class id="KotlinDeprecation" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Usage of redundant or deprecated syntax or deprecated symbols</problem_class>
+  <description>'fun TabRow(selectedTabIndex: Int, modifier: Modifier = ..., containerColor: Color = ..., contentColor: Color = ..., indicator: ComposableFunction1&lt;List&lt;TabPosition&gt;, Unit&gt; = ..., divider: ComposableFunction0&lt;Unit&gt; = ..., tabs: ComposableFunction0&lt;Unit&gt;): Unit' is deprecated. Replaced with PrimaryTabRow and SecondaryTabRow.</description>
+  <highlighted_element>TabRow</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>6</length>
+</problem>
+</problems>

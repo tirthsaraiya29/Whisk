@@ -60,12 +60,12 @@ class FakeCanvasDao : CanvasDao {
     }
 
     override suspend fun insertCanvas(canvas: CanvasEntity) {
-        _canvases.value = _canvases.value + (canvas.id to canvas)
+        _canvases.value += (canvas.id to canvas)
     }
 
     override suspend fun deleteCanvas(id: String): Int {
         val existed = _canvases.value.containsKey(id)
-        _canvases.value = _canvases.value - id
+        _canvases.value -= id
         return if (existed) 1 else 0
     }
 }
@@ -111,7 +111,7 @@ class FakeFolderDao : FolderDao {
     private val _folders = MutableStateFlow<List<FolderEntity>>(emptyList())
     override fun getAllFolders(): Flow<List<FolderEntity>> = _folders
     override suspend fun insertFolder(folder: FolderEntity) {
-        _folders.value = _folders.value + folder
+        _folders.value += folder
     }
     override suspend fun deleteFolder(id: String): Int {
         val existed = _folders.value.any { it.id == id }
@@ -126,7 +126,7 @@ class FakeTaskDao : TaskDao {
     override suspend fun getAllTasksDirect(): List<TaskEntity> = _tasks.value
     override suspend fun getTasksForNote(noteId: String): List<TaskEntity> = _tasks.value.filter { it.noteId == noteId }
     override suspend fun insertTasks(tasks: List<TaskEntity>) {
-        _tasks.value = _tasks.value + tasks
+        _tasks.value += tasks
     }
     override suspend fun deleteTasksForNote(noteId: String): Int {
         val count = _tasks.value.count { it.noteId == noteId }

@@ -1,0 +1,28 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/PropertyRepository.kt</file>
+  <line>255</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.PropertyRepository java.lang.Object filterNoteIdsByProperties(java.util.List&lt;com.whisk.domain.model.PropertyFilter&gt; filters, kotlin.coroutines.Continuation&lt;? super java.util.List&lt;java.lang.String&gt;&gt; $completion)" />
+  <problem_class id="IfThenToElvis" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">If-Then foldable to '?:'</problem_class>
+  <description>If-Then foldable to '?:'</description>
+  <highlighted_element>if (matchingIds == null)</highlighted_element>
+  <language>kotlin</language>
+  <offset>26</offset>
+  <length>24</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/ViewEngine.kt</file>
+  <line>75</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.ViewEngine boolean evaluateFilterRule(com.whisk.domain.model.Note note, java.util.List&lt;com.whisk.domain.model.NotePropertyValue&gt; noteValues, java.util.Map&lt;java.lang.String,com.whisk.domain.model.PropertyDefinition&gt; propertyDefs, com.whisk.domain.model.FilterRule rule)" />
+  <problem_class id="IfThenToElvis" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">If-Then foldable to '?:'</problem_class>
+  <description>If-Then foldable to '?:'</description>
+  <highlighted_element>if (actualValueStr != null)</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>27</length>
+</problem>
+</problems>

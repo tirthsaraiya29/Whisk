@@ -171,16 +171,16 @@ class NotesRepository(
 
         for (note in allNotes) {
             val parsed = WikilinkParser.parseWikilinks(note.body)
-            for (link in parsed) {
-                val resolved = WikilinkParser.resolveWikilink(link.targetTitle, allNotes)
+            for ((targetTitle, rawText) in parsed) {
+                val resolved = WikilinkParser.resolveWikilink(targetTitle, allNotes)
                 if (resolved == null) {
                     brokenLinks.add(
                         BrokenLinkItem(
                             id = java.util.UUID.randomUUID().toString(),
                             sourceNoteId = note.id,
                             sourceNoteTitle = note.title,
-                            rawWikilinkText = link.rawText,
-                            targetTitle = link.targetTitle,
+                            rawWikilinkText = rawText,
+                            targetTitle = targetTitle,
                             updatedAt = note.updatedAt,
                         ),
                     )

@@ -6,7 +6,6 @@ import com.whisk.domain.model.DatabaseView
 import com.whisk.domain.model.FilterRule
 import com.whisk.domain.model.SortRule
 import com.whisk.domain.model.ViewType
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Entity(tableName = "database_views")

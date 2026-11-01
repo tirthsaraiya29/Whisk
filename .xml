@@ -1,0 +1,1396 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/androidTest/java/com/whisk/ExampleInstrumentedTest.kt</file>
+  <line>11</line>
+  <module>Whisk.app.androidTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.ExampleInstrumentedTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>3</length>
+  <highlighted_element>/**</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/androidTest/java/com/whisk/ExampleInstrumentedTest.kt</file>
+  <line>18</line>
+  <module>Whisk.app.androidTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ExampleInstrumentedTest void useAppContext()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/MainActivity.kt</file>
+  <line>99</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.MainActivity" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>42</length>
+  <highlighted_element>class MainActivity : ComponentActivity() {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AdvancedBacklinksAndRelationsTest.kt</file>
+  <line>12</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.AdvancedBacklinksAndRelationsTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>41</length>
+  <highlighted_element>class AdvancedBacklinksAndRelationsTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AdvancedBacklinksAndRelationsTest.kt</file>
+  <line>14</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AdvancedBacklinksAndRelationsTest void testWikilinkParsingWithAliases()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AdvancedBacklinksAndRelationsTest.kt</file>
+  <line>33</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AdvancedBacklinksAndRelationsTest void testWikilinkResolutionByTitleAndAlias()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AdvancedBacklinksAndRelationsTest.kt</file>
+  <line>56</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AdvancedBacklinksAndRelationsTest void testUnlinkedMentionDetectionExcludesCodeBlocksAndExistingLinks()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AdvancedBacklinksAndRelationsTest.kt</file>
+  <line>80</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AdvancedBacklinksAndRelationsTest void testConvertUnlinkedMentionToWikilink()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AdvancedBacklinksAndRelationsTest.kt</file>
+  <line>101</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AdvancedBacklinksAndRelationsTest void testBidirectionalRelationshipReciprocity()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiContextAssemblerTest.kt</file>
+  <line>11</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.AiContextAssemblerTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>30</length>
+  <highlighted_element>class AiContextAssemblerTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiContextAssemblerTest.kt</file>
+  <line>13</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AiContextAssemblerTest void testContextFormattingWithActiveNote()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiContextAssemblerTest.kt</file>
+  <line>27</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AiContextAssemblerTest void testContextFormattingWithGitHubIssueAndPR()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiContextAssemblerTest.kt</file>
+  <line>53</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AiContextAssemblerTest void testTokenEstimation()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiIsolationTest.kt</file>
+  <line>34</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.TestContext" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>40</length>
+  <highlighted_element>class TestContext : ContextWrapper(null)</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class has 2 instantiations, but the instantiations are not reachable from the entry points.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiIsolationTest.kt</file>
+  <line>149</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.AiIsolationTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>40</length>
+  <highlighted_element>@OptIn(ExperimentalCoroutinesApi::class)</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiIsolationTest.kt</file>
+  <line>155</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AiIsolationTest void testNewChatIsIsolatedFromPreviousChatHistory()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiIsolationTest.kt</file>
+  <line>206</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AiIsolationTest void testSessionSwitchingCancelsActiveGenerationAndResetsModelConversation()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/AiIsolationTest.kt</file>
+  <line>241</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.AiIsolationTest void testConcurrentGenerationsAreBlocked()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/BrutalistNavigationTest.kt</file>
+  <line>11</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.BrutalistNavigationTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>31</length>
+  <highlighted_element>class BrutalistNavigationTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/BrutalistNavigationTest.kt</file>
+  <line>13</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.BrutalistNavigationTest void navDestinations_areConfiguredCorrectly()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/BrutalistNavigationTest.kt</file>
+  <line>37</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.BrutalistNavigationTest void brutalistTheme_paletteConfiguredForHighContrast()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/BrutalistNavigationTest.kt</file>
+  <line>44</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.BrutalistNavigationTest void destinationIndexMapping_resolvesCorrectly()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/CanvasRepositoryTest.kt</file>
+  <line>11</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.CanvasRepositoryTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>28</length>
+  <highlighted_element>class CanvasRepositoryTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/CanvasRepositoryTest.kt</file>
+  <line>15</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.CanvasRepositoryTest void testSpatialCanvasSerialization()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/CanvasViewModelTest.kt</file>
+  <line>144</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.CanvasViewModelTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>40</length>
+  <highlighted_element>@OptIn(ExperimentalCoroutinesApi::class)</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/CanvasViewModelTest.kt</file>
+  <line>154</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.CanvasViewModelTest void testCanvasPersistenceAcrossViewModelRecreation()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/CanvasViewModelTest.kt</file>
+  <line>204</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.CanvasViewModelTest void testEmptyCanvasStateWhenNoCanvasesExist()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/CanvasViewModelTest.kt</file>
+  <line>223</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.CanvasViewModelTest void testSelectCanvasLoadsSpecificCanvas()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ChatRepositoryTest.kt</file>
+  <line>16</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.ChatRepositoryTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>40</length>
+  <highlighted_element>@OptIn(ExperimentalCoroutinesApi::class)</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ChatRepositoryTest.kt</file>
+  <line>22</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ChatRepositoryTest void testSessionAndMessagePersistenceWithMetadata()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ChatRepositoryTest.kt</file>
+  <line>54</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ChatRepositoryTest void testPaginatedMessageLoading()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ChatRepositoryTest.kt</file>
+  <line>79</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ChatRepositoryTest void testTransactionalSessionDeletionCascadesToMessages()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DailyNotesTest.kt</file>
+  <line>17</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.DailyNotesTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>22</length>
+  <highlighted_element>class DailyNotesTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DailyNotesTest.kt</file>
+  <line>21</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DailyNotesTest void testDailyNoteMetadataEntityToDomainRoundtrip()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DailyNotesTest.kt</file>
+  <line>39</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DailyNotesTest void testActivityEventEntityToDomainRoundtrip()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DailyNotesTest.kt</file>
+  <line>60</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DailyNotesTest void testBackupDataSerializationWithDailyNotesAndActivityEvents()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DatabaseViewsTest.kt</file>
+  <line>23</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.DatabaseViewsTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>25</length>
+  <highlighted_element>class DatabaseViewsTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DatabaseViewsTest.kt</file>
+  <line>27</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DatabaseViewsTest void testDatabaseViewEntityToDomainRoundtrip()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DatabaseViewsTest.kt</file>
+  <line>58</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DatabaseViewsTest void testViewEngineFilteringAndSorting()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DatabaseViewsTest.kt</file>
+  <line>87</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DatabaseViewsTest void testViewEngineCustomPropertyValueFilter()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DatabaseViewsTest.kt</file>
+  <line>126</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DatabaseViewsTest void testBackupDataSerializationWithDatabaseViews()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DeveloperTemplatesTest.kt</file>
+  <line>8</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.DeveloperTemplatesTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>30</length>
+  <highlighted_element>class DeveloperTemplatesTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DeveloperTemplatesTest.kt</file>
+  <line>10</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DeveloperTemplatesTest void testDailyNoteTemplateGeneration()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DeveloperTemplatesTest.kt</file>
+  <line>20</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DeveloperTemplatesTest void testADRTemplateGeneration()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DeveloperTemplatesTest.kt</file>
+  <line>31</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DeveloperTemplatesTest void testDebuggingJournalTemplateGeneration()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DeveloperTemplatesTest.kt</file>
+  <line>41</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DeveloperTemplatesTest void testCodeSnippetTemplateGeneration()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ExampleUnitTest.kt</file>
+  <line>6</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.ExampleUnitTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>3</length>
+  <highlighted_element>/**</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ExampleUnitTest.kt</file>
+  <line>10</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ExampleUnitTest void addition_isCorrect()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ExportImportSanitizationTest.kt</file>
+  <line>7</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.ExportImportSanitizationTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>36</length>
+  <highlighted_element>class ExportImportSanitizationTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ExportImportSanitizationTest.kt</file>
+  <line>9</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ExportImportSanitizationTest void testZipSlipPathSanitization()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/GraphRepositoryTest.kt</file>
+  <line>11</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.GraphRepositoryTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>27</length>
+  <highlighted_element>class GraphRepositoryTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/GraphRepositoryTest.kt</file>
+  <line>13</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.GraphRepositoryTest void testGraphConstruction()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/McpRepositoryTest.kt</file>
+  <line>9</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.McpRepositoryTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>25</length>
+  <highlighted_element>class McpRepositoryTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/McpRepositoryTest.kt</file>
+  <line>11</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.McpRepositoryTest void testMcpToolModelConstruction()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/McpRepositoryTest.kt</file>
+  <line>24</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.McpRepositoryTest void testWriteToolRequiresApprovalIdentification()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/McpRepositoryTest.kt</file>
+  <line>40</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.McpRepositoryTest void testJsonRpcPayloadBuilderStructure()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/NotesRepositoryTest.kt</file>
+  <line>9</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.NotesRepositoryTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>27</length>
+  <highlighted_element>class NotesRepositoryTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/NotesRepositoryTest.kt</file>
+  <line>11</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.NotesRepositoryTest void testInternalLinkRegexExtraction()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/NotesRepositoryTest.kt</file>
+  <line>22</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.NotesRepositoryTest void testTaskRegexExtraction()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/NotesRepositoryTest.kt</file>
+  <line>41</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.NotesRepositoryTest void testNoteDomainTagSplitting()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>23</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>39</length>
+  <highlighted_element>class ObjectTypesAndRelationshipsTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>27</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testNoteObjectDefaultsAndRoundtrip()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>54</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testObjectTypeDefinitionEntityToDomainRoundtrip()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>78</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testBuiltInObjectTypesConstants()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>89</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testObjectRelationshipEntityToDomainRoundtrip()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>110</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testReciprocalRelationshipDisplayNames()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>125</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testPreventSelfReferentialRelationshipLogic()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>134</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testBackupDataSerializationWithObjectTypesAndRelationships()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>198</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testLegacyBackupImportCompatibilityWithObjectTypesDefaults()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>21</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.PropertySystemTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>26</length>
+  <highlighted_element>class PropertySystemTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>25</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testPropertyDefinitionEntityToDomainRoundtrip()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>51</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testNotePropertyValueEntityToDomainRoundtripForTypedValues()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>82</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testRelationPropertyValueReference()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>98</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testPropertyFilterDataModel()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>111</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testBackupDataSerializationWithProperties()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>153</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testOlderBackupFormatCompatibilityWithoutPropertyFields()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>189</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testValidNumericValidation()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>204</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testMultiSelectUniquenessAndFiltering()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/TaskSyncTest.kt</file>
+  <line>7</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.TaskSyncTest" />
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>20</length>
+  <highlighted_element>class TaskSyncTest {</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Class is not instantiated.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/TaskSyncTest.kt</file>
+  <line>9</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.TaskSyncTest void testTaskStatusRegexReplacementInNoteBody()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/TaskSyncTest.kt</file>
+  <line>30</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.TaskSyncTest void testUncheckingTaskInNoteBody()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/TaskSyncTest.kt</file>
+  <line>43</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.TaskSyncTest void testTaskToggleTargetStatusCalculation()" />
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>5</length>
+  <highlighted_element>@Test</highlighted_element>
+  <problem_class id="" severity="WARNING" attribute_key="NOT_USED_ELEMENT_ATTRIBUTES">unused declaration</problem_class>
+  <hints>
+    <hint value="comment" />
+    <hint value="delete" />
+  </hints>
+  <description>Method is never used.</description>
+</problem>
+</problems>

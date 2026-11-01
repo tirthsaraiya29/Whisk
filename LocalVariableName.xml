@@ -1,0 +1,15 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/ExportImportRepository.kt</file>
+  <line>350</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.ExportImportRepository java.lang.Object importVaultFromZip(android.net.Uri uri, kotlin.coroutines.Continuation&lt;? super java.lang.Integer&gt; $completion)" />
+  <problem_class id="LocalVariableName" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Local variable naming convention</problem_class>
+  <description>Local variable name &lt;code&gt;MAX_SIZE&lt;/code&gt; should start with a lowercase letter</description>
+  <highlighted_element>MAX_SIZE</highlighted_element>
+  <language>kotlin</language>
+  <offset>12</offset>
+  <length>8</length>
+</problem>
+</problems>

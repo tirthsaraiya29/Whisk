@@ -1,0 +1,14 @@
+<problems>
+<problem>
+  <file>Whisk.app.androidTest</file>
+  <module>Whisk.app.androidTest</module>
+  <entry_point TYPE="module" FQNAME="Whisk.app.androidTest" />
+  <problem_class id="UnnecessaryModuleDependencyInspection" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unnecessary module dependency</problem_class>
+  <hints>
+    <hint value="Whisk.app.main" />
+  </hints>
+  <description>Module 'Whisk.app.androidTest' sources do not depend on module 'Whisk.app.main' sources</description>
+  <highlighted_element />
+  <language />
+</problem>
+</problems>

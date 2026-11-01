@@ -5,7 +5,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.whisk.domain.model.NotePropertyValue
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Entity(

@@ -90,6 +90,7 @@ fun GitHubBrowserScreen(
             )
 
             // Category Navigation Tabs
+            @Suppress("DEPRECATION")
             TabRow(selectedTabIndex = selectedTabIndex) {
                 Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }) {
                     Text("Repos (${state.repos.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)

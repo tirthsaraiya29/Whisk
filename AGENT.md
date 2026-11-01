@@ -11,12 +11,12 @@ This document outlines the core guidelines for any AI agent or LLM (e.g., GitHub
 - **Modern Kotlin**: Use trailing lambdas, scope functions (`let`, `apply`, `run`, `with`), and expression bodies where appropriate, but optimize for readability.
 - **Coroutines & Flow**: Always prefer Kotlin Coroutines and `StateFlow`/`SharedFlow` over callbacks or RxJava. Never block the main thread.
 - **Compose Best Practices**:
-  - Keep composable functions pure and side-effect free unless using explicit `LaunchedEffect`/`DisposableEffect`.
+  - Keep composable functions pure and side effect free unless using explicit `LaunchedEffect`/`DisposableEffect`.
   - Prefer immutable state classes.
   - Remember to use `remember` for heavy computations.
 
 ## 3. Architecture Compliance
-- Whisk follows **Clean Architecture** (UI -> Domain -> Data). Do not bypass layers (e.g., do not access Room DAOs directly from the UI).
+- Whisk follows **Clean Architecture** (UI → Domain → Data). Do not bypass layers (e.g., do not access Room DAOs directly from the UI).
 - ViewModels should only expose `StateFlow` and handle intents/events. Do not pass `Context` into ViewModels.
 
 ## 4. UI & Design

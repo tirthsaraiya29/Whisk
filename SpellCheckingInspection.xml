@@ -1,0 +1,890 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/.github/workflows/codeql.yml</file>
+  <line>45</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/.github/workflows/codeql.yml" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'temurin'</description>
+  <highlighted_element>temurin</highlighted_element>
+  <language>yaml</language>
+  <offset>25</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/.github/workflows/semgrep.yml</file>
+  <line>1</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/.github/workflows/semgrep.yml" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Semgrep'</description>
+  <highlighted_element>Semgrep</highlighted_element>
+  <language>yaml</language>
+  <offset>7</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/.github/workflows/semgrep.yml</file>
+  <line>34</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/.github/workflows/semgrep.yml" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Semgrep'</description>
+  <highlighted_element>Semgrep</highlighted_element>
+  <language>yaml</language>
+  <offset>18</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/.github/workflows/semgrep.yml</file>
+  <line>36</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/.github/workflows/semgrep.yml" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'semgrep'</description>
+  <highlighted_element>semgrep</highlighted_element>
+  <language>yaml</language>
+  <offset>10</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/LICENSE</file>
+  <line>552</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/LICENSE" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Affero'</description>
+  <highlighted_element>Affero</highlighted_element>
+  <language>TEXT</language>
+  <offset>23</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/release/output-metadata.json</file>
+  <line>36</line>
+  <module>Whisk.app</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/release/output-metadata.json" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'minSdkVersionForDexing'</description>
+  <highlighted_element>minSdkVersionForDexing</highlighted_element>
+  <language>JSON</language>
+  <offset>3</offset>
+  <length>22</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml</file>
+  <line>20</line>
+  <module>Whisk.app.main</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'libvndksupport'</description>
+  <highlighted_element>libvndksupport</highlighted_element>
+  <language>XML</language>
+  <offset>26</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/assets/mermaid.min.js</file>
+  <line>22</line>
+  <module>Whisk.app.main</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/src/main/assets/mermaid.min.js" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'fafc'</description>
+  <highlighted_element>fafc</highlighted_element>
+  <language>TEXT</language>
+  <offset>51</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/assets/mermaid.min.js</file>
+  <line>84</line>
+  <module>Whisk.app.main</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/src/main/assets/mermaid.min.js" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'defs'</description>
+  <highlighted_element>defs</highlighted_element>
+  <language>TEXT</language>
+  <offset>25</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/assets/mermaid.min.js</file>
+  <line>91</line>
+  <module>Whisk.app.main</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/app/src/main/assets/mermaid.min.js" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'dasharray'</description>
+  <highlighted_element>dasharray</highlighted_element>
+  <language>TEXT</language>
+  <offset>188</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/LocalGemmaManager.kt</file>
+  <line>55</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.LocalGemmaManager java.io.File getModelFile()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'litertlm'</description>
+  <highlighted_element>litertlm</highlighted_element>
+  <language>kotlin</language>
+  <offset>32</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/LocalGemmaManager.kt</file>
+  <line>60</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.LocalGemmaManager java.io.File getModelFile()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'litertlm'</description>
+  <highlighted_element>litertlm</highlighted_element>
+  <language>kotlin</language>
+  <offset>32</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/LocalGemmaManager.kt</file>
+  <line>68</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.ai.LocalGemmaManager certificatePinner" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Pinner'</description>
+  <highlighted_element>Pinner</highlighted_element>
+  <language>kotlin</language>
+  <offset>27</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>23</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.ai.RemoteAiManager certificatePinner" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Pinner'</description>
+  <highlighted_element>Pinner</highlighted_element>
+  <language>kotlin</language>
+  <offset>27</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>167</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.RemoteAiManager kotlinx.coroutines.flow.Flow&lt;java.lang.String&gt; generateGeminiStream(java.lang.String prompt, java.lang.String systemPrompt, com.whisk.domain.model.AiConfig config)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'gemini'</description>
+  <highlighted_element>gemini</highlighted_element>
+  <language>kotlin</language>
+  <offset>52</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/FtsNoteEntity.kt</file>
+  <line>12</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.FtsNoteEntity FtsNoteEntity(int rowid, java.lang.String id, java.lang.String title, java.lang.String body, java.lang.String tags)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'rowid'</description>
+  <highlighted_element>rowid</highlighted_element>
+  <language>kotlin</language>
+  <offset>24</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/FtsNoteEntity.kt</file>
+  <line>13</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.FtsNoteEntity FtsNoteEntity(int rowid, java.lang.String id, java.lang.String title, java.lang.String body, java.lang.String tags)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'rowid'</description>
+  <highlighted_element>rowid</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/WhiskDatabase.kt</file>
+  <line>57</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.WhiskDatabase.Companion$-1 void migrate(androidx.sqlite.db.SupportSQLiteDatabase db)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'rowid'</description>
+  <highlighted_element>rowid</highlighted_element>
+  <language>kotlin</language>
+  <offset>116</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/WhiskDatabase.kt</file>
+  <line>58</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.WhiskDatabase.Companion$-1 void migrate(androidx.sqlite.db.SupportSQLiteDatabase db)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'rowid'</description>
+  <highlighted_element>rowid</highlighted_element>
+  <language>kotlin</language>
+  <offset>127</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/WhiskDatabase.kt</file>
+  <line>59</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.WhiskDatabase.Companion$-1 void migrate(androidx.sqlite.db.SupportSQLiteDatabase db)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'rowid'</description>
+  <highlighted_element>rowid</highlighted_element>
+  <language>kotlin</language>
+  <offset>127</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/WhiskDatabase.kt</file>
+  <line>59</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.WhiskDatabase.Companion$-1 void migrate(androidx.sqlite.db.SupportSQLiteDatabase db)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'rowid'</description>
+  <highlighted_element>rowid</highlighted_element>
+  <language>kotlin</language>
+  <offset>247</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/GitHubRepository.kt</file>
+  <line>18</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.data.repository.GitHubRepository certificatePinner" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Pinner'</description>
+  <highlighted_element>Pinner</highlighted_element>
+  <language>kotlin</language>
+  <offset>27</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>83</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository java.lang.Object connectAndDiscoverTools(java.lang.String endpointUrl, kotlin.coroutines.Continuation&lt;? super java.lang.Boolean&gt; $completion)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'jsonrpc'</description>
+  <highlighted_element>jsonrpc</highlighted_element>
+  <language>kotlin</language>
+  <offset>21</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>111</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository java.lang.Object connectAndDiscoverTools(java.lang.String endpointUrl, kotlin.coroutines.Continuation&lt;? super java.lang.Boolean&gt; $completion)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'jsonrpc'</description>
+  <highlighted_element>jsonrpc</highlighted_element>
+  <language>kotlin</language>
+  <offset>21</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>121</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository java.lang.Object connectAndDiscoverTools(java.lang.String endpointUrl, kotlin.coroutines.Continuation&lt;? super java.lang.Boolean&gt; $completion)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'jsonrpc'</description>
+  <highlighted_element>jsonrpc</highlighted_element>
+  <language>kotlin</language>
+  <offset>21</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>206</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository java.lang.Object invokeTool(java.lang.String endpointUrl, java.lang.String toolName, java.lang.String argumentsJson, kotlin.coroutines.Continuation&lt;? super java.lang.String&gt; $completion)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'jsonrpc'</description>
+  <highlighted_element>jsonrpc</highlighted_element>
+  <language>kotlin</language>
+  <offset>17</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/RelationshipRepository.kt</file>
+  <line>22</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.RelationshipRepository kotlinx.coroutines.flow.Flow&lt;java.util.List&lt;com.whisk.domain.model.RelationshipDetail&gt;&gt; getRelationshipsForObject(java.lang.String objectId)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Defs'</description>
+  <highlighted_element>Defs</highlighted_element>
+  <language>kotlin</language>
+  <offset>20</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/ViewEngine.kt</file>
+  <line>52</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.ViewEngine boolean evaluateFilterRule(com.whisk.domain.model.Note note, java.util.List&lt;com.whisk.domain.model.NotePropertyValue&gt; noteValues, java.util.Map&lt;java.lang.String,com.whisk.domain.model.PropertyDefinition&gt; propertyDefs, com.whisk.domain.model.FilterRule rule)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Defs'</description>
+  <highlighted_element>Defs</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/AiModel.kt</file>
+  <line>6</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.AiProviderType OPENROUTER" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'OPENROUTER'</description>
+  <highlighted_element>OPENROUTER</highlighted_element>
+  <language>kotlin</language>
+  <offset>44</offset>
+  <length>10</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/MarkdownParser.kt</file>
+  <line>56</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.components</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.components.MarkdownParser androidx.compose.ui.text.AnnotatedString parseInlineMarkdown(java.lang.String text, long primaryColor, long onBackgroundColor, long codeBgColor)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'linktext'</description>
+  <highlighted_element>linktext</highlighted_element>
+  <language>kotlin</language>
+  <offset>45</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/MarkdownParser.kt</file>
+  <line>57</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.components</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.components.MarkdownParser androidx.compose.ui.text.AnnotatedString parseInlineMarkdown(java.lang.String text, long primaryColor, long onBackgroundColor, long codeBgColor)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'linkurl'</description>
+  <highlighted_element>linkurl</highlighted_element>
+  <language>kotlin</language>
+  <offset>44</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/ai/AiViewModel.kt</file>
+  <line>109</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.ai.AiViewModel void loadMessagesForActiveSession(java.lang.String sessionId)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'msgs'</description>
+  <highlighted_element>msgs</highlighted_element>
+  <language>kotlin</language>
+  <offset>70</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/ai/AiViewModel.kt</file>
+  <line>170</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.ai.AiViewModel void persistCurrentSession()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Msgs'</description>
+  <highlighted_element>Msgs</highlighted_element>
+  <language>kotlin</language>
+  <offset>19</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/ai/AiWorkspaceScreen.kt</file>
+  <line>304</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.ai.AiWorkspaceScreenKt void AiWorkspaceScreen(com.whisk.ui.screens.ai.AiUiState state, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onSendMessage, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onStopGeneration, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onDownloadModel, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.AiProviderType,kotlin.Unit&gt; onSwitchProvider, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onClearHistory, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onStartNewSession, kotlin.jvm.functions.Function1&lt;? super com.whisk.ui.screens.ai.ChatSession,kotlin.Unit&gt; onLoadSession, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onDeleteSession, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onApplyEdit, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onDismissEdit, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenNote, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onMenuClick)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'LITERTLM'</description>
+  <highlighted_element>LITERTLM</highlighted_element>
+  <language>kotlin</language>
+  <offset>55</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/canvas/CanvasViewModel.kt</file>
+  <line>179</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.canvas</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.canvas.CanvasViewModel void connectCards(java.lang.String fromCardId, java.lang.String toCardId)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Conns'</description>
+  <highlighted_element>Conns</highlighted_element>
+  <language>kotlin</language>
+  <offset>19</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/canvas/CanvasViewModel.kt</file>
+  <line>188</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.canvas</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.canvas.CanvasViewModel void deleteCard(java.lang.String cardId)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Conns'</description>
+  <highlighted_element>Conns</highlighted_element>
+  <language>kotlin</language>
+  <offset>19</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/graph/KnowledgeGraphScreen.kt</file>
+  <line>102</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.graph</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.graph.KnowledgeGraphScreenKt void KnowledgeGraphScreen(com.whisk.ui.screens.graph.GraphUiState state, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.GraphNode,kotlin.Unit&gt; onNodeSelect, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenNote, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onResetGraph, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onToggleOrphans, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onMenuClick)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Fruchterman'</description>
+  <highlighted_element>Fruchterman</highlighted_element>
+  <language>kotlin</language>
+  <offset>48</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/graph/KnowledgeGraphScreen.kt</file>
+  <line>102</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.graph</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.graph.KnowledgeGraphScreenKt void KnowledgeGraphScreen(com.whisk.ui.screens.graph.GraphUiState state, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.GraphNode,kotlin.Unit&gt; onNodeSelect, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenNote, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onResetGraph, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onToggleOrphans, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onMenuClick)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Reingold'</description>
+  <highlighted_element>Reingold</highlighted_element>
+  <language>kotlin</language>
+  <offset>60</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/graph/KnowledgeGraphScreen.kt</file>
+  <line>122</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.graph</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.graph.KnowledgeGraphScreenKt void KnowledgeGraphScreen(com.whisk.ui.screens.graph.GraphUiState state, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.GraphNode,kotlin.Unit&gt; onNodeSelect, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenNote, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onResetGraph, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onToggleOrphans, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onMenuClick)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'disp'</description>
+  <highlighted_element>disp</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/notes/NoteDetailViewModel.kt</file>
+  <line>104</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.notes</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.notes.NoteDetailViewModel void observeProperties()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'defs'</description>
+  <highlighted_element>defs</highlighted_element>
+  <language>kotlin</language>
+  <offset>72</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/notes/NoteDetailViewModel.kt</file>
+  <line>120</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.notes</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.notes.NoteDetailViewModel void observeObjectTypesAndRelationships()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'rels'</description>
+  <highlighted_element>rels</highlighted_element>
+  <language>kotlin</language>
+  <offset>65</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/projects/ProjectWorkspaceViewModel.kt</file>
+  <line>88</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.projects</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.projects.ProjectWorkspaceViewModel void observeData()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'rels'</description>
+  <highlighted_element>rels</highlighted_element>
+  <language>kotlin</language>
+  <offset>82</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/search/SearchViewModel.kt</file>
+  <line>52</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.search</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.ui.screens.search.SearchViewModel" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'defs'</description>
+  <highlighted_element>defs</highlighted_element>
+  <language>kotlin</language>
+  <offset>72</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/search/SearchViewModel.kt</file>
+  <line>89</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.search</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.ui.screens.search.SearchViewModel uiState" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Defs'</description>
+  <highlighted_element>Defs</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/settings/SettingsScreen.kt</file>
+  <line>131</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.settings</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.settings.SettingsScreenKt void SettingsScreen(com.whisk.ui.screens.settings.SettingsUiState state, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onThemeChange, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.AiConfig,kotlin.Unit&gt; onSaveAiConfig, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onSaveGitHubToken, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onResetOnboarding, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onExportBackup, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onImportBackup, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onNavigateToProperties, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onNavigateToTypes, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onMenuClick)" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'OLED'</description>
+  <highlighted_element>OLED</highlighted_element>
+  <language>kotlin</language>
+  <offset>46</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/views/DatabaseViewsViewModel.kt</file>
+  <line>66</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.views</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.views.DatabaseViewsViewModel void observeNotesAndProperties()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'defs'</description>
+  <highlighted_element>defs</highlighted_element>
+  <language>kotlin</language>
+  <offset>72</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/views/DatabaseViewsViewModel.kt</file>
+  <line>170</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.views</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.views.DatabaseViewsViewModel void reapplyViewEngine()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Defs'</description>
+  <highlighted_element>Defs</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DailyNotesTest.kt</file>
+  <line>22</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DailyNotesTest void testDailyNoteMetadataEntityToDomainRoundtrip()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Roundtrip'</description>
+  <highlighted_element>Roundtrip</highlighted_element>
+  <language>kotlin</language>
+  <offset>43</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DailyNotesTest.kt</file>
+  <line>40</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DailyNotesTest void testActivityEventEntityToDomainRoundtrip()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Roundtrip'</description>
+  <highlighted_element>Roundtrip</highlighted_element>
+  <language>kotlin</language>
+  <offset>39</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DatabaseViewsTest.kt</file>
+  <line>28</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DatabaseViewsTest void testDatabaseViewEntityToDomainRoundtrip()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Roundtrip'</description>
+  <highlighted_element>Roundtrip</highlighted_element>
+  <language>kotlin</language>
+  <offset>38</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/DatabaseViewsTest.kt</file>
+  <line>107</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.DatabaseViewsTest void testViewEngineCustomPropertyValueFilter()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'prio'</description>
+  <highlighted_element>prio</highlighted_element>
+  <language>kotlin</language>
+  <offset>20</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/McpRepositoryTest.kt</file>
+  <line>47</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.McpRepositoryTest void testJsonRpcPayloadBuilderStructure()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'jsonrpc'</description>
+  <highlighted_element>jsonrpc</highlighted_element>
+  <language>kotlin</language>
+  <offset>17</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/McpRepositoryTest.kt</file>
+  <line>57</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.McpRepositoryTest void testJsonRpcPayloadBuilderStructure()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'jsonrpc'</description>
+  <highlighted_element>jsonrpc</highlighted_element>
+  <language>kotlin</language>
+  <offset>45</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>28</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testNoteObjectDefaultsAndRoundtrip()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Roundtrip'</description>
+  <highlighted_element>Roundtrip</highlighted_element>
+  <language>kotlin</language>
+  <offset>33</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>55</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testObjectTypeDefinitionEntityToDomainRoundtrip()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Roundtrip'</description>
+  <highlighted_element>Roundtrip</highlighted_element>
+  <language>kotlin</language>
+  <offset>46</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/ObjectTypesAndRelationshipsTest.kt</file>
+  <line>90</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ObjectTypesAndRelationshipsTest void testObjectRelationshipEntityToDomainRoundtrip()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Roundtrip'</description>
+  <highlighted_element>Roundtrip</highlighted_element>
+  <language>kotlin</language>
+  <offset>44</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>26</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testPropertyDefinitionEntityToDomainRoundtrip()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Roundtrip'</description>
+  <highlighted_element>Roundtrip</highlighted_element>
+  <language>kotlin</language>
+  <offset>44</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/test/java/com/whisk/PropertySystemTest.kt</file>
+  <line>52</line>
+  <module>Whisk.app.unitTest</module>
+  <package>com.whisk</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.PropertySystemTest void testNotePropertyValueEntityToDomainRoundtripForTypedValues()" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Roundtrip'</description>
+  <highlighted_element>Roundtrip</highlighted_element>
+  <language>kotlin</language>
+  <offset>43</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties</file>
+  <line>2</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'AARCH'</description>
+  <highlighted_element>AARCH</highlighted_element>
+  <language>Properties</language>
+  <offset>22</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties</file>
+  <line>4</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'AARCH'</description>
+  <highlighted_element>AARCH</highlighted_element>
+  <language>Properties</language>
+  <offset>19</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties</file>
+  <line>6</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'AARCH'</description>
+  <highlighted_element>AARCH</highlighted_element>
+  <language>Properties</language>
+  <offset>20</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties</file>
+  <line>8</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'AARCH'</description>
+  <highlighted_element>AARCH</highlighted_element>
+  <language>Properties</language>
+  <offset>18</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties</file>
+  <line>10</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradle/gradle-daemon-jvm.properties" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'AARCH'</description>
+  <highlighted_element>AARCH</highlighted_element>
+  <language>Properties</language>
+  <offset>21</offset>
+  <length>5</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradlew.bat</file>
+  <line>16</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradlew.bat" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'SPDX'</description>
+  <highlighted_element>SPDX</highlighted_element>
+  <language>textmate</language>
+  <offset>5</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradlew.bat</file>
+  <line>27</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradlew.bat" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'setlocal'</description>
+  <highlighted_element>setlocal</highlighted_element>
+  <language>textmate</language>
+  <offset>0</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradlew.bat</file>
+  <line>73</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradlew.bat" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'ERRORLEVEL'</description>
+  <highlighted_element>ERRORLEVEL</highlighted_element>
+  <language>textmate</language>
+  <offset>4</offset>
+  <length>10</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradlew.bat</file>
+  <line>81</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradlew.bat" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'COMSPEC'</description>
+  <highlighted_element>COMSPEC</highlighted_element>
+  <language>textmate</language>
+  <offset>2</offset>
+  <length>7</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradlew.bat</file>
+  <line>105</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradlew.bat" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'endlocal'</description>
+  <highlighted_element>endlocal</highlighted_element>
+  <language>textmate</language>
+  <offset>5</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradlew.bat</file>
+  <line>107</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradlew.bat" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'Dorg'</description>
+  <highlighted_element>Dorg</highlighted_element>
+  <language>textmate</language>
+  <offset>71</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/gradlew.bat</file>
+  <line>107</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/gradlew.bat" />
+  <problem_class id="SpellCheckingInspection" severity="TYPO" attribute_key="TYPO">Spelling</problem_class>
+  <description>Typo: In word 'appname'</description>
+  <highlighted_element>appname</highlighted_element>
+  <language>textmate</language>
+  <offset>83</offset>
+  <length>7</length>
+</problem>
+</problems>

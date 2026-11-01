@@ -347,7 +347,7 @@ class ExportImportRepository(
     suspend fun importVaultFromZip(uri: Uri): Int = withContext(Dispatchers.IO) {
         var importedCount = 0
         var dataJsonStr: String? = null
-        val MAX_SIZE = 100 * 1024 * 1024 // 100 MB limit
+        val maxSize = 100 * 1024 * 1024 // 100 MB limit
         var legacyImportCount = 0
 
         val inputStream: InputStream = context.contentResolver.openInputStream(uri) ?: return@withContext 0
@@ -363,7 +363,7 @@ class ExportImportRepository(
                     while (zipIn.read(buffer).also { count = it } != -1) {
                         outputStream.write(buffer, 0, count)
                         bytesRead += count
-                        if (bytesRead > MAX_SIZE) {
+                        if (bytesRead > maxSize) {
                             throw SecurityException("Zip entry too large")
                         }
                     }
@@ -380,7 +380,7 @@ class ExportImportRepository(
                             val title = lines.firstOrNull { it.startsWith("# ") }?.removePrefix("# ")?.trim()
                                 ?: entryName.removeSuffix(".md").removeSuffix(".txt")
                             val body = if (lines.firstOrNull()?.startsWith("# ") == true) {
-                                lines.drop(1).asSequence().joinToString("\n").trim()
+                                lines.drop(1).joinToString("\n").trim()
                             } else {
                                 text
                             }

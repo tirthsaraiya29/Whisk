@@ -1,0 +1,80 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>141</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository java.lang.Object getBacklinksForNote(java.lang.String noteTitle, java.lang.String noteId, java.util.List&lt;java.lang.String&gt; aliases, kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.Backlink&gt;&gt; $completion)" />
+  <problem_class id="DestructuringDeclaration" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Use destructuring declaration</problem_class>
+  <description>Use destructuring declaration</description>
+  <highlighted_element>n</highlighted_element>
+  <language>kotlin</language>
+  <offset>13</offset>
+  <length>1</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>172</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository java.lang.Object getBrokenLinks(kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.BrokenLinkItem&gt;&gt; $completion)" />
+  <problem_class id="DestructuringDeclaration" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Use destructuring declaration</problem_class>
+  <description>Use destructuring declaration</description>
+  <highlighted_element>note</highlighted_element>
+  <language>kotlin</language>
+  <offset>13</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>174</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository java.lang.Object getBrokenLinks(kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.BrokenLinkItem&gt;&gt; $completion)" />
+  <problem_class id="DestructuringDeclaration" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Use destructuring declaration</problem_class>
+  <description>Use destructuring declaration</description>
+  <highlighted_element>link</highlighted_element>
+  <language>kotlin</language>
+  <offset>17</offset>
+  <length>4</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/PropertyRepository.kt</file>
+  <line>213</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.PropertyRepository java.lang.Object filterNoteIdsByProperties(java.util.List&lt;com.whisk.domain.model.PropertyFilter&gt; filters, kotlin.coroutines.Continuation&lt;? super java.util.List&lt;java.lang.String&gt;&gt; $completion)" />
+  <problem_class id="DestructuringDeclaration" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Use destructuring declaration</problem_class>
+  <description>Use destructuring declaration</description>
+  <highlighted_element>filter</highlighted_element>
+  <language>kotlin</language>
+  <offset>13</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/UnlinkedMentionDetector.kt</file>
+  <line>21</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.UnlinkedMentionDetector java.util.List&lt;com.whisk.domain.model.UnlinkedMention&gt; findUnlinkedMentions(com.whisk.domain.model.Note sourceNote, java.util.List&lt;com.whisk.domain.model.Note&gt; allNotes)" />
+  <problem_class id="DestructuringDeclaration" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Use destructuring declaration</problem_class>
+  <description>Use destructuring declaration</description>
+  <highlighted_element>target</highlighted_element>
+  <language>kotlin</language>
+  <offset>13</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/ViewEngine.kt</file>
+  <line>125</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.ViewEngine java.util.Comparator&lt;com.whisk.domain.model.Note&gt; buildMultiComparator(java.util.List&lt;com.whisk.domain.model.SortRule&gt; sorts, java.util.Map&lt;java.lang.String,? extends java.util.List&lt;com.whisk.domain.model.NotePropertyValue&gt;&gt; propertyValues)" />
+  <problem_class id="DestructuringDeclaration" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Use destructuring declaration</problem_class>
+  <description>Use destructuring declaration</description>
+  <highlighted_element>sort</highlighted_element>
+  <language>kotlin</language>
+  <offset>17</offset>
+  <length>4</length>
+</problem>
+</problems>

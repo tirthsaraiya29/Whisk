@@ -520,7 +520,6 @@ fun NoteDetailScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun NotePropertiesSection(
     propertyItems: List<NotePropertyItem>,

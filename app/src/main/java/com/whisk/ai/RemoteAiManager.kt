@@ -134,12 +134,12 @@ open class RemoteAiManager {
 
         val response = client.newCall(requestBuilder.build()).execute()
         if (!response.isSuccessful) {
-            val errBody = response.body?.string() ?: response.message
+            val errBody = response.body.string()
             emit("API Request Failed [${response.code}]: $errBody")
             return@flow
         }
 
-        val reader = BufferedReader(InputStreamReader(response.body?.byteStream()))
+        val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
         var line: String?
         while (reader.readLine().also { line = it } != null) {
             val l = line?.trim() ?: continue
@@ -195,12 +195,12 @@ open class RemoteAiManager {
 
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
-            val errBody = response.body?.string() ?: response.message
+            val errBody = response.body.string()
             emit("Gemini Request Failed [${response.code}]: $errBody")
             return@flow
         }
 
-        val reader = BufferedReader(InputStreamReader(response.body?.byteStream()))
+        val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
         var line: String?
         while (reader.readLine().also { line = it } != null) {
             val l = line?.trim() ?: continue
@@ -253,12 +253,12 @@ open class RemoteAiManager {
 
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
-            val errBody = response.body?.string() ?: response.message
+            val errBody = response.body.string()
             emit("Anthropic Request Failed [${response.code}]: $errBody")
             return@flow
         }
 
-        val reader = BufferedReader(InputStreamReader(response.body?.byteStream()))
+        val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
         var line: String?
         while (reader.readLine().also { line = it } != null) {
             val l = line?.trim() ?: continue

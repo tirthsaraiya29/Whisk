@@ -1,0 +1,15 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/search/SearchScreen.kt</file>
+  <line>229</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.search</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.search.SearchScreenKt void SearchScreen(com.whisk.ui.screens.search.SearchUiState state, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onQueryChange, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.PropertyFilter,kotlin.Unit&gt; onSetPropertyFilter, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onNoteClick, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onSelectType, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onMenuClick)" />
+  <problem_class id="RemoveCurlyBracesFromTemplate" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Redundant curly braces in string template</problem_class>
+  <description>Redundant curly braces in string template</description>
+  <highlighted_element>${filterName}</highlighted_element>
+  <language>kotlin</language>
+  <offset>38</offset>
+  <length>13</length>
+</problem>
+</problems>

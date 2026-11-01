@@ -98,12 +98,12 @@ class FakeChatDao : ChatDao {
     }
 
     override suspend fun insertSession(session: ChatSessionEntity) {
-        _sessions.value = _sessions.value + (session.id to session)
+        _sessions.value += (session.id to session)
     }
 
     override suspend fun deleteSessionById(id: String): Int {
         val existed = _sessions.value.containsKey(id)
-        _sessions.value = _sessions.value - id
+        _sessions.value -= id
         return if (existed) 1 else 0
     }
 

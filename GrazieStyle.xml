@@ -1,0 +1,86 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/AGENT.md</file>
+  <line>19</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/AGENT.md" />
+  <problem_class id="GrazieStyle" severity="STYLE_SUGGESTION" attribute_key="TEXT_STYLE_SUGGESTION">Style</problem_class>
+  <description>Would you like to insert '→'?</description>
+  <highlighted_element>-&gt;</highlighted_element>
+  <language>Markdown</language>
+  <offset>43</offset>
+  <length>2</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/AGENT.md</file>
+  <line>19</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/AGENT.md" />
+  <problem_class id="GrazieStyle" severity="STYLE_SUGGESTION" attribute_key="TEXT_STYLE_SUGGESTION">Style</problem_class>
+  <description>Would you like to insert '→'?</description>
+  <highlighted_element>-&gt;</highlighted_element>
+  <language>Markdown</language>
+  <offset>53</offset>
+  <length>2</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/SECURITY.md</file>
+  <line>16</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/SECURITY.md" />
+  <problem_class id="GrazieStyle" severity="STYLE_SUGGESTION" attribute_key="TEXT_STYLE_SUGGESTION">Style</problem_class>
+  <description>Consider using 'email'.</description>
+  <highlighted_element>send an email to</highlighted_element>
+  <language>Markdown</language>
+  <offset>16</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/SETUP.md</file>
+  <line>59</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/SETUP.md" />
+  <problem_class id="GrazieStyle" severity="STYLE_SUGGESTION" attribute_key="TEXT_STYLE_SUGGESTION">Style</problem_class>
+  <description>Would you like to insert '→'?</description>
+  <highlighted_element>-&gt;</highlighted_element>
+  <language>Markdown</language>
+  <offset>95</offset>
+  <length>2</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/SETUP.md</file>
+  <line>59</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/SETUP.md" />
+  <problem_class id="GrazieStyle" severity="STYLE_SUGGESTION" attribute_key="TEXT_STYLE_SUGGESTION">Style</problem_class>
+  <description>Would you like to insert '→'?</description>
+  <highlighted_element>-&gt;</highlighted_element>
+  <language>Markdown</language>
+  <offset>127</offset>
+  <length>2</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/SETUP.md</file>
+  <line>59</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/SETUP.md" />
+  <problem_class id="GrazieStyle" severity="STYLE_SUGGESTION" attribute_key="TEXT_STYLE_SUGGESTION">Style</problem_class>
+  <description>Would you like to insert '→'?</description>
+  <highlighted_element>-&gt;</highlighted_element>
+  <language>Markdown</language>
+  <offset>142</offset>
+  <length>2</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/SETUP.md</file>
+  <line>59</line>
+  <module>Whisk</module>
+  <entry_point TYPE="file" FQNAME="file://$PROJECT_DIR$/SETUP.md" />
+  <problem_class id="GrazieStyle" severity="STYLE_SUGGESTION" attribute_key="TEXT_STYLE_SUGGESTION">Style</problem_class>
+  <description>Would you like to insert '→'?</description>
+  <highlighted_element>-&gt;</highlighted_element>
+  <language>Markdown</language>
+  <offset>152</offset>
+  <length>2</length>
+</problem>
+</problems>

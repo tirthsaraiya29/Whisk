@@ -11,6 +11,7 @@ import com.whisk.domain.model.SortRule
 
 object ViewEngine {
 
+    @Suppress("UNUSED_PARAMETER")
     fun applyViewQuery(
         notes: List<Note>,
         propertyValues: Map<String, List<NotePropertyValue>>, // noteId -> propertyValues
@@ -29,7 +30,7 @@ object ViewEngine {
             result = result.filter { note ->
                 val values = propertyValues[note.id] ?: emptyList()
                 view.filters.all { rule ->
-                    evaluateFilterRule(note, values, propertyDefinitions, rule)
+                    evaluateFilterRule(note, values, rule)
                 }
             }
         }
@@ -49,7 +50,6 @@ object ViewEngine {
     private fun evaluateFilterRule(
         note: Note,
         noteValues: List<NotePropertyValue>,
-        propertyDefs: Map<String, PropertyDefinition>,
         rule: FilterRule,
     ): Boolean {
         val rawTarget = rule.value ?: ""
@@ -72,14 +72,10 @@ object ViewEngine {
 
         return when (rule.operator) {
             PropertyOperator.EQUALS -> {
-                if (actualValueStr != null) {
-                    actualValueStr.equals(rawTarget, ignoreCase = true)
-                } else false
+                actualValueStr?.equals(rawTarget, ignoreCase = true) == true
             }
             PropertyOperator.NOT_EQUALS -> {
-                if (actualValueStr != null) {
-                    !actualValueStr.equals(rawTarget, ignoreCase = true)
-                } else true
+                actualValueStr?.equals(rawTarget, ignoreCase = true) != true
             }
             PropertyOperator.CONTAINS -> {
                 if (propVal?.listValue?.isNotEmpty() == true) {
@@ -91,22 +87,18 @@ object ViewEngine {
             PropertyOperator.GREATER_THAN -> {
                 val numVal = propVal?.numberValue ?: actualValueStr?.toDoubleOrNull()
                 val targetNum = rawTarget.toDoubleOrNull()
-                if (numVal != null && targetNum != null) {
-                    numVal > targetNum
-                } else false
+                numVal != null && targetNum != null && numVal > targetNum
             }
             PropertyOperator.LESS_THAN -> {
                 val numVal = propVal?.numberValue ?: actualValueStr?.toDoubleOrNull()
                 val targetNum = rawTarget.toDoubleOrNull()
-                if (numVal != null && targetNum != null) {
-                    numVal < targetNum
-                } else false
+                numVal != null && targetNum != null && numVal < targetNum
             }
             PropertyOperator.BEFORE -> {
-                if (actualValueStr != null) actualValueStr < rawTarget else false
+                actualValueStr != null && actualValueStr < rawTarget
             }
             PropertyOperator.AFTER -> {
-                if (actualValueStr != null) actualValueStr > rawTarget else false
+                actualValueStr != null && actualValueStr > rawTarget
             }
             PropertyOperator.IS_EMPTY -> {
                 actualValueStr.isNullOrBlank() && (propVal?.listValue.isNullOrEmpty())
@@ -122,10 +114,7 @@ object ViewEngine {
         propertyValues: Map<String, List<NotePropertyValue>>,
     ): Comparator<Note> {
         return Comparator { a, b ->
-            for (sort in sorts) {
-                val propId = sort.propertyId
-                val dir = sort.direction
-
+            for ((propId, dir) in sorts) {
                 val valA = extractComparableValue(a, propertyValues[a.id], propId)
                 val valB = extractComparableValue(b, propertyValues[b.id], propId)
 

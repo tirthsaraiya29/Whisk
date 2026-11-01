@@ -1,0 +1,1120 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/LocalGemmaManager.kt</file>
+  <line>396</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.LocalGemmaManager java.lang.Object deleteModel(kotlin.coroutines.Continuation&lt;? super java.lang.Boolean&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;deleteModel&quot; is never used</description>
+  <highlighted_element>deleteModel</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ai/RemoteAiManager.kt</file>
+  <line>36</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ai</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ai.RemoteAiManager java.lang.Object testConnection(com.whisk.domain.model.AiConfig config, kotlin.coroutines.Continuation&lt;? super kotlin.Pair&lt;java.lang.Boolean,java.lang.String&gt;&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;testConnection&quot; is never used</description>
+  <highlighted_element>testConnection</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/PreferencesManager.kt</file>
+  <line>63</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.PreferencesManager java.lang.Object setFirstLaunchCompleted(kotlin.coroutines.Continuation&lt;? super kotlin.Unit&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;setFirstLaunchCompleted&quot; is never used</description>
+  <highlighted_element>setFirstLaunchCompleted</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/PreferencesManager.kt</file>
+  <line>146</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.data.local.PreferencesManager githubDefaultRepo$delegate" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;githubDefaultRepo&quot; is never used</description>
+  <highlighted_element>githubDefaultRepo</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/PreferencesManager.kt</file>
+  <line>159</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.data.local.PreferencesManager mcpEndpoint$delegate" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;mcpEndpoint&quot; is never used</description>
+  <highlighted_element>mcpEndpoint</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/PreferencesManager.kt</file>
+  <line>165</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.PreferencesManager java.lang.Object saveMcpEndpoint(java.lang.String endpoint, kotlin.coroutines.Continuation&lt;? super kotlin.Unit&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;saveMcpEndpoint&quot; is never used</description>
+  <highlighted_element>saveMcpEndpoint</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/local/SecureStorageManager.kt</file>
+  <line>38</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.local</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.local.SecureStorageManager void removeSecret(java.lang.String key)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;removeSecret&quot; is never used</description>
+  <highlighted_element>removeSecret</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/DailyNotesRepository.kt</file>
+  <line>109</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.DailyNotesRepository kotlinx.coroutines.flow.Flow&lt;com.whisk.domain.model.Note&gt; observeDailyNote(java.lang.String dateKey)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;observeDailyNote&quot; is never used</description>
+  <highlighted_element>observeDailyNote</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/DatabaseViewRepository.kt</file>
+  <line>19</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.DatabaseViewRepository kotlinx.coroutines.flow.Flow&lt;java.util.List&lt;com.whisk.domain.model.DatabaseView&gt;&gt; getViewsForTarget(java.lang.String targetTypeId)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;getViewsForTarget&quot; is never used</description>
+  <highlighted_element>getViewsForTarget</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/ExportImportRepository.kt</file>
+  <line>218</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.ExportImportRepository java.lang.Object exportNoteToMarkdown(com.whisk.domain.model.Note note, java.io.OutputStream outputStream, kotlin.coroutines.Continuation&lt;? super kotlin.Unit&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;exportNoteToMarkdown&quot; is never used</description>
+  <highlighted_element>exportNoteToMarkdown</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>20</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>48</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.data.repository.McpRepository approvalRequests" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;approvalRequests&quot; is never used</description>
+  <highlighted_element>approvalRequests</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>56</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository void setServerTrust(java.lang.String endpointUrl, boolean trusted)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;setServerTrust&quot; is never used</description>
+  <highlighted_element>setServerTrust</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>60</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository void trustTool(java.lang.String endpointUrl, java.lang.String toolName)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;trustTool&quot; is never used</description>
+  <highlighted_element>trustTool</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>64</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository void revokeToolTrust(java.lang.String endpointUrl, java.lang.String toolName)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;revokeToolTrust&quot; is never used</description>
+  <highlighted_element>revokeToolTrust</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/McpRepository.kt</file>
+  <line>74</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.McpRepository void resolveApproval(java.lang.String logId, boolean approved)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;resolveApproval&quot; is never used</description>
+  <highlighted_element>resolveApproval</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>34</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.data.repository.NotesRepository favoriteNotes" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;favoriteNotes&quot; is never used</description>
+  <highlighted_element>favoriteNotes</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>13</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>38</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.data.repository.NotesRepository archivedNotes" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;archivedNotes&quot; is never used</description>
+  <highlighted_element>archivedNotes</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>13</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>50</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository kotlinx.coroutines.flow.Flow&lt;java.util.List&lt;com.whisk.domain.model.Note&gt;&gt; getNotesByTypeId(java.lang.String typeId)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;getNotesByTypeId&quot; is never used</description>
+  <highlighted_element>getNotesByTypeId</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>60</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository java.lang.Object changeObjectType(java.lang.String noteId, java.lang.String newTypeId, kotlin.coroutines.Continuation&lt;? super kotlin.Unit&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;changeObjectType&quot; is never used</description>
+  <highlighted_element>changeObjectType</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>64</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository java.lang.Object duplicateNote(java.lang.String noteId, kotlin.coroutines.Continuation&lt;? super com.whisk.domain.model.Note&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;duplicateNote&quot; is never used</description>
+  <highlighted_element>duplicateNote</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>13</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>95</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository kotlinx.coroutines.flow.Flow&lt;java.util.List&lt;com.whisk.domain.model.Note&gt;&gt; searchNotes(java.lang.String query)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;searchNotes&quot; is never used</description>
+  <highlighted_element>searchNotes</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>114</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository java.lang.Object extractLinks(com.whisk.domain.model.Note note, kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.NoteLink&gt;&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;extractLinks&quot; is never used</description>
+  <highlighted_element>extractLinks</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>216</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository java.lang.Object getTagsWithCounts(kotlin.coroutines.Continuation&lt;? super java.util.List&lt;com.whisk.domain.model.Tag&gt;&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;getTagsWithCounts&quot; is never used</description>
+  <highlighted_element>getTagsWithCounts</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/NotesRepository.kt</file>
+  <line>226</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.NotesRepository java.lang.Object addFolder(java.lang.String name, kotlin.coroutines.Continuation&lt;? super kotlin.Unit&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;addFolder&quot; is never used</description>
+  <highlighted_element>addFolder</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/ObjectTypeRepository.kt</file>
+  <line>38</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.ObjectTypeRepository java.lang.Object getObjectTypeDefinitionById(java.lang.String id, kotlin.coroutines.Continuation&lt;? super com.whisk.domain.model.ObjectTypeDefinition&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;getObjectTypeDefinitionById&quot; is never used</description>
+  <highlighted_element>getObjectTypeDefinitionById</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>27</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/PropertyRepository.kt</file>
+  <line>32</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.PropertyRepository java.lang.Object getPropertyDefinitionById(java.lang.String id, kotlin.coroutines.Continuation&lt;? super com.whisk.domain.model.PropertyDefinition&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;getPropertyDefinitionById&quot; is never used</description>
+  <highlighted_element>getPropertyDefinitionById</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>25</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/RelationshipRepository.kt</file>
+  <line>71</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.RelationshipRepository java.lang.Object removeRelationshipsBetween(java.lang.String objA, java.lang.String objB, kotlin.coroutines.Continuation&lt;? super kotlin.Unit&gt; $completion)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;removeRelationshipsBetween&quot; is never used</description>
+  <highlighted_element>removeRelationshipsBetween</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>26</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/data/repository/RelationshipRepository.kt</file>
+  <line>75</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.data.repository</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.data.repository.RelationshipRepository kotlinx.coroutines.flow.Flow&lt;java.util.List&lt;com.whisk.domain.model.ObjectRelationship&gt;&gt; getAllRelationships()" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;getAllRelationships&quot; is never used</description>
+  <highlighted_element>getAllRelationships</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>19</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/DatabaseView.kt</file>
+  <line>5</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.domain.model.ViewType ViewType(java.lang.String displayName, java.lang.String iconName)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;displayName&quot; is never used</description>
+  <highlighted_element>displayName</highlighted_element>
+  <language>kotlin</language>
+  <offset>24</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/DatabaseView.kt</file>
+  <line>5</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.domain.model.ViewType ViewType(java.lang.String displayName, java.lang.String iconName)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;iconName&quot; is never used</description>
+  <highlighted_element>iconName</highlighted_element>
+  <language>kotlin</language>
+  <offset>49</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>4</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.NodeType FOLDER" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;FOLDER&quot; is never used</description>
+  <highlighted_element>FOLDER</highlighted_element>
+  <language>kotlin</language>
+  <offset>15</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>4</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.NodeType GITHUB_REPO" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;GITHUB_REPO&quot; is never used</description>
+  <highlighted_element>GITHUB_REPO</highlighted_element>
+  <language>kotlin</language>
+  <offset>23</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>4</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.NodeType GITHUB_ISSUE" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;GITHUB_ISSUE&quot; is never used</description>
+  <highlighted_element>GITHUB_ISSUE</highlighted_element>
+  <language>kotlin</language>
+  <offset>36</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>4</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.NodeType GITHUB_PR" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;GITHUB_PR&quot; is never used</description>
+  <highlighted_element>GITHUB_PR</highlighted_element>
+  <language>kotlin</language>
+  <offset>50</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>4</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.NodeType SOURCE_FILE" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;SOURCE_FILE&quot; is never used</description>
+  <highlighted_element>SOURCE_FILE</highlighted_element>
+  <language>kotlin</language>
+  <offset>61</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>4</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.NodeType OBJECT" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;OBJECT&quot; is never used</description>
+  <highlighted_element>OBJECT</highlighted_element>
+  <language>kotlin</language>
+  <offset>74</offset>
+  <length>6</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>8</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.EdgeType BACKLINK" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;BACKLINK&quot; is never used</description>
+  <highlighted_element>BACKLINK</highlighted_element>
+  <language>kotlin</language>
+  <offset>19</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>8</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.EdgeType FOLDER_PARENT" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;FOLDER_PARENT&quot; is never used</description>
+  <highlighted_element>FOLDER_PARENT</highlighted_element>
+  <language>kotlin</language>
+  <offset>45</offset>
+  <length>13</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>8</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.EdgeType CODE_DEPENDENCY" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;CODE_DEPENDENCY&quot; is never used</description>
+  <highlighted_element>CODE_DEPENDENCY</highlighted_element>
+  <language>kotlin</language>
+  <offset>60</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/KnowledgeGraph.kt</file>
+  <line>8</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.EdgeType AI_SUGGESTED" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;AI_SUGGESTED&quot; is never used</description>
+  <highlighted_element>AI_SUGGESTED</highlighted_element>
+  <language>kotlin</language>
+  <offset>77</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/SpatialCanvas.kt</file>
+  <line>7</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="field" FQNAME="com.whisk.domain.model.CardType NEW_NOTE" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;NEW_NOTE&quot; is never used</description>
+  <highlighted_element>NEW_NOTE</highlighted_element>
+  <language>kotlin</language>
+  <offset>15</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/domain/model/TaskItem.kt</file>
+  <line>15</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.domain.model</package>
+  <entry_point TYPE="class" FQNAME="com.whisk.domain.model.Template" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Class &quot;Template&quot; is never used</description>
+  <highlighted_element>Template</highlighted_element>
+  <language>kotlin</language>
+  <offset>11</offset>
+  <length>8</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/components/LinkPreviewCard.kt</file>
+  <line>36</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.components</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.components.LinkPreviewCardKt void LinkPreviewCard(com.whisk.domain.model.Note note, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenNote, androidx.compose.ui.Modifier modifier, boolean isBroken, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onCreateMissing)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;LinkPreviewCard&quot; is never used</description>
+  <highlighted_element>LinkPreviewCard</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/canvas/CanvasViewModel.kt</file>
+  <line>113</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.canvas</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.canvas.CanvasViewModel void deleteCanvas(java.lang.String canvasId)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;deleteCanvas&quot; is never used</description>
+  <highlighted_element>deleteCanvas</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/canvas/CanvasViewModel.kt</file>
+  <line>172</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.canvas</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.canvas.CanvasViewModel void connectCards(java.lang.String fromCardId, java.lang.String toCardId)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;connectCards&quot; is never used</description>
+  <highlighted_element>connectCards</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>12</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/canvas/CanvasViewModel.kt</file>
+  <line>194</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.canvas</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.canvas.CanvasViewModel void selectCard(java.lang.String cardId)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;selectCard&quot; is never used</description>
+  <highlighted_element>selectCard</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>10</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/daily/DailyNotesViewModel.kt</file>
+  <line>35</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.daily</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.daily.DailyNotesViewModel DailyNotesViewModel(com.whisk.data.repository.DailyNotesRepository dailyNotesRepository, com.whisk.data.repository.NotesRepository notesRepository, com.whisk.ai.LocalGemmaManager localGemmaManager, com.whisk.ai.RemoteAiManager remoteAiManager)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;localGemmaManager&quot; is never used</description>
+  <highlighted_element>localGemmaManager</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/daily/DailyNotesViewModel.kt</file>
+  <line>36</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.daily</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.daily.DailyNotesViewModel DailyNotesViewModel(com.whisk.data.repository.DailyNotesRepository dailyNotesRepository, com.whisk.data.repository.NotesRepository notesRepository, com.whisk.ai.LocalGemmaManager localGemmaManager, com.whisk.ai.RemoteAiManager remoteAiManager)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;remoteAiManager&quot; is never used</description>
+  <highlighted_element>remoteAiManager</highlighted_element>
+  <language>kotlin</language>
+  <offset>16</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/graph/GraphViewModel.kt</file>
+  <line>43</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.graph</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.graph.GraphViewModel void loadLocalGraph(java.lang.String centerNoteId)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;loadLocalGraph&quot; is never used</description>
+  <highlighted_element>loadLocalGraph</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/search/SearchViewModel.kt</file>
+  <line>121</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.search</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.search.SearchViewModel void selectTag(java.lang.String tag)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;selectTag&quot; is never used</description>
+  <highlighted_element>selectTag</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>9</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/settings/SettingsViewModel.kt</file>
+  <line>65</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.settings</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.settings.SettingsViewModel void exportVault(java.io.OutputStream outputStream)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;exportVault&quot; is never used</description>
+  <highlighted_element>exportVault</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/settings/SettingsViewModel.kt</file>
+  <line>71</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.settings</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.settings.SettingsViewModel void importVault(android.net.Uri uri, kotlin.jvm.functions.Function1&lt;? super java.lang.Integer,kotlin.Unit&gt; onComplete)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;importVault&quot; is never used</description>
+  <highlighted_element>importVault</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>11</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/types/ObjectTypeManagementViewModel.kt</file>
+  <line>83</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.types</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.types.ObjectTypeManagementViewModel void toggleArchive(com.whisk.domain.model.ObjectTypeDefinition typeDef)" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Function &quot;toggleArchive&quot; is never used</description>
+  <highlighted_element>toggleArchive</highlighted_element>
+  <language>kotlin</language>
+  <offset>8</offset>
+  <length>13</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>16</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt DarkTextMuted" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;DarkTextMuted&quot; is never used</description>
+  <highlighted_element>DarkTextMuted</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>13</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>25</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt LightTextMuted" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;LightTextMuted&quot; is never used</description>
+  <highlighted_element>LightTextMuted</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>29</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt VercelCyan" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;VercelCyan&quot; is never used</description>
+  <highlighted_element>VercelCyan</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>10</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>33</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt ObsidianBackground" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;ObsidianBackground&quot; is never used</description>
+  <highlighted_element>ObsidianBackground</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>34</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt ObsidianSurface" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;ObsidianSurface&quot; is never used</description>
+  <highlighted_element>ObsidianSurface</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>35</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt ObsidianSurfaceVariant" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;ObsidianSurfaceVariant&quot; is never used</description>
+  <highlighted_element>ObsidianSurfaceVariant</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>22</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>36</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt ObsidianTextPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;ObsidianTextPrimary&quot; is never used</description>
+  <highlighted_element>ObsidianTextPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>19</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>37</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt ObsidianTextSecondary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;ObsidianTextSecondary&quot; is never used</description>
+  <highlighted_element>ObsidianTextSecondary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>38</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt ObsidianPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;ObsidianPrimary&quot; is never used</description>
+  <highlighted_element>ObsidianPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>15</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>40</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt CyberpunkBackground" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;CyberpunkBackground&quot; is never used</description>
+  <highlighted_element>CyberpunkBackground</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>19</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>41</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt CyberpunkSurface" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;CyberpunkSurface&quot; is never used</description>
+  <highlighted_element>CyberpunkSurface</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>42</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt CyberpunkSurfaceVariant" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;CyberpunkSurfaceVariant&quot; is never used</description>
+  <highlighted_element>CyberpunkSurfaceVariant</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>43</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt CyberpunkTextPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;CyberpunkTextPrimary&quot; is never used</description>
+  <highlighted_element>CyberpunkTextPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>20</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>44</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt CyberpunkTextSecondary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;CyberpunkTextSecondary&quot; is never used</description>
+  <highlighted_element>CyberpunkTextSecondary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>22</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>45</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt CyberpunkPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;CyberpunkPrimary&quot; is never used</description>
+  <highlighted_element>CyberpunkPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>47</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt SolarizedBackground" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;SolarizedBackground&quot; is never used</description>
+  <highlighted_element>SolarizedBackground</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>19</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>48</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt SolarizedSurface" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;SolarizedSurface&quot; is never used</description>
+  <highlighted_element>SolarizedSurface</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>49</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt SolarizedSurfaceVariant" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;SolarizedSurfaceVariant&quot; is never used</description>
+  <highlighted_element>SolarizedSurfaceVariant</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>23</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>50</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt SolarizedTextPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;SolarizedTextPrimary&quot; is never used</description>
+  <highlighted_element>SolarizedTextPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>20</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>51</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt SolarizedTextSecondary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;SolarizedTextSecondary&quot; is never used</description>
+  <highlighted_element>SolarizedTextSecondary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>22</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>52</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt SolarizedPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;SolarizedPrimary&quot; is never used</description>
+  <highlighted_element>SolarizedPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>54</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt MonokaiBackground" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;MonokaiBackground&quot; is never used</description>
+  <highlighted_element>MonokaiBackground</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>55</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt MonokaiSurface" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;MonokaiSurface&quot; is never used</description>
+  <highlighted_element>MonokaiSurface</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>56</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt MonokaiSurfaceVariant" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;MonokaiSurfaceVariant&quot; is never used</description>
+  <highlighted_element>MonokaiSurfaceVariant</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>21</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>57</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt MonokaiTextPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;MonokaiTextPrimary&quot; is never used</description>
+  <highlighted_element>MonokaiTextPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>18</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>58</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt MonokaiTextSecondary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;MonokaiTextSecondary&quot; is never used</description>
+  <highlighted_element>MonokaiTextSecondary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>20</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>59</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt MonokaiPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;MonokaiPrimary&quot; is never used</description>
+  <highlighted_element>MonokaiPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>14</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>61</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt NordicBackground" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;NordicBackground&quot; is never used</description>
+  <highlighted_element>NordicBackground</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>16</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>62</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt NordicSurface" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;NordicSurface&quot; is never used</description>
+  <highlighted_element>NordicSurface</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>13</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>63</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt NordicSurfaceVariant" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;NordicSurfaceVariant&quot; is never used</description>
+  <highlighted_element>NordicSurfaceVariant</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>20</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>64</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt NordicTextPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;NordicTextPrimary&quot; is never used</description>
+  <highlighted_element>NordicTextPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>17</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>65</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt NordicTextSecondary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;NordicTextSecondary&quot; is never used</description>
+  <highlighted_element>NordicTextSecondary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>19</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt</file>
+  <line>66</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.theme</package>
+  <entry_point TYPE="field" FQNAME="file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/theme/Color.kt NordicPrimary" />
+  <problem_class id="UnusedSymbol" severity="WARNING" attribute_key="WARNING_ATTRIBUTES">Unused symbol</problem_class>
+  <description>Property &quot;NordicPrimary&quot; is never used</description>
+  <highlighted_element>NordicPrimary</highlighted_element>
+  <language>kotlin</language>
+  <offset>4</offset>
+  <length>13</length>
+</problem>
+</problems>

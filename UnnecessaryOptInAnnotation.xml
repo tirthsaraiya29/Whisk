@@ -1,0 +1,80 @@
+<problems>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/daily/DailyNotesScreen.kt</file>
+  <line>60</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.daily</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.daily.DailyNotesScreenKt void DailyNotesScreen(com.whisk.ui.screens.daily.DailyNotesUiState state, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onDateSelect, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onPrevDay, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onNextDay, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onGoToToday, kotlin.jvm.functions.Function2&lt;? super java.lang.String,? super java.lang.String,kotlin.Unit&gt; onUpdateJournal, kotlin.jvm.functions.Function2&lt;? super java.lang.String,? super java.lang.Boolean,kotlin.Unit&gt; onToggleTask, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onGenerateAiReflection, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onApplyAiSuggestion, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onDismissAiSuggestion, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenNote, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onMenuClick, java.util.List&lt;com.whisk.domain.model.Note&gt; allNotes)" />
+  <problem_class id="UnnecessaryOptInAnnotation" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Unnecessary '@OptIn' annotation</problem_class>
+  <description>The opt-in annotation is redundant: no matching experimental API is used</description>
+  <highlighted_element>@OptIn(ExperimentalMaterial3Api::class)</highlighted_element>
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>39</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/notes/NoteDetailScreen.kt</file>
+  <line>523</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.notes</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.notes.NoteDetailScreenKt void NotePropertiesSection(java.util.List&lt;com.whisk.domain.model.NotePropertyItem&gt; propertyItems, java.util.List&lt;com.whisk.domain.model.PropertyDefinition&gt; allDefinitions, java.util.List&lt;com.whisk.domain.model.Note&gt; allNotes, kotlin.jvm.functions.Function5&lt;? super java.lang.String,? super java.lang.String,? super java.lang.Double,? super java.lang.Boolean,? super java.util.List&lt;java.lang.String&gt;,kotlin.Unit&gt; onUpdatePropertyValue, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onDeletePropertyValue, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onManageProperties, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenNote)" />
+  <problem_class id="UnnecessaryOptInAnnotation" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Unnecessary '@OptIn' annotation</problem_class>
+  <description>The opt-in annotation is redundant: no matching experimental API is used</description>
+  <highlighted_element>@OptIn(ExperimentalLayoutApi::class)</highlighted_element>
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>36</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/properties/PropertyManagementScreen.kt</file>
+  <line>65</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.properties</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.properties.PropertyManagementScreenKt void PropertyManagementScreen(com.whisk.ui.screens.properties.PropertyManagementUiState state, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onBackClick, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onOpenCreateDialog, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onCloseCreateDialog, kotlin.jvm.functions.Function4&lt;? super java.lang.String,? super com.whisk.domain.model.PropertyType,? super java.lang.String,? super java.util.List&lt;java.lang.String&gt;,kotlin.Unit&gt; onCreateProperty, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.PropertyDefinition,kotlin.Unit&gt; onOpenEditDialog, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onCloseEditDialog, kotlin.jvm.functions.Function6&lt;? super java.lang.String,? super java.lang.String,? super com.whisk.domain.model.PropertyType,? super java.lang.String,? super java.util.List&lt;java.lang.String&gt;,? super java.lang.Boolean,kotlin.Unit&gt; onUpdateProperty, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.PropertyDefinition,kotlin.Unit&gt; onOpenDeleteConfirmation, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onCloseDeleteConfirmation, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onDeleteProperty, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.PropertyDefinition,kotlin.Unit&gt; onToggleArchive)" />
+  <problem_class id="UnnecessaryOptInAnnotation" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Unnecessary '@OptIn' annotation</problem_class>
+  <description>The opt-in annotation is redundant: no matching experimental API is used</description>
+  <highlighted_element>@OptIn(ExperimentalLayoutApi::class)</highlighted_element>
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>36</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/properties/PropertyManagementScreen.kt</file>
+  <line>249</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.properties</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.properties.PropertyManagementScreenKt void PropertyCardRow(com.whisk.domain.model.PropertyDefinition property, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onEdit, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onToggleArchive, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onDelete)" />
+  <problem_class id="UnnecessaryOptInAnnotation" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Unnecessary '@OptIn' annotation</problem_class>
+  <description>The opt-in annotation is redundant: no matching experimental API is used</description>
+  <highlighted_element>@OptIn(ExperimentalLayoutApi::class)</highlighted_element>
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>36</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/properties/PropertyManagementScreen.kt</file>
+  <line>380</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.properties</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.properties.PropertyManagementScreenKt void PropertyEditModal(java.lang.String title, java.lang.String initialName, com.whisk.domain.model.PropertyType initialType, java.lang.String initialDescription, java.util.List&lt;java.lang.String&gt; initialOptions, boolean initialIsArchived, boolean isEditing, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onDismiss, kotlin.jvm.functions.Function5&lt;? super java.lang.String,? super com.whisk.domain.model.PropertyType,? super java.lang.String,? super java.util.List&lt;java.lang.String&gt;,? super java.lang.Boolean,kotlin.Unit&gt; onSave)" />
+  <problem_class id="UnnecessaryOptInAnnotation" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Unnecessary '@OptIn' annotation</problem_class>
+  <description>The opt-in annotation is redundant: no matching experimental API is used</description>
+  <highlighted_element>@OptIn(ExperimentalLayoutApi::class)</highlighted_element>
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>36</length>
+</problem>
+<problem>
+  <file>file://$PROJECT_DIR$/app/src/main/java/com/whisk/ui/screens/views/DatabaseViewsScreen.kt</file>
+  <line>61</line>
+  <module>Whisk.app.main</module>
+  <package>com.whisk.ui.screens.views</package>
+  <entry_point TYPE="method" FQNAME="com.whisk.ui.screens.views.DatabaseViewsScreenKt void DatabaseViewsScreen(com.whisk.ui.screens.views.DatabaseViewsUiState state, kotlin.jvm.functions.Function1&lt;? super com.whisk.domain.model.DatabaseView,kotlin.Unit&gt; onSelectView, kotlin.jvm.functions.Function2&lt;? super java.lang.String,? super com.whisk.domain.model.ViewType,kotlin.Unit&gt; onCreateView, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onDuplicateView, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onDeleteView, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onOpenNote, kotlin.jvm.functions.Function6&lt;? super java.lang.String,? super java.lang.String,? super java.lang.String,? super java.lang.Double,? super java.lang.Boolean,? super java.util.List&lt;java.lang.String&gt;,kotlin.Unit&gt; onUpdatePropertyValue, kotlin.jvm.functions.Function2&lt;? super java.lang.String,? super java.lang.String,kotlin.Unit&gt; onMoveNoteToGroup, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onCreateInGroup, kotlin.jvm.functions.Function1&lt;? super java.lang.String,kotlin.Unit&gt; onCreateOnDate, kotlin.jvm.functions.Function0&lt;kotlin.Unit&gt; onMenuClick)" />
+  <problem_class id="UnnecessaryOptInAnnotation" severity="WEAK WARNING" attribute_key="INFO_ATTRIBUTES">Unnecessary '@OptIn' annotation</problem_class>
+  <description>The opt-in annotation is redundant: no matching experimental API is used</description>
+  <highlighted_element>@OptIn(ExperimentalMaterial3Api::class)</highlighted_element>
+  <language>kotlin</language>
+  <offset>0</offset>
+  <length>39</length>
+</problem>
+</problems>

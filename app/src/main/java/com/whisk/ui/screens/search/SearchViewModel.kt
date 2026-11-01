@@ -37,7 +37,7 @@ data class SearchUiState(
 class SearchViewModel(
     private val notesRepository: NotesRepository,
     private val propertyRepository: PropertyRepository,
-    private val objectTypeRepository: ObjectTypeRepository? = null,
+    objectTypeRepository: ObjectTypeRepository? = null,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")

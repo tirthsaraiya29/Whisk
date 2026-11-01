@@ -67,17 +67,17 @@ class AiViewModel(
         // Observe sessions from Room
         viewModelScope.launch {
             chatRepository.allSessions.collect { sessionEntities ->
-                val sessions = sessionEntities.map { entity ->
+                val sessions = sessionEntities.map { (id, title, timestamp) ->
                     ChatSession(
-                        id = entity.id,
-                        title = entity.title,
-                        timestamp = entity.timestamp,
+                        id = id,
+                        title = title,
+                        timestamp = timestamp,
                         messages = emptyList(),
                     )
                 }
                 _historySessions.value = sessions
 
-                if (_activeSessionId.value == null && sessions.isNotEmpty()) {
+                if ((_activeSessionId.value == null) && sessions.isNotEmpty()) {
                     val first = sessions.first()
                     _activeSessionId.value = first.id
                     _activeSessionTitle.value = first.title

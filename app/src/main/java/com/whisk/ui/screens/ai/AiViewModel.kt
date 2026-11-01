@@ -74,6 +74,7 @@ class AiViewModel(
                             _activeSessionId.value = id
                             _activeSessionTitle.value = title
                             _messages.value = messages
+                            localGemmaManager.resetConversation(id)
                         }
                     } catch (_: Exception) {}
                 }
@@ -112,9 +113,13 @@ class AiViewModel(
     }
 
     fun switchProvider(providerType: AiProviderType) {
+        stopGeneration()
         viewModelScope.launch {
             val currentConfig = uiState.value.config
             preferencesManager.saveAiConfig(currentConfig.copy(providerType = providerType))
+            if (providerType == AiProviderType.LOCAL_GEMMA) {
+                localGemmaManager.resetConversation(_activeSessionId.value)
+            }
         }
     }
 
@@ -163,6 +168,7 @@ class AiViewModel(
 
     fun sendMessage(userText: String) {
         if (userText.isBlank()) return
+        if (_isGenerating.value) return // Prevent concurrent generations from racing
 
         // Automatic Title Generation on first message of a session
         if (_messages.value.isEmpty() || (_activeSessionId.value == null)) {
@@ -170,6 +176,8 @@ class AiViewModel(
             _activeSessionTitle.value = autoTitle
             _activeSessionId.value = UUID.randomUUID().toString()
         }
+
+        val currentSessionId = _activeSessionId.value
 
         val userMsg = AiMessage(role = AiRole.USER, content = userText)
         val assistantMsgId = UUID.randomUUID().toString()
@@ -201,7 +209,7 @@ class AiViewModel(
             val streamFlow: Flow<String> = if (config.providerType == AiProviderType.LOCAL_GEMMA) {
                 val isLoaded = localGemmaManager.initializeEngine(config)
                 if (isLoaded) {
-                    localGemmaManager.generateStream(userText, historyContext, config)
+                    localGemmaManager.generateStream(userText, historyContext, config, currentSessionId)
                 } else {
                     kotlinx.coroutines.flow.flowOf("Error initializing LiteRT-LM engine. Verify model file in Settings or select a Cloud Provider.")
                 }
@@ -245,32 +253,48 @@ class AiViewModel(
 
     fun stopGeneration() {
         generationJob?.cancel()
+        generationJob = null
         _isGenerating.value = false
         persistCurrentSession()
     }
 
     fun startNewSession() {
-        persistCurrentSession()
-        _activeSessionId.value = UUID.randomUUID().toString()
+        stopGeneration()
+        val newSessionId = UUID.randomUUID().toString()
+        _activeSessionId.value = newSessionId
         _activeSessionTitle.value = "NEW CHAT"
         _messages.value = emptyList()
         _generatedEditPreview.value = null
+        viewModelScope.launch {
+            localGemmaManager.resetConversation(newSessionId)
+        }
     }
 
     fun loadSession(session: ChatSession) {
-        persistCurrentSession()
+        stopGeneration()
         _activeSessionId.value = session.id
         _activeSessionTitle.value = session.title
         _messages.value = session.messages
         _generatedEditPreview.value = null
+        viewModelScope.launch {
+            localGemmaManager.resetConversation(session.id)
+        }
     }
 
     fun deleteSession(sessionId: String) {
+        if (_activeSessionId.value == sessionId) {
+            stopGeneration()
+        }
         _historySessions.value = _historySessions.value.filterNot { (id) -> id == sessionId }
         if (_activeSessionId.value == sessionId) {
-            _activeSessionId.value = null
+            val newSessionId = UUID.randomUUID().toString()
+            _activeSessionId.value = newSessionId
             _activeSessionTitle.value = "NEW CHAT"
             _messages.value = emptyList()
+            _generatedEditPreview.value = null
+            viewModelScope.launch {
+                localGemmaManager.resetConversation(newSessionId)
+            }
         }
         viewModelScope.launch {
             try {

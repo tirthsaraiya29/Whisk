@@ -14,9 +14,9 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "whisk_preferences")
 
-class PreferencesManager(private val context: Context) {
+open class PreferencesManager(private val context: Context) {
 
-    private val secureStorage = SecureStorageManager(context)
+    private val secureStorage by lazy { SecureStorageManager(context) }
 
     companion object {
         val KEY_THEME = stringPreferencesKey("theme_mode") // "SYSTEM", "LIGHT", "DARK"
@@ -42,8 +42,10 @@ class PreferencesManager(private val context: Context) {
         private const val SECRET_GITHUB_TOKEN = "secret_github_token"
     }
 
-    val themeMode: Flow<String> = context.dataStore.data.map { prefs ->
-        prefs[KEY_THEME] ?: "SYSTEM"
+    val themeMode: Flow<String> by lazy {
+        context.dataStore.data.map { prefs ->
+            prefs[KEY_THEME] ?: "SYSTEM"
+        }
     }
 
     suspend fun setThemeMode(mode: String) {
@@ -52,8 +54,10 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    val isFirstLaunch: Flow<Boolean> = context.dataStore.data.map { prefs ->
-        !(prefs[KEY_FIRST_LAUNCH_DONE] ?: false)
+    val isFirstLaunch: Flow<Boolean> by lazy {
+        context.dataStore.data.map { prefs ->
+            !(prefs[KEY_FIRST_LAUNCH_DONE] ?: false)
+        }
     }
 
     suspend fun setFirstLaunchCompleted() {
@@ -62,14 +66,16 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    val hintsDismissed: Flow<Map<String, Boolean>> = context.dataStore.data.map { prefs ->
-        mapOf(
-            "links" to (prefs[KEY_HINT_LINKS_DISMISSED] ?: false),
-            "graph" to (prefs[KEY_HINT_GRAPH_DISMISSED] ?: false),
-            "ai" to (prefs[KEY_HINT_AI_DISMISSED] ?: false),
-            "github" to (prefs[KEY_HINT_GITHUB_DISMISSED] ?: false),
-            "canvas" to (prefs[KEY_HINT_CANVAS_DISMISSED] ?: false),
-        )
+    val hintsDismissed: Flow<Map<String, Boolean>> by lazy {
+        context.dataStore.data.map { prefs ->
+            mapOf(
+                "links" to (prefs[KEY_HINT_LINKS_DISMISSED] ?: false),
+                "graph" to (prefs[KEY_HINT_GRAPH_DISMISSED] ?: false),
+                "ai" to (prefs[KEY_HINT_AI_DISMISSED] ?: false),
+                "github" to (prefs[KEY_HINT_GITHUB_DISMISSED] ?: false),
+                "canvas" to (prefs[KEY_HINT_CANVAS_DISMISSED] ?: false),
+            )
+        }
     }
 
     suspend fun dismissHint(hintKey: String) {
@@ -95,28 +101,30 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    val aiConfig: Flow<AiConfig> = context.dataStore.data.map { prefs ->
-        val providerStr = prefs[KEY_AI_PROVIDER] ?: AiProviderType.LOCAL_GEMMA.name
-        val providerType = try {
-            AiProviderType.valueOf(providerStr)
-        } catch (_: Exception) {
-            AiProviderType.LOCAL_GEMMA
-        }
-        val secretApiKey = secureStorage.getSecret(SECRET_AI_API_KEY)
-        val secretHfToken = secureStorage.getSecret(SECRET_HF_API_TOKEN)
+    open val aiConfig: Flow<AiConfig> by lazy {
+        context.dataStore.data.map { prefs ->
+            val providerStr = prefs[KEY_AI_PROVIDER] ?: AiProviderType.LOCAL_GEMMA.name
+            val providerType = try {
+                AiProviderType.valueOf(providerStr)
+            } catch (_: Exception) {
+                AiProviderType.LOCAL_GEMMA
+            }
+            val secretApiKey = secureStorage.getSecret(SECRET_AI_API_KEY)
+            val secretHfToken = secureStorage.getSecret(SECRET_HF_API_TOKEN)
 
-        AiConfig(
-            providerType = providerType,
-            apiKey = secretApiKey,
-            customEndpoint = prefs[KEY_AI_CUSTOM_ENDPOINT] ?: "",
-            selectedModel = prefs[KEY_AI_MODEL] ?: "gemma-4-E2B-it-gpu.litertlm",
-            hfModelUrl = prefs[KEY_AI_HF_MODEL_URL] ?: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm",
-            hfApiToken = secretHfToken,
-            useGpuAccelerator = prefs[KEY_AI_USE_GPU] ?: true,
-        )
+            AiConfig(
+                providerType = providerType,
+                apiKey = secretApiKey,
+                customEndpoint = prefs[KEY_AI_CUSTOM_ENDPOINT] ?: "",
+                selectedModel = prefs[KEY_AI_MODEL] ?: "gemma-4-E2B-it-gpu.litertlm",
+                hfModelUrl = prefs[KEY_AI_HF_MODEL_URL] ?: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it-gpu.litertlm",
+                hfApiToken = secretHfToken,
+                useGpuAccelerator = prefs[KEY_AI_USE_GPU] ?: true,
+            )
+        }
     }
 
-    suspend fun saveAiConfig(config: AiConfig) {
+    open suspend fun saveAiConfig(config: AiConfig) {
         secureStorage.saveSecret(SECRET_AI_API_KEY, config.apiKey)
         secureStorage.saveSecret(SECRET_HF_API_TOKEN, config.hfApiToken)
 
@@ -129,12 +137,16 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    val githubToken: Flow<String> = context.dataStore.data.map { _ ->
-        secureStorage.getSecret(SECRET_GITHUB_TOKEN)
+    val githubToken: Flow<String> by lazy {
+        context.dataStore.data.map { _ ->
+            secureStorage.getSecret(SECRET_GITHUB_TOKEN)
+        }
     }
 
-    val githubDefaultRepo: Flow<String> = context.dataStore.data.map { prefs ->
-        prefs[KEY_GITHUB_DEFAULT_REPO] ?: ""
+    val githubDefaultRepo: Flow<String> by lazy {
+        context.dataStore.data.map { prefs ->
+            prefs[KEY_GITHUB_DEFAULT_REPO] ?: ""
+        }
     }
 
     suspend fun saveGitHubConfig(token: String, defaultRepo: String) {
@@ -144,8 +156,10 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    val mcpEndpoint: Flow<String> = context.dataStore.data.map { prefs ->
-        prefs[KEY_MCP_ENDPOINT] ?: "http://localhost:8080/mcp"
+    val mcpEndpoint: Flow<String> by lazy {
+        context.dataStore.data.map { prefs ->
+            prefs[KEY_MCP_ENDPOINT] ?: "http://localhost:8080/mcp"
+        }
     }
 
     suspend fun saveMcpEndpoint(endpoint: String) {
@@ -154,11 +168,13 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    val savedAiSessionsJson: Flow<String> = context.dataStore.data.map { prefs ->
-        prefs[KEY_SAVED_AI_SESSIONS] ?: "[]"
+    open val savedAiSessionsJson: Flow<String> by lazy {
+        context.dataStore.data.map { prefs ->
+            prefs[KEY_SAVED_AI_SESSIONS] ?: "[]"
+        }
     }
 
-    suspend fun saveAiSessionsJson(jsonStr: String) {
+    open suspend fun saveAiSessionsJson(jsonStr: String) {
         context.dataStore.edit { prefs ->
             prefs[KEY_SAVED_AI_SESSIONS] = jsonStr
         }

@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -27,7 +29,7 @@ import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class LocalGemmaManager(private val context: Context) : AutoCloseable {
+open class LocalGemmaManager(private val context: Context) : AutoCloseable {
 
     private val _modelStatus = MutableStateFlow(LocalModelStatus())
     val modelStatus: StateFlow<LocalModelStatus> = _modelStatus.asStateFlow()
@@ -36,6 +38,8 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
 
     private var engine: Engine? = null
     private var conversation: Conversation? = null
+    private var currentSessionId: String? = null
+    private val generationMutex = Mutex()
 
     private val modelFileName = "gemma-4-E2B-it-gpu.litertlm"
 
@@ -69,15 +73,15 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
         .certificatePinner(certificatePinner)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
-        .followRedirects(followRedirects = false)
-        .followSslRedirects(followProtocolRedirects = false)
+        .followRedirects(false)
+        .followSslRedirects(false)
         .build()
 
     init {
         checkModelFile()
     }
 
-    fun checkModelFile() {
+    open fun checkModelFile() {
         val file = getModelFile()
         if (file.exists() && (file.length() > 50_000_000L)) {
             val sizeMb = file.length() / (1024 * 1024)
@@ -260,67 +264,120 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
         false
     }
 
-    suspend fun initializeEngine(config: AiConfig): Boolean = withContext(Dispatchers.IO) {
-        val file = getModelFile()
-        if (!file.exists() || (file.length() < 50_000_000L)) {
-            _modelStatus.value = _modelStatus.value.copy(
-                isLoaded = false,
-                statusText = "Model file missing or incomplete",
-            )
-            return@withContext false
-        }
+    open suspend fun initializeEngine(config: AiConfig): Boolean = generationMutex.withLock {
+        withContext(Dispatchers.IO) {
+            val file = getModelFile()
+            if (!file.exists() || (file.length() < 50_000_000L)) {
+                _modelStatus.value = _modelStatus.value.copy(
+                    isLoaded = false,
+                    statusText = "Model file missing or incomplete",
+                )
+                return@withContext false
+            }
 
-        try {
-            _modelStatus.value = _modelStatus.value.copy(statusText = "Loading LiteRT-LM engine into memory...")
-            conversation?.close()
-            conversation = null
-            engine?.close()
-            engine = null
+            try {
+                _modelStatus.value = _modelStatus.value.copy(statusText = "Loading LiteRT-LM engine into memory...")
+                conversation?.close()
+                conversation = null
+                engine?.close()
+                engine = null
+                currentSessionId = null
 
-            val backend = if (config.useGpuAccelerator) Backend.GPU() else Backend.CPU()
-            val engineConfig = EngineConfig(
-                modelPath = file.absolutePath,
-                backend = backend,
-                cacheDir = context.cacheDir.path,
-            )
+                val backend = if (config.useGpuAccelerator) Backend.GPU() else Backend.CPU()
+                val engineConfig = EngineConfig(
+                    modelPath = file.absolutePath,
+                    backend = backend,
+                    cacheDir = context.cacheDir.path,
+                )
 
-            val newEngine = Engine(engineConfig)
-            newEngine.initialize()
-            engine = newEngine
+                val newEngine = Engine(engineConfig)
+                newEngine.initialize()
+                engine = newEngine
 
-            conversation = newEngine.createConversation(
-                ConversationConfig(
-                    systemInstruction = Contents.of("You are Whisk AI, a senior developer knowledge workspace assistant."),
-                ),
-            )
+                conversation = newEngine.createConversation(
+                    ConversationConfig(
+                        systemInstruction = Contents.of("You are Whisk AI, a senior developer knowledge workspace assistant."),
+                    ),
+                )
 
-            _modelStatus.value = _modelStatus.value.copy(
-                isLoaded = true,
-                statusText = "LiteRT-LM Gemma Engine active",
-                loadError = null,
-            )
-            true
-        } catch (e: Throwable) {
-            _modelStatus.value = _modelStatus.value.copy(
-                isLoaded = false,
-                statusText = "Initialization failed: ${e.message}",
-                loadError = e.message,
-            )
-            false
+                _modelStatus.value = _modelStatus.value.copy(
+                    isLoaded = true,
+                    statusText = "LiteRT-LM Gemma Engine active",
+                    loadError = null,
+                )
+                true
+            } catch (e: Throwable) {
+                _modelStatus.value = _modelStatus.value.copy(
+                    isLoaded = false,
+                    statusText = "Initialization failed: ${e.message}",
+                    loadError = e.message,
+                )
+                false
+            }
         }
     }
 
-    fun generateStream(prompt: String, contextText: String = "", config: AiConfig = AiConfig()): Flow<String> = callbackFlow {
-        val activeConv = conversation
-        if (activeConv == null) {
-            trySend("Error: LiteRT-LM conversation engine is not initialized. Config provider: ${config.providerType}")
+    open suspend fun resetConversation(sessionId: String? = null) = generationMutex.withLock {
+        withContext(Dispatchers.IO) {
+            try {
+                conversation?.close()
+            } catch (_: Exception) {}
+            conversation = null
+            currentSessionId = sessionId
+            val activeEngine = engine
+            if (activeEngine != null) {
+                try {
+                    conversation = activeEngine.createConversation(
+                        ConversationConfig(
+                            systemInstruction = Contents.of("You are Whisk AI, a senior developer knowledge workspace assistant."),
+                        ),
+                    )
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    open fun generateStream(
+        prompt: String,
+        contextText: String = "",
+        config: AiConfig = AiConfig(),
+        sessionId: String? = null,
+    ): Flow<String> = callbackFlow {
+        val acquired = generationMutex.tryLock()
+        if (!acquired) {
+            trySend("Error: Another generation is currently in progress.")
             close()
             return@callbackFlow
         }
 
-        val fullText = if (contextText.isNotBlank()) "Context:\n$contextText\n\nPrompt:\n$prompt" else prompt
-
         try {
+            if (sessionId != null && sessionId != currentSessionId) {
+                try {
+                    conversation?.close()
+                } catch (_: Exception) {}
+                conversation = null
+                currentSessionId = sessionId
+                val activeEngine = engine
+                if (activeEngine != null) {
+                    try {
+                        conversation = activeEngine.createConversation(
+                            ConversationConfig(
+                                systemInstruction = Contents.of("You are Whisk AI, a senior developer knowledge workspace assistant."),
+                            ),
+                        )
+                    } catch (_: Exception) {}
+                }
+            }
+
+            val activeConv = conversation
+            if (activeConv == null) {
+                trySend("Error: LiteRT-LM conversation engine is not initialized. Config provider: ${config.providerType}")
+                close()
+                return@callbackFlow
+            }
+
+            val fullText = if (contextText.isNotBlank()) "Context:\n$contextText\n\nPrompt:\n$prompt" else prompt
+
             val asyncReply = activeConv.sendMessageAsync(fullText)
             asyncReply.collect { messageChunk ->
                 trySend(messageChunk.toString())
@@ -329,32 +386,37 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
         } catch (e: Exception) {
             trySend("Inference Exception: ${e.message}")
             close()
+        } finally {
+            generationMutex.unlock()
         }
 
         awaitClose { }
     }.flowOn(Dispatchers.IO)
 
-    suspend fun deleteModel(): Boolean = withContext(Dispatchers.IO) {
-        try {
-            conversation?.close()
-        } catch (_: Exception) {}
-        try {
-            engine?.close()
-        } catch (_: Exception) {}
-        conversation = null
-        engine = null
+    suspend fun deleteModel(): Boolean = generationMutex.withLock {
+        withContext(Dispatchers.IO) {
+            try {
+                conversation?.close()
+            } catch (_: Exception) {}
+            try {
+                engine?.close()
+            } catch (_: Exception) {}
+            conversation = null
+            engine = null
+            currentSessionId = null
 
-        val file = getModelFile()
-        if (file.exists()) {
-            file.delete()
+            val file = getModelFile()
+            if (file.exists()) {
+                file.delete()
+            }
+            _modelStatus.value = LocalModelStatus(
+                isDownloaded = false,
+                downloadProgress = 0f,
+                statusText = "Model deleted",
+                isLoaded = false,
+            )
+            true
         }
-        _modelStatus.value = LocalModelStatus(
-            isDownloaded = false,
-            downloadProgress = 0f,
-            statusText = "Model deleted",
-            isLoaded = false,
-        )
-        true
     }
 
     override fun close() {
@@ -366,6 +428,7 @@ class LocalGemmaManager(private val context: Context) : AutoCloseable {
         } catch (_: Exception) {}
         conversation = null
         engine = null
+        currentSessionId = null
         executor.shutdown()
     }
 }

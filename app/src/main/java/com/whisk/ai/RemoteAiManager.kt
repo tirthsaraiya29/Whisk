@@ -18,7 +18,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.concurrent.TimeUnit
 
-class RemoteAiManager {
+open class RemoteAiManager {
 
     private val certificatePinner = CertificatePinner.Builder()
         .add("api.openai.com", "sha256/Cua12II7MZbEHsOwMvD0/MXnQ+Y8Et2v/oxvYK50vFk=")
@@ -78,7 +78,7 @@ class RemoteAiManager {
         }
     }
 
-    fun generateStream(prompt: String, contextText: String, config: AiConfig): Flow<String> = flow {
+    open fun generateStream(prompt: String, contextText: String, config: AiConfig): Flow<String> = flow {
         if (config.apiKey.isBlank() && (config.providerType != AiProviderType.CUSTOM_HTTPS) && (config.providerType != AiProviderType.LOCAL_GEMMA)) {
             emit("Error: API Key missing for ${config.providerType.name}.")
             return@flow

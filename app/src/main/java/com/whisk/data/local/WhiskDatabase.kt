@@ -18,8 +18,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ChatMessageEntity::class,
         PropertyDefinitionEntity::class,
         NotePropertyValueEntity::class,
+        ObjectTypeDefinitionEntity::class,
+        ObjectRelationshipEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class WhiskDatabase : RoomDatabase() {
@@ -29,6 +31,8 @@ abstract class WhiskDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun chatDao(): ChatDao
     abstract fun propertyDao(): PropertyDao
+    abstract fun objectTypeDao(): ObjectTypeDao
+    abstract fun relationshipDao(): RelationshipDao
 
     companion object {
         @Volatile
@@ -131,6 +135,53 @@ abstract class WhiskDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notes ADD COLUMN typeId TEXT NOT NULL DEFAULT 'note'")
+                db.execSQL("ALTER TABLE notes ADD COLUMN description TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE notes ADD COLUMN icon TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE notes ADD COLUMN coverImage TEXT DEFAULT NULL")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_notes_typeId` ON `notes` (`typeId`)")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `object_type_definitions` (
+                        `id` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `description` TEXT,
+                        `icon` TEXT,
+                        `isBuiltIn` INTEGER NOT NULL,
+                        `configurationJson` TEXT,
+                        `position` INTEGER NOT NULL,
+                        `isArchived` INTEGER NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `object_relationships` (
+                        `id` TEXT NOT NULL,
+                        `sourceObjectId` TEXT NOT NULL,
+                        `targetObjectId` TEXT NOT NULL,
+                        `relationshipType` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`),
+                        FOREIGN KEY(`sourceObjectId`) REFERENCES `notes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+                        FOREIGN KEY(`targetObjectId`) REFERENCES `notes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_object_relationships_sourceObjectId` ON `object_relationships` (`sourceObjectId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_object_relationships_targetObjectId` ON `object_relationships` (`targetObjectId`)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_object_relationships_source_target_type` ON `object_relationships` (`sourceObjectId`, `targetObjectId`, `relationshipType`)")
+            }
+        }
+
         fun getDatabase(context: Context): WhiskDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -138,7 +189,7 @@ abstract class WhiskDatabase : RoomDatabase() {
                     WhiskDatabase::class.java,
                     "whisk_database",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
                     .build()
                 INSTANCE = instance

@@ -1,11 +1,11 @@
 package com.whisk.domain.model
 
 enum class NodeType {
-    NOTE, TAG, FOLDER, GITHUB_REPO, GITHUB_ISSUE, GITHUB_PR, SOURCE_FILE
+    NOTE, TAG, FOLDER, GITHUB_REPO, GITHUB_ISSUE, GITHUB_PR, SOURCE_FILE, OBJECT
 }
 
 enum class EdgeType {
-    EXPLICIT_LINK, BACKLINK, TAG_MEMBERSHIP, FOLDER_PARENT, CODE_DEPENDENCY, AI_SUGGESTED
+    EXPLICIT_LINK, BACKLINK, TAG_MEMBERSHIP, FOLDER_PARENT, CODE_DEPENDENCY, AI_SUGGESTED, OBJECT_RELATIONSHIP
 }
 
 data class GraphNode(
@@ -16,6 +16,7 @@ data class GraphNode(
     val isOrphan: Boolean = false,
     val isArchived: Boolean = false,
     val noteId: String? = null,
+    val objectTypeId: String = "note",
 )
 
 data class GraphEdge(

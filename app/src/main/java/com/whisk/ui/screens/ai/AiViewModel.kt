@@ -346,7 +346,6 @@ class AiViewModel(
     }
 
     override fun onCleared() {
-        super.onCleared()
         localGemmaManager.close()
     }
 }

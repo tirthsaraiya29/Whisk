@@ -16,6 +16,10 @@ data class Note(
     val repoRef: String? = null,
     val aliases: List<String> = emptyList(),
     val status: String? = "DRAFT",
+    val typeId: String = "note",
+    val description: String? = null,
+    val icon: String? = null,
+    val coverImage: String? = null,
 )
 
 data class NoteLink(

@@ -1,13 +1,18 @@
 package com.whisk.data.repository
 
 import com.whisk.data.local.NoteDao
+import com.whisk.data.local.RelationshipDao
 import com.whisk.domain.model.EdgeType
 import com.whisk.domain.model.GraphEdge
 import com.whisk.domain.model.GraphNode
 import com.whisk.domain.model.KnowledgeGraph
 import com.whisk.domain.model.NodeType
+import com.whisk.domain.model.RelationshipType
 
-class GraphRepository(private val noteDao: NoteDao) {
+class GraphRepository(
+    private val noteDao: NoteDao,
+    private val relationshipDao: RelationshipDao? = null,
+) {
 
     suspend fun buildGlobalGraph(): KnowledgeGraph {
         val notes = noteDao.getAllNotesDirect()
@@ -17,7 +22,7 @@ class GraphRepository(private val noteDao: NoteDao) {
 
         val titleToIdMap = notes.associateBy({ it.title }, { it.id })
 
-        // 1. Create Note Nodes
+        // 1. Create Object / Note Nodes
         notes.forEach { note ->
             val isOrphan = !linkRegex.containsMatchIn(note.body) &&
                 notes.none { other -> (other.id != note.id) && other.body.contains("[[${note.title}]]") }
@@ -25,10 +30,11 @@ class GraphRepository(private val noteDao: NoteDao) {
                 id = note.id,
                 label = note.title,
                 type = NodeType.NOTE,
-                subtitle = note.tags.ifEmpty { note.folder },
+                subtitle = "TYPE: ${note.typeId.uppercase()}",
                 isOrphan = isOrphan,
                 isArchived = note.isArchived,
                 noteId = note.id,
+                objectTypeId = note.typeId,
             )
             nodesMap[note.id] = node
 
@@ -55,7 +61,7 @@ class GraphRepository(private val noteDao: NoteDao) {
             }
         }
 
-        // 2. Create Explicit Link Edges
+        // 2. Create Explicit Markdown Link Edges
         notes.forEach { note ->
             val matches = linkRegex.findAll(note.body)
             matches.forEach { match ->
@@ -68,6 +74,24 @@ class GraphRepository(private val noteDao: NoteDao) {
                             targetId = targetId,
                             type = EdgeType.EXPLICIT_LINK,
                             label = "links to",
+                        ),
+                    )
+                }
+            }
+        }
+
+        // 3. Create First-Class Object Relationships Edges
+        relationshipDao?.let { dao ->
+            val relationships = dao.getAllRelationshipsDirect()
+            relationships.forEach { rel ->
+                if (nodesMap.containsKey(rel.sourceObjectId) && nodesMap.containsKey(rel.targetObjectId)) {
+                    val relType = RelationshipType.fromString(rel.relationshipType)
+                    edges.add(
+                        GraphEdge(
+                            sourceId = rel.sourceObjectId,
+                            targetId = rel.targetObjectId,
+                            type = EdgeType.OBJECT_RELATIONSHIP,
+                            label = relType.displayName.lowercase(),
                         ),
                     )
                 }

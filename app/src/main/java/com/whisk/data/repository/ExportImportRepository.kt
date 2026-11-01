@@ -9,6 +9,8 @@ import com.whisk.data.local.ChatSessionEntity
 import com.whisk.data.local.FolderEntity
 import com.whisk.data.local.NoteEntity
 import com.whisk.data.local.NotePropertyValueEntity
+import com.whisk.data.local.ObjectRelationshipEntity
+import com.whisk.data.local.ObjectTypeDefinitionEntity
 import com.whisk.data.local.PropertyDefinitionEntity
 import com.whisk.data.local.TaskEntity
 import com.whisk.data.local.WhiskDatabase
@@ -43,6 +45,8 @@ data class BackupData(
     val chatMessages: List<ChatMessageDto> = emptyList(),
     val propertyDefinitions: List<PropertyDefinitionDto> = emptyList(),
     val notePropertyValues: List<NotePropertyValueDto> = emptyList(),
+    val objectTypeDefinitions: List<ObjectTypeDefinitionDto> = emptyList(),
+    val objectRelationships: List<ObjectRelationshipDto> = emptyList(),
 )
 
 @Serializable
@@ -60,6 +64,10 @@ data class NoteDto(
     val repoRef: String?,
     val aliases: String,
     val status: String?,
+    val typeId: String = "note",
+    val description: String? = null,
+    val icon: String? = null,
+    val coverImage: String? = null,
 )
 
 @Serializable
@@ -135,6 +143,29 @@ data class NotePropertyValueDto(
     val updatedAt: Long,
 )
 
+@Serializable
+data class ObjectTypeDefinitionDto(
+    val id: String,
+    val name: String,
+    val description: String?,
+    val icon: String?,
+    val isBuiltIn: Boolean,
+    val configurationJson: String?,
+    val position: Int,
+    val isArchived: Boolean,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+@Serializable
+data class ObjectRelationshipDto(
+    val id: String,
+    val sourceObjectId: String,
+    val targetObjectId: String,
+    val relationshipType: String,
+    val createdAt: Long,
+)
+
 class ExportImportRepository(
     private val context: Context,
     private val database: WhiskDatabase,
@@ -157,7 +188,25 @@ class ExportImportRepository(
 
     suspend fun exportVaultToZip(outputStream: OutputStream) = withContext(Dispatchers.IO) {
         val notes = database.noteDao().getAllNotesDirect().map {
-            NoteDto(it.id, it.title, it.body, it.createdAt, it.updatedAt, it.folder, it.tags, it.isFavorite, it.isArchived, it.sourceMetadata, it.repoRef, it.aliases, it.status)
+            NoteDto(
+                id = it.id,
+                title = it.title,
+                body = it.body,
+                createdAt = it.createdAt,
+                updatedAt = it.updatedAt,
+                folder = it.folder,
+                tags = it.tags,
+                isFavorite = it.isFavorite,
+                isArchived = it.isArchived,
+                sourceMetadata = it.sourceMetadata,
+                repoRef = it.repoRef,
+                aliases = it.aliases,
+                status = it.status,
+                typeId = it.typeId,
+                description = it.description,
+                icon = it.icon,
+                coverImage = it.coverImage,
+            )
         }
         val folders = database.folderDao().getAllFolders().first().map {
             FolderDto(it.id, it.name, it.parentId)
@@ -180,8 +229,25 @@ class ExportImportRepository(
         val notePropertyValues = database.propertyDao().getAllNotePropertyValuesDirect().map {
             NotePropertyValueDto(it.id, it.noteId, it.propertyDefinitionId, it.textValue, it.numberValue, it.booleanValue, it.listValueJson, it.createdAt, it.updatedAt)
         }
+        val objectTypeDefinitions = database.objectTypeDao().getAllObjectTypeDefinitionsDirect().map {
+            ObjectTypeDefinitionDto(it.id, it.name, it.description, it.icon, it.isBuiltIn, it.configurationJson, it.position, it.isArchived, it.createdAt, it.updatedAt)
+        }
+        val objectRelationships = database.relationshipDao().getAllRelationshipsDirect().map {
+            ObjectRelationshipDto(it.id, it.sourceObjectId, it.targetObjectId, it.relationshipType, it.createdAt)
+        }
 
-        val backupData = BackupData(notes, folders, canvases, tasks, chatSessions, chatMessages, propertyDefinitions, notePropertyValues)
+        val backupData = BackupData(
+            notes = notes,
+            folders = folders,
+            canvases = canvases,
+            tasks = tasks,
+            chatSessions = chatSessions,
+            chatMessages = chatMessages,
+            propertyDefinitions = propertyDefinitions,
+            notePropertyValues = notePropertyValues,
+            objectTypeDefinitions = objectTypeDefinitions,
+            objectRelationships = objectRelationships,
+        )
         val dataJsonString = json.encodeToString(backupData)
         val dataBytes = dataJsonString.toByteArray(Charsets.UTF_8)
 
@@ -189,7 +255,7 @@ class ExportImportRepository(
             .joinToString("") { "%02x".format(it) }
 
         val manifest = BackupManifest(
-            version = 1,
+            version = 2,
             timestamp = System.currentTimeMillis(),
             dataChecksum = checksum,
         )
@@ -289,7 +355,12 @@ class ExportImportRepository(
                 val taskDao = database.taskDao()
                 val chatDao = database.chatDao()
                 val propertyDao = database.propertyDao()
+                val objectTypeDao = database.objectTypeDao()
+                val relationshipDao = database.relationshipDao()
 
+                backupData.objectTypeDefinitions.forEach { otd ->
+                    objectTypeDao.insertObjectTypeDefinition(ObjectTypeDefinitionEntity(otd.id, otd.name, otd.description, otd.icon, otd.isBuiltIn, otd.configurationJson, otd.position, otd.isArchived, otd.createdAt, otd.updatedAt))
+                }
                 backupData.propertyDefinitions.forEach { pd ->
                     propertyDao.insertPropertyDefinition(PropertyDefinitionEntity(pd.id, pd.name, pd.type, pd.description, pd.optionsJson, pd.position, pd.isArchived, pd.createdAt, pd.updatedAt))
                 }
@@ -297,8 +368,31 @@ class ExportImportRepository(
                     folderDao.insertFolder(FolderEntity(f.id, f.name, f.parentId))
                 }
                 backupData.notes.forEach { n ->
-                    noteDao.insertNote(NoteEntity(n.id, n.title, n.body, n.createdAt, n.updatedAt, n.folder, n.tags, n.isFavorite, n.isArchived, n.sourceMetadata, n.repoRef, n.aliases, n.status))
+                    noteDao.insertNote(
+                        NoteEntity(
+                            id = n.id,
+                            title = n.title,
+                            body = n.body,
+                            createdAt = n.createdAt,
+                            updatedAt = n.updatedAt,
+                            folder = n.folder,
+                            tags = n.tags,
+                            isFavorite = n.isFavorite,
+                            isArchived = n.isArchived,
+                            sourceMetadata = n.sourceMetadata,
+                            repoRef = n.repoRef,
+                            aliases = n.aliases,
+                            status = n.status,
+                            typeId = n.typeId,
+                            description = n.description,
+                            icon = n.icon,
+                            coverImage = n.coverImage,
+                        ),
+                    )
                     importedCount++
+                }
+                backupData.objectRelationships.forEach { rel ->
+                    relationshipDao.insertRelationship(ObjectRelationshipEntity(rel.id, rel.sourceObjectId, rel.targetObjectId, rel.relationshipType, rel.createdAt))
                 }
                 backupData.notePropertyValues.forEach { pv ->
                     propertyDao.insertNotePropertyValue(NotePropertyValueEntity(pv.id, pv.noteId, pv.propertyDefinitionId, pv.textValue, pv.numberValue, pv.booleanValue, pv.listValueJson, pv.createdAt, pv.updatedAt))

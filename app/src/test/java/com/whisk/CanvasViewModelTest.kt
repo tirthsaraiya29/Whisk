@@ -93,6 +93,18 @@ class FakeNoteDao : NoteDao {
     }
     override suspend fun getNoteCount(): Int = _notes.value.size
     override suspend fun getAllNotesDirect(): List<NoteEntity> = _notes.value
+    override fun getNotesByTypeId(typeId: String): Flow<List<NoteEntity>> = _notes.map { list -> list.filter { it.typeId == typeId } }
+    override suspend fun getObjectsForPicker(query: String, typeId: String?, limit: Int): List<NoteEntity> {
+        return _notes.value.filter { note ->
+            (typeId == null || note.typeId == typeId) &&
+                (query.isBlank() || note.title.contains(query, ignoreCase = true) || (note.description?.contains(query, ignoreCase = true) == true))
+        }.take(limit)
+    }
+    override suspend fun updateObjectType(id: String, typeId: String): Int {
+        val note = getNoteById(id) ?: return 0
+        insertNote(note.copy(typeId = typeId))
+        return 1
+    }
 }
 
 class FakeFolderDao : FolderDao {

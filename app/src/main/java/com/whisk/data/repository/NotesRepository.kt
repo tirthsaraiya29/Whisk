@@ -44,6 +44,32 @@ class NotesRepository(
         entities.map { it.toDomain() }
     }
 
+    fun getNotesByTypeId(typeId: String): Flow<List<Note>> {
+        return noteDao.getNotesByTypeId(typeId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    suspend fun getObjectsForPicker(query: String, typeId: String?, limit: Int = 50): List<Note> {
+        return noteDao.getObjectsForPicker(query, typeId, limit).map { it.toDomain() }
+    }
+
+    suspend fun changeObjectType(noteId: String, newTypeId: String) {
+        noteDao.updateObjectType(noteId, newTypeId)
+    }
+
+    suspend fun duplicateNote(noteId: String): Note? {
+        val original = getNoteById(noteId) ?: return null
+        val duplicate = original.copy(
+            id = java.util.UUID.randomUUID().toString(),
+            title = "${original.title} (Copy)",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+        )
+        saveNote(duplicate)
+        return duplicate
+    }
+
     suspend fun getNoteById(id: String): Note? {
         return noteDao.getNoteById(id)?.toDomain()
     }

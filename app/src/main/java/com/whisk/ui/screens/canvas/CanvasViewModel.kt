@@ -218,7 +218,6 @@ class CanvasViewModel(
                 canvasRepository.saveCanvas(current)
             }
         }
-        super.onCleared()
     }
 
     private data class StateBundlePrimary(

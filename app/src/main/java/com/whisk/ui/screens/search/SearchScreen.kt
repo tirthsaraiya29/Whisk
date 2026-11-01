@@ -66,6 +66,7 @@ fun SearchScreen(
     onQueryChange: (String) -> Unit,
     onSetPropertyFilter: (PropertyFilter?) -> Unit,
     onNoteClick: (String) -> Unit,
+    onSelectType: ((String?) -> Unit)? = null,
     onMenuClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -134,6 +135,58 @@ fun SearchScreen(
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 singleLine = true,
             )
+
+            // Object Type Chips Row
+            if (state.objectTypes.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    item {
+                        val isAll = state.selectedTypeId == null
+                        Box(
+                            modifier = Modifier
+                                .background(if (isAll) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onSelectType?.invoke(null)
+                                }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                        ) {
+                            Text(
+                                text = "ALL OBJECTS",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                color = if (isAll) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+
+                    items(state.objectTypes) { typeDef ->
+                        val isSelected = state.selectedTypeId == typeDef.id
+                        Box(
+                            modifier = Modifier
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onSelectType?.invoke(if (isSelected) null else typeDef.id)
+                                }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                        ) {
+                            Text(
+                                text = typeDef.name.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = DotMatrixFontFamily,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+            }
 
             // Property Filter & Quick Suggestion Row
             Row(

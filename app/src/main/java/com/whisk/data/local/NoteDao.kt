@@ -54,4 +54,13 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes")
     suspend fun getAllNotesDirect(): List<NoteEntity>
+
+    @Query("SELECT * FROM notes WHERE typeId = :typeId AND isArchived = 0 ORDER BY updatedAt DESC")
+    fun getNotesByTypeId(typeId: String): Flow<List<NoteEntity>>
+
+    @Query("SELECT * FROM notes WHERE (:typeId IS NULL OR typeId = :typeId) AND (:query = '' OR title LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%') AND isArchived = 0 ORDER BY updatedAt DESC LIMIT :limit")
+    suspend fun getObjectsForPicker(query: String, typeId: String?, limit: Int = 50): List<NoteEntity>
+
+    @Query("UPDATE notes SET typeId = :typeId WHERE id = :id")
+    suspend fun updateObjectType(id: String, typeId: String): Int
 }

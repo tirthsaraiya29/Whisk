@@ -77,6 +77,10 @@ import com.whisk.domain.model.PropertyDefinition
 import com.whisk.domain.model.PropertyType
 import com.whisk.ui.components.MarkdownEditor
 import com.whisk.ui.components.WhiskTopBar
+import com.whisk.domain.model.ObjectTypeDefinition
+import com.whisk.domain.model.RelationshipType
+import com.whisk.ui.components.RelationshipSection
+import com.whisk.ui.components.getIconForObjectType
 import com.whisk.ui.theme.DotMatrixFontFamily
 import java.util.Calendar
 
@@ -93,11 +97,17 @@ fun NoteDetailScreen(
     onUpdatePropertyValue: (definitionId: String, textValue: String?, numberValue: Double?, booleanValue: Boolean?, listValue: List<String>) -> Unit,
     onDeletePropertyValue: (definitionId: String) -> Unit,
     onManageProperties: () -> Unit,
+    onChangeObjectType: ((String) -> Unit)? = null,
+    onAddRelationship: ((targetObjectId: String, type: RelationshipType) -> Unit)? = null,
+    onRemoveRelationship: ((relationshipId: String) -> Unit)? = null,
+    onQueryObjects: (suspend (String, String?) -> List<Note>)? = null,
+    onOpenProjectWorkspace: ((String) -> Unit)? = null,
     allNotes: List<Note> = emptyList(),
 ) {
     val note = state.note ?: return
     val haptic = LocalHapticFeedback.current
     var showBacklinksSheet by remember { mutableStateOf(false) }
+    var showTypeMenu by remember { mutableStateOf(false) }
 
     val folderName = (note.folder ?: "VAULT").ifBlank { "VAULT" }.uppercase()
     val breadcrumbTitle = "$folderName / ${note.title.ifBlank { "UNTITLED.MD" }.uppercase()}"
@@ -177,6 +187,104 @@ fun NoteDetailScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background),
         ) {
+            // Object Type & Flagship Workspace Header Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                // Object Type Selector Dropdown
+                Box {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                showTypeMenu = true
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        Icon(
+                            imageVector = getIconForObjectType(note.typeId),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "TYPE: ${note.typeId.uppercase()}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showTypeMenu,
+                        onDismissRequest = { showTypeMenu = false },
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                    ) {
+                        state.objectTypes.forEach { typeDef ->
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = getIconForObjectType(typeDef.id),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = typeDef.name.uppercase(),
+                                            fontFamily = DotMatrixFontFamily,
+                                            fontWeight = if (typeDef.id == note.typeId) FontWeight.Bold else FontWeight.Normal,
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    showTypeMenu = false
+                                    onChangeObjectType?.invoke(typeDef.id)
+                                },
+                            )
+                        }
+                    }
+                }
+
+                // Flagship Project Workspace Button (if object type is Project)
+                if (note.typeId == "project" && onOpenProjectWorkspace != null) {
+                    Button(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onOpenProjectWorkspace(note.id)
+                        },
+                        shape = RoundedCornerShape(0.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    ) {
+                        Text(
+                            text = "PROJECT WORKSPACE ->",
+                            fontFamily = DotMatrixFontFamily,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+
             // Note Properties Header Section
             NotePropertiesSection(
                 propertyItems = state.propertyItems,
@@ -187,6 +295,19 @@ fun NoteDetailScreen(
                 onManageProperties = onManageProperties,
                 onOpenNote = onOpenNote,
             )
+
+            // Explicit Object Relationships Section
+            if (onAddRelationship != null && onRemoveRelationship != null && onQueryObjects != null) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+                RelationshipSection(
+                    relationships = state.relationships,
+                    objectTypes = state.objectTypes,
+                    onQueryObjects = onQueryObjects,
+                    onAddRelationship = onAddRelationship,
+                    onRemoveRelationship = onRemoveRelationship,
+                    onOpenObject = onOpenNote,
+                )
+            }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 

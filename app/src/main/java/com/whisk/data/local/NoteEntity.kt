@@ -19,6 +19,10 @@ data class NoteEntity(
     val repoRef: String?,
     val aliases: String = "",
     val status: String? = "DRAFT",
+    val typeId: String = "note",
+    val description: String? = null,
+    val icon: String? = null,
+    val coverImage: String? = null,
 ) {
     fun toDomain(): Note {
         return Note(
@@ -35,6 +39,10 @@ data class NoteEntity(
             repoRef = repoRef,
             aliases = if (aliases.isBlank()) emptyList() else aliases.split(",").asSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList(),
             status = status,
+            typeId = typeId,
+            description = description,
+            icon = icon,
+            coverImage = coverImage,
         )
     }
 
@@ -54,6 +62,10 @@ data class NoteEntity(
                 repoRef = note.repoRef,
                 aliases = note.aliases.joinToString(","),
                 status = note.status,
+                typeId = note.typeId,
+                description = note.description,
+                icon = note.icon,
+                coverImage = note.coverImage,
             )
         }
     }

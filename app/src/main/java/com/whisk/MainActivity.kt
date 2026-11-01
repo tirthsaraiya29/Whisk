@@ -7,12 +7,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,8 +50,12 @@ import com.whisk.data.repository.GitHubRepository
 import com.whisk.data.repository.GraphRepository
 import com.whisk.data.repository.McpRepository
 import com.whisk.data.repository.NotesRepository
+import com.whisk.data.repository.ObjectTypeRepository
+import com.whisk.data.repository.PropertyRepository
+import com.whisk.data.repository.RelationshipRepository
 import com.whisk.domain.model.Note
 import com.whisk.ui.components.CommandPalette
+import com.whisk.ui.components.SidebarDrawer
 import com.whisk.ui.components.WhiskBottomBar
 import com.whisk.ui.screens.ai.AiViewModel
 import com.whisk.ui.screens.ai.AiWorkspaceScreen
@@ -57,25 +66,22 @@ import com.whisk.ui.screens.github.GitHubViewModel
 import com.whisk.ui.screens.graph.GraphViewModel
 import com.whisk.ui.screens.graph.KnowledgeGraphScreen
 import com.whisk.ui.screens.notes.NoteDetailScreen
-import com.whisk.data.repository.PropertyRepository
-import com.whisk.ui.screens.properties.PropertyManagementScreen
-import com.whisk.ui.screens.properties.PropertyManagementViewModel
 import com.whisk.ui.screens.notes.NoteDetailViewModel
 import com.whisk.ui.screens.notes.NotesListScreen
 import com.whisk.ui.screens.notes.NotesViewModel
+import com.whisk.ui.screens.projects.ProjectWorkspaceScreen
+import com.whisk.ui.screens.projects.ProjectWorkspaceViewModel
+import com.whisk.ui.screens.properties.PropertyManagementScreen
+import com.whisk.ui.screens.properties.PropertyManagementViewModel
 import com.whisk.ui.screens.search.SearchScreen
 import com.whisk.ui.screens.search.SearchViewModel
 import com.whisk.ui.screens.settings.SettingsScreen
 import com.whisk.ui.screens.settings.SettingsViewModel
 import com.whisk.ui.screens.tasks.TasksScreen
 import com.whisk.ui.screens.tasks.TasksViewModel
+import com.whisk.ui.screens.types.ObjectTypeManagementScreen
+import com.whisk.ui.screens.types.ObjectTypeManagementViewModel
 import com.whisk.ui.theme.WhiskTheme
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import com.whisk.ui.components.SidebarDrawer
 import kotlinx.coroutines.launch
 
 @Suppress("UNCHECKED_CAST")
@@ -90,6 +96,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var notesRepository: NotesRepository
     private lateinit var propertyRepository: PropertyRepository
+    private lateinit var objectTypeRepository: ObjectTypeRepository
+    private lateinit var relationshipRepository: RelationshipRepository
     private lateinit var graphRepository: GraphRepository
     private lateinit var canvasRepository: CanvasRepository
     private lateinit var gitHubRepository: GitHubRepository
@@ -129,7 +137,9 @@ class MainActivity : ComponentActivity() {
         preferencesManager = PreferencesManager(this)
         notesRepository = NotesRepository(database.noteDao(), database.folderDao(), database.taskDao())
         propertyRepository = PropertyRepository(database.propertyDao(), database.noteDao())
-        graphRepository = GraphRepository(database.noteDao())
+        objectTypeRepository = ObjectTypeRepository(database.objectTypeDao(), database.noteDao(), database.propertyDao())
+        relationshipRepository = RelationshipRepository(database.relationshipDao(), database.noteDao(), database.objectTypeDao())
+        graphRepository = GraphRepository(database.noteDao(), database.relationshipDao())
         canvasRepository = CanvasRepository(database.canvasDao())
         gitHubRepository = GitHubRepository()
         mcpRepository = McpRepository()
@@ -148,6 +158,8 @@ class MainActivity : ComponentActivity() {
                 WhiskApp(
                     notesRepository = notesRepository,
                     propertyRepository = propertyRepository,
+                    objectTypeRepository = objectTypeRepository,
+                    relationshipRepository = relationshipRepository,
                     graphRepository = graphRepository,
                     canvasRepository = canvasRepository,
                     gitHubRepository = gitHubRepository,
@@ -195,6 +207,8 @@ class MainActivity : ComponentActivity() {
 fun WhiskApp(
     notesRepository: NotesRepository,
     propertyRepository: PropertyRepository,
+    objectTypeRepository: ObjectTypeRepository,
+    relationshipRepository: RelationshipRepository,
     graphRepository: GraphRepository,
     canvasRepository: CanvasRepository,
     gitHubRepository: GitHubRepository,
@@ -218,8 +232,9 @@ fun WhiskApp(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val allNotes by notesRepository.allNotes.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    // Seed Welcome Note on First Launch
-    LaunchedEffect(isFirstLaunch) {
+    // Seed Welcome Note & Object Types
+    LaunchedEffect(Unit) {
+        objectTypeRepository.seedBuiltInObjectTypes()
         if (isFirstLaunch) {
             notesRepository.seedWelcomeNoteIfEmpty()
         }
@@ -301,7 +316,15 @@ fun WhiskApp(
                 val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
                 val viewModel: NoteDetailViewModel = viewModel(
                     key = noteId,
-                    factory = viewModelFactory { NoteDetailViewModel(notesRepository, propertyRepository, noteId) },
+                    factory = viewModelFactory {
+                        NoteDetailViewModel(
+                            notesRepository = notesRepository,
+                            propertyRepository = propertyRepository,
+                            objectTypeRepository = objectTypeRepository,
+                            relationshipRepository = relationshipRepository,
+                            noteId = noteId,
+                        )
+                    },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -330,6 +353,11 @@ fun WhiskApp(
                     },
                     onDeletePropertyValue = { defId -> viewModel.deletePropertyValue(defId) },
                     onManageProperties = { navController.navigate("properties") },
+                    onChangeObjectType = { newTypeId -> viewModel.changeObjectType(newTypeId) },
+                    onAddRelationship = { targetId, relType -> viewModel.addRelationship(targetId, relType) },
+                    onRemoveRelationship = { relId -> viewModel.removeRelationship(relId) },
+                    onQueryObjects = { query, typeId -> viewModel.queryObjectsForPicker(query, typeId) },
+                    onOpenProjectWorkspace = { projectId -> navController.navigate("project_workspace/$projectId") },
                     allNotes = allNotes,
                 )
             }
@@ -337,7 +365,7 @@ fun WhiskApp(
             // 3. Search Destination
             composable("search") {
                 val viewModel: SearchViewModel = viewModel(
-                    factory = viewModelFactory { SearchViewModel(notesRepository, propertyRepository) },
+                    factory = viewModelFactory { SearchViewModel(notesRepository, propertyRepository, objectTypeRepository) },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -346,6 +374,7 @@ fun WhiskApp(
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onQueryChange = { q -> viewModel.updateQuery(q) },
                     onSetPropertyFilter = { filter -> viewModel.setPropertyFilter(filter) },
+                    onSelectType = { typeId -> viewModel.selectTypeId(typeId) },
                     onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") },
                 )
             }
@@ -499,6 +528,7 @@ fun WhiskApp(
                     onExportBackup = onExportZip,
                     onImportBackup = onImportZip,
                     onNavigateToProperties = { navController.navigate("properties") },
+                    onNavigateToTypes = { navController.navigate("object_types") },
                 )
             }
 
@@ -522,6 +552,66 @@ fun WhiskApp(
                     onCloseDeleteConfirmation = { viewModel.closeDeleteConfirmation() },
                     onDeleteProperty = { id -> viewModel.deleteProperty(id) },
                     onToggleArchive = { prop -> viewModel.toggleArchive(prop) },
+                )
+            }
+
+            // 11. Object Type Registry Destination
+            composable("object_types") {
+                val viewModel: ObjectTypeManagementViewModel = viewModel(
+                    factory = viewModelFactory { ObjectTypeManagementViewModel(objectTypeRepository) },
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                ObjectTypeManagementScreen(
+                    state = state,
+                    onBackClick = { navController.popBackStack() },
+                    onOpenCreateDialog = { viewModel.openCreateDialog() },
+                    onCloseCreateDialog = { viewModel.closeCreateDialog() },
+                    onCreateCustomType = { name, icon, desc -> viewModel.createCustomType(name, icon, desc) },
+                    onOpenDeleteConfirmation = { typeDef -> viewModel.openDeleteConfirmation(typeDef) },
+                    onCloseDeleteConfirmation = { viewModel.closeDeleteConfirmation() },
+                    onDeleteCustomType = { typeId, action, reassignId -> viewModel.deleteCustomType(typeId, action, reassignId) },
+                )
+            }
+
+            // 12. Project Workspace Destination
+            composable(
+                route = "project_workspace/{projectId}",
+                arguments = listOf(
+                    navArgument("projectId") { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val projectId = backStackEntry.arguments?.getString("projectId") ?: ""
+                val viewModel: ProjectWorkspaceViewModel = viewModel(
+                    key = projectId,
+                    factory = viewModelFactory {
+                        ProjectWorkspaceViewModel(
+                            projectId = projectId,
+                            notesRepository = notesRepository,
+                            propertyRepository = propertyRepository,
+                            relationshipRepository = relationshipRepository,
+                            objectTypeRepository = objectTypeRepository,
+                            chatRepository = chatRepository,
+                            gitHubRepository = gitHubRepository,
+                        )
+                    },
+                )
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                ProjectWorkspaceScreen(
+                    state = state,
+                    onBackClick = { navController.popBackStack() },
+                    onUpdateContent = { title, desc, body -> viewModel.updateProjectContent(title, desc, body) },
+                    onUpdateStatus = { status -> viewModel.updateStatus(status) },
+                    onUpdateRepoRef = { repoRef -> viewModel.updateRepoRef(repoRef) },
+                    onCreateTask = { taskTitle -> viewModel.createProjectTask(taskTitle) },
+                    onToggleTask = { taskId, status -> viewModel.toggleTask(taskId, status) },
+                    onAddRelationship = { targetId, relType -> viewModel.addRelationship(targetId, relType) },
+                    onRemoveRelationship = { relId -> viewModel.removeRelationship(relId) },
+                    onQueryObjects = { query, typeId -> viewModel.queryObjectsForPicker(query, typeId) },
+                    onOpenObject = { id -> navController.navigate("note_detail/$id") },
+                    onStartAiSession = { callback -> viewModel.startNewAiSession(callback) },
+                    onOpenAiSession = { sessionId -> navController.navigate("ai?noteId=$projectId") },
                 )
             }
         }

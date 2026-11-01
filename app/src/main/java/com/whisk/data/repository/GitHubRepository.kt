@@ -61,6 +61,33 @@ class GitHubRepository {
         }
     }
 
+    suspend fun getRepository(owner: String, name: String, token: String? = null): GitHubRepo? = withContext(Dispatchers.IO) {
+        val url = "https://api.github.com/repos/$owner/$name"
+        val requestBuilder = Request.Builder().url(url)
+            .header("Accept", "application/vnd.github.v3+json")
+        if (!token.isNullOrBlank()) {
+            requestBuilder.header("Authorization", "Bearer $token")
+        }
+
+        try {
+            val response = client.newCall(requestBuilder.build()).execute()
+            if (!response.isSuccessful) return@withContext null
+            val bodyStr = response.body?.string() ?: return@withContext null
+            val item = JSONObject(bodyStr)
+            GitHubRepo(
+                fullName = item.getString("full_name"),
+                name = item.getString("name"),
+                owner = item.getJSONObject("owner").getString("login"),
+                description = item.optString("description", ""),
+                defaultBranch = item.optString("default_branch", "main"),
+                isPrivate = item.getBoolean("private"),
+                stars = item.getInt("stargazers_count"),
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     suspend fun getIssues(repoFullName: String, token: String? = null): List<GitHubIssue> = withContext(Dispatchers.IO) {
         val url = "https://api.github.com/repos/$repoFullName/issues?per_page=15&state=all"
         val requestBuilder = Request.Builder().url(url)

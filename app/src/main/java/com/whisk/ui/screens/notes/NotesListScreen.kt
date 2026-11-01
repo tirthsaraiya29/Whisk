@@ -46,7 +46,6 @@ import com.whisk.ui.theme.DotMatrixFontFamily
 import com.whisk.ui.theme.VercelMonoFontFamily
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 @Composable
 fun NotesListScreen(
@@ -264,7 +263,7 @@ fun NoteRowCard(
     onClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", androidx.compose.ui.platform.LocalLocale.current.platformLocale)
     val dateStr = dateFormat.format(Date(note.updatedAt))
 
     Column(

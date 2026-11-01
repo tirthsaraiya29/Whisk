@@ -3,12 +3,17 @@ package com.whisk.ui.screens.notes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.whisk.data.repository.NotesRepository
+import com.whisk.data.repository.ObjectTypeRepository
 import com.whisk.data.repository.PropertyRepository
+import com.whisk.data.repository.RelationshipRepository
 import com.whisk.domain.model.Backlink
 import com.whisk.domain.model.Note
 import com.whisk.domain.model.NotePropertyItem
 import com.whisk.domain.model.NotePropertyValue
+import com.whisk.domain.model.ObjectTypeDefinition
 import com.whisk.domain.model.PropertyDefinition
+import com.whisk.domain.model.RelationshipDetail
+import com.whisk.domain.model.RelationshipType
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,11 +33,15 @@ data class NoteDetailUiState(
     val isDeleted: Boolean = false,
     val propertyItems: List<NotePropertyItem> = emptyList(),
     val allDefinitions: List<PropertyDefinition> = emptyList(),
+    val objectTypes: List<ObjectTypeDefinition> = emptyList(),
+    val relationships: List<RelationshipDetail> = emptyList(),
 )
 
 class NoteDetailViewModel(
     private val notesRepository: NotesRepository,
     private val propertyRepository: PropertyRepository,
+    private val objectTypeRepository: ObjectTypeRepository? = null,
+    private val relationshipRepository: RelationshipRepository? = null,
     private val noteId: String,
 ) : ViewModel() {
 
@@ -44,6 +53,7 @@ class NoteDetailViewModel(
     init {
         loadNote()
         observeProperties()
+        observeObjectTypesAndRelationships()
     }
 
     fun loadNote() {
@@ -70,6 +80,52 @@ class NoteDetailViewModel(
                 _uiState.value = _uiState.value.copy(allDefinitions = defs)
             }
         }
+    }
+
+    private fun observeObjectTypesAndRelationships() {
+        objectTypeRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.nonArchivedObjectTypeDefinitions.collect { types ->
+                    _uiState.value = _uiState.value.copy(objectTypes = types)
+                }
+            }
+        }
+        relationshipRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.getRelationshipsForObject(noteId).collect { rels ->
+                    _uiState.value = _uiState.value.copy(relationships = rels)
+                }
+            }
+        }
+    }
+
+    fun changeObjectType(newTypeId: String) {
+        val current = _uiState.value.note ?: return
+        val updated = current.copy(typeId = newTypeId, updatedAt = System.currentTimeMillis())
+        _uiState.value = _uiState.value.copy(note = updated)
+        viewModelScope.launch {
+            notesRepository.saveNote(updated)
+        }
+    }
+
+    fun addRelationship(targetObjectId: String, relationshipType: RelationshipType) {
+        relationshipRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.addRelationship(noteId, targetObjectId, relationshipType)
+            }
+        }
+    }
+
+    fun removeRelationship(relationshipId: String) {
+        relationshipRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.removeRelationship(relationshipId)
+            }
+        }
+    }
+
+    suspend fun queryObjectsForPicker(query: String, typeId: String?): List<Note> {
+        return notesRepository.getObjectsForPicker(query, typeId)
     }
 
     fun updatePropertyValue(
@@ -168,6 +224,5 @@ class NoteDetailViewModel(
 
     override fun onCleared() {
         flushPendingSave()
-        super.onCleared()
     }
 }

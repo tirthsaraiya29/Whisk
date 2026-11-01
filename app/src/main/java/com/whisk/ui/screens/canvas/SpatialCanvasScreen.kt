@@ -22,9 +22,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -46,6 +51,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.whisk.domain.model.CanvasCard
@@ -60,18 +66,54 @@ fun SpatialCanvasScreen(
     onAddNoteCard: (Note) -> Unit,
     onUpdateCardPos: (String, Float, Float) -> Unit,
     onDeleteCard: (String) -> Unit,
+    onCreateCanvas: () -> Unit = {},
+    onSelectCanvas: (String) -> Unit = {},
+    onRetryLoad: () -> Unit = {},
     onOpenNote: (String) -> Unit,
 ) {
     var showNotePickerSheet by remember { mutableStateOf(false) }
+    var showCanvasMenu by remember { mutableStateOf(false) }
     var canvasScale by remember { mutableFloatStateOf(1f) }
     var canvasOffset by remember { mutableStateOf(Offset.Zero) }
+
+    val currentCanvas = state.currentCanvas
 
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = state.currentCanvas.title,
-                subtitle = "${state.currentCanvas.cards.size} spatial cards • Zoom: ${(canvasScale * 100).toInt()}%",
+                title = currentCanvas?.title ?: "Spatial Canvas",
+                subtitle = if (currentCanvas != null) {
+                    "${currentCanvas.cards.size} spatial cards • Zoom: ${(canvasScale * 100).toInt()}%"
+                } else {
+                    "No active canvas"
+                },
                 actions = {
+                    if (state.allCanvases.size > 1) {
+                        Box {
+                            IconButton(onClick = { showCanvasMenu = true }) {
+                                Icon(Icons.Default.Folder, contentDescription = "Switch Canvas")
+                            }
+                            DropdownMenu(
+                                expanded = showCanvasMenu,
+                                onDismissRequest = { showCanvasMenu = false },
+                            ) {
+                                state.allCanvases.forEach { canvas ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = canvas.title,
+                                                fontWeight = if (canvas.id == state.selectedCanvasId) FontWeight.Bold else FontWeight.Normal,
+                                            )
+                                        },
+                                        onClick = {
+                                            showCanvasMenu = false
+                                            onSelectCanvas(canvas.id)
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
                     IconButton(onClick = {
                         canvasScale = 1f
                         canvasOffset = Offset.Zero
@@ -107,68 +149,131 @@ fun SpatialCanvasScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        canvasScale = (canvasScale * zoom).coerceIn(0.4f, 3.0f)
-                        canvasOffset += pan
-                    }
-                },
+                .padding(paddingValues),
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        scaleX = canvasScale
-                        scaleY = canvasScale
-                        translationX = canvasOffset.x
-                        translationY = canvasOffset.y
-                    },
-            ) {
-                val strokeColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-
-                // Background Canvas for Inter-card Connection Lines
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    state.currentCanvas.connections.forEach { conn ->
-                        val fromCard = state.currentCanvas.cards.find { it.id == conn.fromCardId }
-                        val toCard = state.currentCanvas.cards.find { it.id == conn.toCardId }
-                        if (fromCard != null && toCard != null) {
-                            drawLine(
-                                color = strokeColor,
-                                start = Offset(fromCard.x + 110f, fromCard.y + 60f),
-                                end = Offset(toCard.x + 110f, toCard.y + 60f),
-                                strokeWidth = 3f,
-                                cap = StrokeCap.Round,
-                            )
-                        }
-                    }
-                }
-
-                if (state.currentCanvas.cards.isEmpty()) {
+            when {
+                state.isLoading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = "Spatial Canvas is empty.\nTap + or Note icon to place cards.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
-                } else {
-                    // Render Spatial Cards
-                    state.currentCanvas.cards.forEach { card ->
-                        CanvasCardItem(
-                            card = card,
-                            onDrag = { dx, dy ->
-                                onUpdateCardPos(card.id, card.x + dx / canvasScale, card.y + dy / canvasScale)
+                }
+
+                state.errorMessage != null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                text = state.errorMessage,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = TextAlign.Center,
+                            )
+                            Button(onClick = onRetryLoad) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                }
+
+                currentCanvas == null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                text = "No spatial canvas found.\nCreate a new canvas to start.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                            )
+                            Button(onClick = onCreateCanvas) {
+                                Text("Create Canvas")
+                            }
+                        }
+                    }
+                }
+
+                else -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                detectTransformGestures { _, pan, zoom, _ ->
+                                    canvasScale = (canvasScale * zoom).coerceIn(0.4f, 3.0f)
+                                    canvasOffset += pan
+                                }
                             },
-                            onDelete = { onDeleteCard(card.id) },
-                            onOpenNote = {
-                                val nId = card.noteId
-                                if (nId != null) onOpenNote(nId)
-                            },
-                        )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer {
+                                    scaleX = canvasScale
+                                    scaleY = canvasScale
+                                    translationX = canvasOffset.x
+                                    translationY = canvasOffset.y
+                                },
+                        ) {
+                            val strokeColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+
+                            // Background Canvas for Inter-card Connection Lines
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                currentCanvas.connections.forEach { conn ->
+                                    val fromCard = currentCanvas.cards.find { it.id == conn.fromCardId }
+                                    val toCard = currentCanvas.cards.find { it.id == conn.toCardId }
+                                    if (fromCard != null && toCard != null) {
+                                        drawLine(
+                                            color = strokeColor,
+                                            start = Offset(fromCard.x + 110f, fromCard.y + 60f),
+                                            end = Offset(toCard.x + 110f, toCard.y + 60f),
+                                            strokeWidth = 3f,
+                                            cap = StrokeCap.Round,
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (currentCanvas.cards.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "Spatial Canvas is empty.\nTap + or Note icon to place cards.",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                }
+                            } else {
+                                // Render Spatial Cards
+                                currentCanvas.cards.forEach { card ->
+                                    CanvasCardItem(
+                                        card = card,
+                                        onDrag = { dx, dy ->
+                                            onUpdateCardPos(card.id, card.x + dx / canvasScale, card.y + dy / canvasScale)
+                                        },
+                                        onDelete = { onDeleteCard(card.id) },
+                                        onOpenNote = {
+                                            val nId = card.noteId
+                                            if (nId != null) onOpenNote(nId)
+                                        },
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

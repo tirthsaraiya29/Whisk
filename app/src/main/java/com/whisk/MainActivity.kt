@@ -362,6 +362,9 @@ fun WhiskApp(
                     onAddNoteCard = { note -> viewModel.addNoteCard(note) },
                     onUpdateCardPos = { id, x, y -> viewModel.updateCardPosition(id, x, y) },
                     onDeleteCard = { id -> viewModel.deleteCard(id) },
+                    onCreateCanvas = { viewModel.createNewCanvas() },
+                    onSelectCanvas = { canvasId -> viewModel.selectCanvas(canvasId) },
+                    onRetryLoad = { viewModel.loadCanvases() },
                 ) { noteId ->
                     navController.navigate("note_detail/$noteId")
                 }

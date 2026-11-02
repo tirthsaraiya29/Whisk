@@ -79,6 +79,7 @@ import com.whisk.ui.screens.notes.NoteDetailScreen
 import com.whisk.ui.screens.notes.NoteDetailViewModel
 import com.whisk.ui.screens.notes.NotesListScreen
 import com.whisk.ui.screens.notes.NotesViewModel
+import com.whisk.ui.screens.onboarding.OnboardingScreen
 import com.whisk.ui.screens.projects.ProjectWorkspaceScreen
 import com.whisk.ui.screens.projects.ProjectWorkspaceViewModel
 import com.whisk.ui.screens.properties.PropertyManagementScreen
@@ -308,7 +309,7 @@ fun WhiskApp(
         Box(modifier = Modifier.fillMaxSize()) {
             NavHost(
                 navController = navController,
-                startDestination = "notes",
+                startDestination = if (isFirstLaunch) "onboarding" else "notes",
                 modifier = Modifier.fillMaxSize(),
                 enterTransition = {
                     slideInHorizontally(
@@ -323,6 +324,20 @@ fun WhiskApp(
                     ) { it / 4 } + fadeOut()
                 },
             ) {
+            // 0. First-Time Onboarding Destination
+            composable("onboarding") {
+                OnboardingScreen(
+                    onCompleteOnboarding = {
+                        scope.launch {
+                            preferencesManager.setFirstLaunchCompleted()
+                            navController.navigate("notes") {
+                                popUpTo("onboarding") { inclusive = true }
+                            }
+                        }
+                    },
+                )
+            }
+
             // 1. Notes List Destination
             composable("notes") {
                 val viewModel: NotesViewModel = viewModel(
@@ -333,6 +348,7 @@ fun WhiskApp(
                 NotesListScreen(
                     state = state,
                     onMenuClick = { scope.launch { drawerState.open() } },
+                    onCommandPaletteClick = { showCommandPalette = true },
                     onNoteClick = { noteId -> navController.navigate("note_detail/$noteId") },
                     onNewNoteClick = {
                         scope.launch {
@@ -584,7 +600,10 @@ fun WhiskApp(
                     onThemeChange = { mode -> viewModel.setThemeMode(mode) },
                     onSaveAiConfig = { config -> viewModel.saveAiConfig(config) },
                     onSaveGitHubToken = { token -> viewModel.saveGitHubToken(token) },
-                    onResetOnboarding = { viewModel.resetOnboarding() },
+                    onResetOnboarding = {
+                        viewModel.resetOnboarding()
+                        navController.navigate("onboarding")
+                    },
                     onExportBackup = onExportZip,
                     onImportBackup = onImportZip,
                     onIndexWorkspace = { force -> viewModel.indexWorkspace(force) },
@@ -731,14 +750,19 @@ fun WhiskApp(
         }
 
         // Brutalist Bottom Navigation Bar
-        val isBottomBarVisible = ((currentRoute in listOf("notes", "search", "graph", "settings", "database_views", "daily_notes")) || currentRoute.startsWith("ai")) && drawerState.isClosed
+        val bottomBarRoutes = remember {
+            setOf("notes", "search", "graph", "settings", "database_views", "daily_notes", "canvas", "tasks", "github")
+        }
+        val isBottomBarVisible = ((currentRoute in bottomBarRoutes) || currentRoute.startsWith("ai")) && drawerState.isClosed
         if (isBottomBarVisible) {
             val selectedRoute = if (currentRoute.startsWith("ai")) "ai" else currentRoute
             WhiskBottomBar(
                 currentRoute = selectedRoute,
                 onNavigate = { route ->
                     navController.navigate(route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        popUpTo("notes") {
+                            saveState = true
+                        }
                         launchSingleTop = true
                         restoreState = true
                     }

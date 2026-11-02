@@ -11,6 +11,7 @@ fun WhiskTopBar(
     subtitle: String? = null,
     onBackClick: (() -> Unit)? = null,
     onMenuClick: (() -> Unit)? = null,
+    onCommandPaletteClick: (() -> Unit)? = null,
     saveStateText: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
@@ -19,6 +20,7 @@ fun WhiskTopBar(
         subtitle = subtitle,
         onBackClick = onBackClick,
         onMenuClick = onMenuClick,
+        onCommandPaletteClick = onCommandPaletteClick,
         saveStateText = saveStateText,
         actions = actions,
         modifier = modifier,

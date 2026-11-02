@@ -656,22 +656,24 @@ fun SettingsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onResetOnboarding()
                         }
-                        .padding(vertical = 10.dp),
+                        .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "RESET ONBOARDING HINTS",
+                            text = "LAUNCH INTERACTIVE ONBOARDING GUIDE",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }

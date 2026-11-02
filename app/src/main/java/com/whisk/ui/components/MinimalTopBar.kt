@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +57,7 @@ fun MinimalTopBar(
     subtitle: String? = null,
     onBackClick: (() -> Unit)? = null,
     onMenuClick: (() -> Unit)? = null,
+    onCommandPaletteClick: (() -> Unit)? = null,
     saveStateText: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
@@ -162,8 +164,27 @@ fun MinimalTopBar(
             // Contextual Actions Row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
+                if (onCommandPaletteClick != null) {
+                    Box(
+                        modifier = Modifier
+                            .border(1.dp, MaterialTheme.colorScheme.outline)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onCommandPaletteClick()
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = "[⌘K]",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
                 actions()
             }
         }

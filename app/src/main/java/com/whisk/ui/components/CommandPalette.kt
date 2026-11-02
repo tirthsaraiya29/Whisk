@@ -1,13 +1,18 @@
 package com.whisk.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,9 +30,11 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,13 +43,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.whisk.domain.model.DeveloperTemplates
 import com.whisk.domain.model.Note
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
 
 data class CommandItem(
     val id: String,
@@ -61,55 +73,56 @@ fun CommandPalette(
     onExportBackup: () -> Unit,
     onCreateTemplateNote: ((Note) -> Unit)? = null,
 ) {
+    val haptic = LocalHapticFeedback.current
     var searchQuery by remember { mutableStateOf("") }
 
     val commands = remember {
         listOf(
-            CommandItem("new_note", "Create New Note", "Start writing a new Markdown note", "⌘N", Icons.Default.Add) {
+            CommandItem("new_note", "CREATE NEW NOTE", "Initialize a blank Markdown note in vault", "⌘N", Icons.Default.Add) {
                 onNewNote()
                 onDismiss()
             },
-            CommandItem("daily_notes_workspace", "Daily Notes Workspace", "Canonical daily notes workspace & activity log", "⌘D", Icons.Default.CalendarToday) {
+            CommandItem("daily_notes_workspace", "DAILY NOTES WORKSPACE", "Canonical daily notes workspace & activity log", "⌘D", Icons.Default.CalendarToday) {
                 onNavigate("daily_notes")
                 onDismiss()
             },
-            CommandItem("database_views", "Database Views", "Table, Board, Calendar, Gallery & List views", "⌘V", Icons.Default.Description) {
+            CommandItem("database_views", "DATABASE VIEWS", "Table, Board, Calendar, Gallery & List views", "⌘V", Icons.Default.Description) {
                 onNavigate("database_views")
                 onDismiss()
             },
-            CommandItem("adr_note", "Architecture Decision Record", "Document an architectural decision (ADR)", "⌘A", Icons.Default.Gavel) {
+            CommandItem("adr_note", "ARCHITECTURE DECISION RECORD", "Document an architectural decision (ADR)", "⌘A", Icons.Default.Gavel) {
                 onCreateTemplateNote?.invoke(DeveloperTemplates.createADR())
                 onDismiss()
             },
-            CommandItem("debug_journal", "Debugging Journal", "Document a bug investigation and fix", "⌘B", Icons.Default.BugReport) {
+            CommandItem("debug_journal", "DEBUGGING JOURNAL", "Document a bug investigation and fix", "⌘B", Icons.Default.BugReport) {
                 onCreateTemplateNote?.invoke(DeveloperTemplates.createDebuggingJournal())
                 onDismiss()
             },
-            CommandItem("search", "Search Vault", "Full-text search across all notes", "⌘F", Icons.Default.Search) {
+            CommandItem("search", "SEARCH VAULT", "Full-text search across all notes", "⌘F", Icons.Default.Search) {
                 onNavigate("search")
                 onDismiss()
             },
-            CommandItem("graph", "Knowledge Graph", "Interactive 2D graph visualization", "⌘G", Icons.Default.Hub) {
+            CommandItem("graph", "KNOWLEDGE GRAPH", "Interactive 2D graph visualization", "⌘G", Icons.Default.Hub) {
                 onNavigate("graph")
                 onDismiss()
             },
-            CommandItem("canvas", "Spatial Canvas", "Arrange ideas & note cards", "⌘S", Icons.Default.Description) {
+            CommandItem("canvas", "SPATIAL CANVAS", "Arrange ideas & note cards", "⌘S", Icons.Default.Description) {
                 onNavigate("canvas")
                 onDismiss()
             },
-            CommandItem("ai", "AI Workspace", "On-device Gemma 2B or remote LLM", "⌘AI", Icons.Default.AutoAwesome) {
+            CommandItem("ai", "AI WORKSPACE", "On-device Gemma 2B or remote LLM", "⌘AI", Icons.Default.AutoAwesome) {
                 onNavigate("ai")
                 onDismiss()
             },
-            CommandItem("github", "GitHub & MCP Tools", "Browse repos, issues & run MCP tools", "⌘GH", Icons.Default.Code) {
+            CommandItem("github", "GITHUB & MCP TOOLS", "Browse repos, issues & run MCP tools", "⌘GH", Icons.Default.Code) {
                 onNavigate("github")
                 onDismiss()
             },
-            CommandItem("export", "Export Vault Backup", "Backup vault to ZIP format", "⌘E", Icons.Default.Backup) {
+            CommandItem("export", "EXPORT VAULT BACKUP", "Backup vault to ZIP format", "⌘E", Icons.Default.Backup) {
                 onExportBackup()
                 onDismiss()
             },
-            CommandItem("settings", "Settings", "Manage themes, AI keys & preferences", "⌘,", Icons.Default.Settings) {
+            CommandItem("settings", "SETTINGS", "Manage themes, AI keys & preferences", "⌘,", Icons.Default.Settings) {
                 onNavigate("settings")
                 onDismiss()
             },
@@ -126,34 +139,96 @@ fun CommandPalette(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            shape = RoundedCornerShape(12.dp),
+                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp)),
+            shape = RoundedCornerShape(0.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Command Palette",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "WHISK // COMMAND PALETTE",
+                        fontFamily = DotMatrixFontFamily,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onDismiss()
+                            }
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = "[ESC]",
+                            fontFamily = DotMatrixFontFamily,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+                Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Type command or shortcut...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = {
+                        Text(
+                            "> TYPE COMMAND OR SHORTCUT...",
+                            fontFamily = DotMatrixFontFamily,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                    ),
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
                     singleLine = true,
                 )
 
-                LazyColumn(modifier = Modifier.padding(top = 10.dp)) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyColumn(
+                    modifier = Modifier.height(280.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
                     items(filtered, key = { it.id }) { cmd ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { cmd.action() }
-                                .padding(vertical = 10.dp, horizontal = 8.dp),
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    cmd.action()
+                                }
+                                .padding(vertical = 10.dp, horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
@@ -165,17 +240,21 @@ fun CommandPalette(
                                     imageVector = cmd.icon,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(end = 12.dp),
+                                    modifier = Modifier.size(18.dp),
                                 )
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
                                         text = cmd.title,
-                                        style = MaterialTheme.typography.titleLarge,
+                                        fontFamily = DotMatrixFontFamily,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
                                         text = cmd.subtitle,
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontFamily = VercelMonoFontFamily,
+                                        fontSize = 10.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
@@ -183,14 +262,16 @@ fun CommandPalette(
 
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
                             ) {
                                 Text(
                                     text = cmd.shortcut,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.primary,
+                                    fontFamily = DotMatrixFontFamily,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                 )
                             }
                         }

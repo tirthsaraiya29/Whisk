@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -20,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,6 +33,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,6 +61,7 @@ fun NotesListScreen(
     showHint: Boolean = true,
     onDismissHint: () -> Unit = {},
     onMenuClick: (() -> Unit)? = null,
+    onCommandPaletteClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -66,6 +71,7 @@ fun NotesListScreen(
                 title = "WHISK // VAULT",
                 subtitle = "${state.notes.size} OBJECTS LOADED",
                 onMenuClick = onMenuClick,
+                onCommandPaletteClick = onCommandPaletteClick,
                 actions = {
                     Box(
                         modifier = Modifier
@@ -190,27 +196,63 @@ fun NotesListScreen(
                         .padding(32.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.Description,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 12.dp),
-                        )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .border(1.dp, MaterialTheme.colorScheme.outline)
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Description,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(28.dp),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         Text(
-                            text = if (state.searchQuery.isBlank()) "NO OBJECTS FOUND" else "ZERO SEARCH MATCHES",
+                            text = if (state.searchQuery.isBlank()) "NO OBJECTS IN VAULT" else "ZERO SEARCH MATCHES",
                             style = MaterialTheme.typography.labelMedium,
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
+
                         Text(
-                            text = "PRESS [+] TO INITIALIZE NEW NOTE",
+                            text = if (state.searchQuery.isBlank()) "INITIALIZE YOUR FIRST NOTE TO BUILD KNOWLEDGE GRAPH" else "TRY FILTERING BY DIFFERENT TAG OR SEARCH QUERY",
                             style = MaterialTheme.typography.labelSmall,
                             fontFamily = DotMatrixFontFamily,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp),
                         )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.primary)
+                                .border(1.dp, MaterialTheme.colorScheme.primary)
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onNewNoteClick()
+                                }
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                        ) {
+                            Text(
+                                text = "+ CREATE FIRST NOTE",
+                                fontFamily = DotMatrixFontFamily,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
                     }
                 }
             } else {
@@ -266,6 +308,10 @@ fun NoteRowCard(
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", androidx.compose.ui.platform.LocalLocale.current.platformLocale)
     val dateStr = dateFormat.format(Date(note.updatedAt))
 
+    val wikilinkCount = remember(note.body) {
+        if (note.body.isBlank()) 0 else note.body.split("[[").size - 1
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -280,15 +326,37 @@ fun NoteRowCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = note.title.ifBlank { "UNTITLED.MD" },
-                style = MaterialTheme.typography.titleLarge,
-                fontFamily = VercelMonoFontFamily,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f),
-            )
+            ) {
+                if (!note.folder.isNullOrBlank()) {
+                    Icon(
+                        imageVector = Icons.Default.Folder,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(14.dp)
+                            .padding(end = 4.dp),
+                    )
+                    Text(
+                        text = "${note.folder.uppercase()} / ",
+                        fontFamily = DotMatrixFontFamily,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
+                Text(
+                    text = note.title.ifBlank { "UNTITLED.MD" },
+                    style = MaterialTheme.typography.titleLarge,
+                    fontFamily = VercelMonoFontFamily,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
             if (note.isFavorite) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
@@ -319,12 +387,25 @@ fun NoteRowCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = "UPDATED $dateStr",
-                style = MaterialTheme.typography.labelSmall,
-                fontFamily = DotMatrixFontFamily,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "UPDATED $dateStr",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = DotMatrixFontFamily,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                if (wikilinkCount > 0) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "[$wikilinkCount LINKS]",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
 
             if (note.tags.isNotEmpty()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

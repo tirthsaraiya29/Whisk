@@ -4,6 +4,7 @@ import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import com.whisk.data.rag.embedding.tokenizer.TokenizationResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.Closeable
@@ -19,27 +20,37 @@ class OnnxEmbeddingInferenceEngine(
     suspend fun runInference(tokenResult: TokenizationResult): FloatArray = withContext(Dispatchers.Default) {
         val shape = longArrayOf(1, tokenResult.inputIds.size.toLong())
 
-        val tensorInputIds = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(tokenResult.inputIds), shape)
-        val tensorAttentionMask = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(tokenResult.attentionMask), shape)
-        val tensorTokenTypeIds = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(tokenResult.tokenTypeIds), shape)
+        var tensorInputIds: OnnxTensor? = null
+        var tensorAttentionMask: OnnxTensor? = null
+        var tensorTokenTypeIds: OnnxTensor? = null
+        var result: OrtSession.Result? = null
 
-        val inputs = mutableMapOf<String, OnnxTensor>()
-        val inputNames = ortSession.inputNames
-        if (inputNames.contains("input_ids")) inputs["input_ids"] = tensorInputIds
-        if (inputNames.contains("attention_mask")) inputs["attention_mask"] = tensorAttentionMask
-        if (inputNames.contains("token_type_ids")) inputs["token_type_ids"] = tensorTokenTypeIds
+        try {
+            tensorInputIds = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(tokenResult.inputIds), shape)
+            tensorAttentionMask = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(tokenResult.attentionMask), shape)
+            tensorTokenTypeIds = OnnxTensor.createTensor(ortEnv, LongBuffer.wrap(tokenResult.tokenTypeIds), shape)
 
-        val result = ortSession.run(inputs)
+            val inputs = mutableMapOf<String, OnnxTensor>()
+            val inputNames = ortSession.inputNames
+            if (inputNames.contains("input_ids")) inputs["input_ids"] = tensorInputIds
+            if (inputNames.contains("attention_mask")) inputs["attention_mask"] = tensorAttentionMask
+            if (inputNames.contains("token_type_ids")) inputs["token_type_ids"] = tensorTokenTypeIds
 
-        val outputTensor = result.get(0).value
-        val floatVector = processOutputTensor(outputTensor, tokenResult.attentionMask, targetDimensions)
+            result = ortSession.run(inputs)
 
-        tensorInputIds.close()
-        tensorAttentionMask.close()
-        tensorTokenTypeIds.close()
-        result.close()
+            val outputTensor = result.get(0).value
+            val floatVector = processOutputTensor(outputTensor, tokenResult.attentionMask, targetDimensions)
 
-        normalizeVector(floatVector)
+            normalizeVector(floatVector)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            throw e
+        } finally {
+            try { tensorInputIds?.close() } catch (_: Exception) {}
+            try { tensorAttentionMask?.close() } catch (_: Exception) {}
+            try { tensorTokenTypeIds?.close() } catch (_: Exception) {}
+            try { result?.close() } catch (_: Exception) {}
+        }
     }
 
     private fun processOutputTensor(

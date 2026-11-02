@@ -306,18 +306,35 @@ class AiViewModel(
                 chatRepository.saveMessage(currentSessionId, userMsg)
                 chatRepository.saveMessage(currentSessionId, initialAssistantMsg)
                 persistCurrentSession()
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _isGenerating.value = false
+                val errorMsg = AiMessage(
+                    id = assistantMsgId,
+                    role = AiRole.ASSISTANT,
+                    content = "Database persistence error: ${e.message}",
+                    status = MessageStatus.FAILED,
+                )
+                _messages.value = _messages.value.map { msg ->
+                    if (msg.id == assistantMsgId) errorMsg else msg
+                }
+                return@launch
+            }
 
             // Run RAG hybrid retrieval if enabled
             val retrievedChunks = if (_isVaultRagEnabled.value && hybridSearchEngine != null) {
                 _isSearchingVault.value = true
                 try {
-                    hybridSearchEngine.search(
+                    when (val searchRes = hybridSearchEngine.search(
                         query = userText,
                         topK = 8,
                         filter = RetrievalFilter(typeId = _selectedSearchScopeTypeId.value),
-                    )
-                } catch (_: Exception) {
+                    )) {
+                        is com.whisk.domain.rag.retrieval.SearchResult.Success -> searchRes.chunks
+                        is com.whisk.domain.rag.retrieval.SearchResult.Failure -> emptyList()
+                    }
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     emptyList()
                 } finally {
                     _isSearchingVault.value = false
@@ -361,7 +378,7 @@ class AiViewModel(
 
             try {
                 streamFlow.collect { chunk ->
-                    if (activeGenerationId != generationId || _activeSessionId.value != currentSessionId) {
+                    if (activeGenerationId != generationId) {
                         return@collect
                     }
                     contentBuilder.append(chunk)
@@ -369,8 +386,10 @@ class AiViewModel(
                     if ((now - lastUpdateMs) > 250L) {
                         lastUpdateMs = now
                         val currentText = contentBuilder.toString()
-                        _messages.value = _messages.value.map { msg ->
-                            if (msg.id == assistantMsgId) msg.copy(content = currentText, status = MessageStatus.GENERATING) else msg
+                        if (_activeSessionId.value == currentSessionId) {
+                            _messages.value = _messages.value.map { msg ->
+                                if (msg.id == assistantMsgId) msg.copy(content = currentText, status = MessageStatus.GENERATING) else msg
+                            }
                         }
                         // Incremental durable persistence
                         chatRepository.updateMessageContentAndStatus(assistantMsgId, currentText, MessageStatus.GENERATING.name)
@@ -385,26 +404,28 @@ class AiViewModel(
                     contentBuilder.clear().append(errText)
                 }
             } finally {
-                if (activeGenerationId == generationId && _activeSessionId.value == currentSessionId) {
-                    _isGenerating.value = false
-                    val finalRes = contentBuilder.toString()
-                    val finalAssistantMsg = AiMessage(
-                        id = assistantMsgId,
-                        role = AiRole.ASSISTANT,
-                        content = finalRes,
-                        status = finalStatus,
-                    )
+                _isGenerating.value = false
+                val finalRes = contentBuilder.toString()
+                val finalAssistantMsg = AiMessage(
+                    id = assistantMsgId,
+                    role = AiRole.ASSISTANT,
+                    content = finalRes,
+                    status = finalStatus,
+                )
+                if (_activeSessionId.value == currentSessionId) {
                     _messages.value = _messages.value.map { msg ->
                         if (msg.id == assistantMsgId) finalAssistantMsg else msg
                     }
-
-                    chatRepository.saveMessage(currentSessionId, finalAssistantMsg)
-                    persistCurrentSession()
-
                     if (finalRes.contains("```") && finalStatus == MessageStatus.COMPLETED) {
                         _generatedEditPreview.value = finalRes
                     }
                 }
+
+                try {
+                    chatRepository.saveMessage(currentSessionId, finalAssistantMsg)
+                    persistCurrentSession()
+                } catch (_: Exception) {}
+
                 if (activeGenerationId == generationId) {
                     activeGenerationId = null
                 }

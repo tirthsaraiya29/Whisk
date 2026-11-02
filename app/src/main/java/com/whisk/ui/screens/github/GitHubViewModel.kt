@@ -91,11 +91,14 @@ class GitHubViewModel(
         }
     }
 
+    private var searchJob: kotlinx.coroutines.Job? = null
+
     fun searchRepositories(query: String) {
         _searchQuery.value = query
         _isLoadingRepos.value = true
         _repoError.value = null
-        viewModelScope.launch {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             val token = uiState.value.token.ifBlank { null }
             when (val res = gitHubRepository.searchRepositories(query, token)) {
                 is GitHubResult.Success -> {

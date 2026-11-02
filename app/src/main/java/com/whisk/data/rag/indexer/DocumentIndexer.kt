@@ -1,7 +1,9 @@
 package com.whisk.data.rag.indexer
 
 import com.whisk.data.local.NoteDao
+import com.whisk.data.local.NotePropertyValueEntity
 import com.whisk.data.local.ObjectRelationshipEntity
+import com.whisk.data.local.PropertyDao
 import com.whisk.data.local.RelationshipDao
 import com.whisk.data.local.rag.DocumentChunkEntity
 import com.whisk.data.local.rag.EmbeddingVectorEntity
@@ -40,6 +42,7 @@ class DocumentIndexer(
     private val vectorRepository: VectorRepository,
     private val indexingRepository: IndexingRepository,
     private val embeddingModelManager: EmbeddingModelManager,
+    private val propertyDao: PropertyDao? = null,
 ) {
 
     private val _progress = MutableStateFlow(IndexingProgress())
@@ -55,18 +58,28 @@ class DocumentIndexer(
             body: String,
             tags: String,
             typeId: String,
-            relationships: List<ObjectRelationshipEntity>,
+            relationships: List<ObjectRelationshipEntity> = emptyList(),
+            propertyValues: List<NotePropertyValueEntity> = emptyList(),
             modelId: String,
             pipelineVersion: String = PIPELINE_VERSION,
+            tokenizerVersion: String = "bert-wordpiece-v1",
+            dimensions: Int = 384,
         ): String {
             val sortedRels = relationships
                 .map { "${it.relationshipType}:${it.targetObjectId}" }
                 .sorted()
                 .joinToString(";")
 
+            val sortedProps = propertyValues
+                .map { "${it.propertyDefinitionId}:${it.textValue.orEmpty()}:${it.numberValue ?: 0}:${it.booleanValue ?: false}:${it.listValueJson.orEmpty()}" }
+                .sorted()
+                .joinToString(";")
+
             val rawContent = buildString {
                 append("v=").append(pipelineVersion).append("\n")
                 append("model=").append(modelId).append("\n")
+                append("tok=").append(tokenizerVersion).append("\n")
+                append("dim=").append(dimensions).append("\n")
                 append("id=").append(noteId).append("\n")
                 append("type=").append(typeId).append("\n")
                 append("title=").append(title).append("\n")
@@ -74,6 +87,7 @@ class DocumentIndexer(
                 append("body=").append(body).append("\n")
                 append("tags=").append(tags).append("\n")
                 append("rels=").append(sortedRels).append("\n")
+                append("props=").append(sortedProps).append("\n")
             }
 
             return DocumentChunker.computeHash(rawContent)
@@ -100,21 +114,18 @@ class DocumentIndexer(
 
         // 2. Remove orphaned chunks whose source note doesn't exist
         val allChunks = vectorRepository.getAllChunksDirect()
+        val validChunkIds = mutableSetOf<String>()
         for (chunk in allChunks) {
             if (chunk.sourceObjectId !in activeNoteIds) {
                 vectorRepository.deleteChunkById(chunk.id)
                 removedChunksCount++
+            } else {
+                validChunkIds.add(chunk.id)
             }
         }
 
-        // 3. Remove orphaned vectors whose source note or chunk doesn't exist
-        val currentModelId = try {
-            embeddingModelManager.getActiveProvider().modelId
-        } catch (_: Exception) {
-            "unknown"
-        }
-        val validChunkIds = vectorRepository.getAllChunksDirect().map { it.id }.toSet()
-        val allVectors = vectorRepository.getAllVectorsForModel(currentModelId)
+        // 3. Remove orphaned vectors across ALL model IDs
+        val allVectors = vectorRepository.getAllVectorsDirect()
         for (vec in allVectors) {
             if (vec.sourceObjectId !in activeNoteIds || vec.chunkId !in validChunkIds) {
                 vectorRepository.deleteVectorByChunkId(vec.chunkId)
@@ -177,6 +188,8 @@ class DocumentIndexer(
                 _progress.value = _progress.value.copy(currentObjectTitle = note.title)
 
                 val relationships = relationshipDao.getRelationshipsForObjectDirect(note.id)
+                val propertyValues = propertyDao?.getPropertyValuesForNoteDirect(note.id) ?: emptyList()
+
                 val currentFingerprint = computeFingerprint(
                     noteId = note.id,
                     title = note.title,
@@ -185,7 +198,9 @@ class DocumentIndexer(
                     tags = note.tags,
                     typeId = note.typeId,
                     relationships = relationships,
+                    propertyValues = propertyValues,
                     modelId = currentModelId,
+                    dimensions = activeProvider.dimensions,
                 )
 
                 val existingState = indexingRepository.getIndexingState(note.id)

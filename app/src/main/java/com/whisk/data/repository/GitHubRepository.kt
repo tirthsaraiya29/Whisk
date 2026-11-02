@@ -74,7 +74,8 @@ class GitHubRepository(
         if (query.isBlank()) return@withContext GitHubResult.Success(emptyList())
 
         val action = suspend {
-            val url = "https://api.github.com/search/repositories?q=${query.trim()}&per_page=10"
+            val encodedQuery = java.net.URLEncoder.encode(query.trim(), "UTF-8")
+            val url = "https://api.github.com/search/repositories?q=$encodedQuery&per_page=10"
             val requestBuilder = Request.Builder().url(url)
                 .header("Accept", "application/vnd.github.v3+json")
             if (!token.isNullOrBlank()) {

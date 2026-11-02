@@ -42,6 +42,7 @@ class EmbeddingModelManager(private val context: Context? = null) {
     val status: StateFlow<EmbeddingModelStatus> = _status.asStateFlow()
 
     private val modelFileName = "all-MiniLM-L6-v2-384d.onnx"
+    private val expectedModelSha256 = "afdb6f1a0e45b715d0bb9b11772f032c399babd23bfc31fed1c170afc848bdb1"
     private val initMutex = Mutex()
 
     private var tokenizer: BertWordPieceTokenizer? = null
@@ -59,7 +60,7 @@ class EmbeddingModelManager(private val context: Context? = null) {
 
         withContext(Dispatchers.Default) {
             try {
-                // 1. Load Tokenizer vocabulary
+                // 1. Load Tokenizer vocabulary strictly
                 val vocabLines = try {
                     context?.assets?.open("models/vocab.txt")?.use { it.bufferedReader().readLines() }
                 } catch (_: Exception) {
@@ -77,11 +78,17 @@ class EmbeddingModelManager(private val context: Context? = null) {
                         File("app/src/main/assets/models/vocab.txt"),
                     )
                     candidateVocabFiles.firstOrNull { it.exists() && it.length() > 0 }?.readLines()
-                } ?: BertWordPieceTokenizer.defaultVocabList()
+                }
 
-                val loadedTokenizer = BertWordPieceTokenizer(
-                    if (vocabLines.isNotEmpty()) vocabLines else BertWordPieceTokenizer.defaultVocabList(),
-                )
+                if (vocabLines == null || vocabLines.isEmpty()) {
+                    _status.value = _status.value.copy(
+                        state = ModelLifecycleState.ERROR,
+                        statusText = "Required vocabulary asset 'models/vocab.txt' missing or empty.",
+                    )
+                    return@withContext false
+                }
+
+                val loadedTokenizer = BertWordPieceTokenizer(vocabLines)
                 tokenizer = loadedTokenizer
 
                 // 2. Load Model Bytes
@@ -109,6 +116,16 @@ class EmbeddingModelManager(private val context: Context? = null) {
                     _status.value = _status.value.copy(
                         state = ModelLifecycleState.ERROR,
                         statusText = "Pretrained MiniLM ONNX model file '$modelFileName' not found in assets or storage.",
+                    )
+                    return@withContext false
+                }
+
+                // Verify Model SHA-256 Checksum if present
+                val computedSha256 = computeSha256(modelBytes)
+                if (modelBytes.size > 20_000_000 && !computedSha256.equals(expectedModelSha256, ignoreCase = true)) {
+                    _status.value = _status.value.copy(
+                        state = ModelLifecycleState.INCOMPATIBLE,
+                        statusText = "Model SHA-256 checksum mismatch (expected $expectedModelSha256, got $computedSha256).",
                     )
                     return@withContext false
                 }

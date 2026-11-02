@@ -281,7 +281,9 @@ class ExportImportRepository(
 
         fun sanitizeZipEntryName(entryName: String): String {
             val clean = entryName.trim()
-            if (clean.contains("..") || clean.startsWith("/") || clean.contains("\\..\\")) {
+            if (clean.contains("..") || clean.startsWith("/") || clean.startsWith("\\") ||
+                clean.contains("\\..\\") || clean.contains("/../") || clean.contains("\\../") || clean.contains("/..\\")
+            ) {
                 throw SecurityException("Security violation: Zip path traversal detected in entry '$entryName'")
             }
             if (clean.contains(":") || clean.contains("*") || clean.contains("?") || clean.contains("<") || clean.contains(">") || clean.contains("|")) {
@@ -452,6 +454,7 @@ class ExportImportRepository(
 
         var totalEntryCount = 0
         var totalDecompressedBytes = 0L
+        val seenEntryNames = mutableSetOf<String>()
 
         ZipInputStream(inputStream).use { zipIn ->
             var entry: ZipEntry? = zipIn.nextEntry
@@ -464,6 +467,9 @@ class ExportImportRepository(
                 val rawName = entry.name
                 if (!entry.isDirectory) {
                     val entryName = sanitizeZipEntryName(rawName)
+                    if (!seenEntryNames.add(entryName.lowercase())) {
+                        throw SecurityException("Security violation: Duplicate ZIP entry detected in archive '$entryName'")
+                    }
                     var bytesRead = 0L
                     val buffer = ByteArray(8192)
                     val outStream = ByteArrayOutputStream()
@@ -471,7 +477,11 @@ class ExportImportRepository(
                     while (zipIn.read(buffer).also { count = it } != -1) {
                         outStream.write(buffer, 0, count)
                         bytesRead += count
-                        totalDecompressedBytes += count
+                        try {
+                            totalDecompressedBytes = Math.addExact(totalDecompressedBytes, count.toLong())
+                        } catch (_: ArithmeticException) {
+                            throw SecurityException("Security violation: Total decompressed size arithmetic overflow")
+                        }
 
                         if (bytesRead > MAX_SINGLE_ENTRY_BYTES) {
                             throw SecurityException("Security violation: ZIP entry '$entryName' exceeds single entry limit of $MAX_SINGLE_ENTRY_BYTES bytes")

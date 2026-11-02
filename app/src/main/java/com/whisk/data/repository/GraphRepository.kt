@@ -8,7 +8,6 @@ import com.whisk.domain.model.GraphNode
 import com.whisk.domain.model.KnowledgeGraph
 import com.whisk.domain.model.NodeType
 import com.whisk.domain.model.RelationshipType
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -139,16 +138,20 @@ class GraphRepository(
         withContext(Dispatchers.Default) {
             val selectedIds = mutableSetOf(centerNoteId)
 
+            // Fast O(1) adjacency lookup
+            val adjacencyMap = mutableMapOf<String, MutableSet<String>>()
+            globalGraph.edges.forEach { edge ->
+                adjacencyMap.getOrPut(edge.sourceId) { mutableSetOf() }.add(edge.targetId)
+                adjacencyMap.getOrPut(edge.targetId) { mutableSetOf() }.add(edge.sourceId)
+            }
+
             var currentBoundary = setOf(centerNoteId)
             repeat(depth) {
                 coroutineContext.ensureActive()
                 val nextBoundary = mutableSetOf<String>()
-                globalGraph.edges.forEach { edge ->
-                    if (edge.sourceId in currentBoundary) {
-                        nextBoundary.add(edge.targetId)
-                    }
-                    if (edge.targetId in currentBoundary) {
-                        nextBoundary.add(edge.sourceId)
+                for (nodeId in currentBoundary) {
+                    adjacencyMap[nodeId]?.let { neighbors ->
+                        nextBoundary.addAll(neighbors)
                     }
                 }
                 selectedIds.addAll(nextBoundary)

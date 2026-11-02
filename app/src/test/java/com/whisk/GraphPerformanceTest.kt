@@ -90,6 +90,40 @@ class GraphPerformanceTest {
     }
 
     @Test
+    fun testGraphConstruction5000NotesScalability() = runTest {
+        val notes = (1..5000).map { i ->
+            val target = if (i > 1) "[[Note ${i - 1}]]" else ""
+            createTestNote("n_$i", "Note $i", "Body text for note $i with link $target")
+        }
+
+        val repository = GraphRepository(noteDao = FakeNoteDaoForGraph(notes))
+        val elapsed = measureTimeMillis {
+            val graph = repository.buildGlobalGraph()
+            assertEquals(5000, graph.nodes.size)
+            assertEquals(4999, graph.edges.size)
+        }
+
+        assertTrue("5000 notes graph should take < 5000ms, took $elapsed ms", elapsed < 5000)
+    }
+
+    @Test
+    fun testGraphConstruction10000NotesScalability() = runTest {
+        val notes = (1..10000).map { i ->
+            val target = if (i > 1) "[[Note ${i - 1}]]" else ""
+            createTestNote("n_$i", "Note $i", "Body text for note $i with link $target")
+        }
+
+        val repository = GraphRepository(noteDao = FakeNoteDaoForGraph(notes))
+        val elapsed = measureTimeMillis {
+            val graph = repository.buildGlobalGraph()
+            assertEquals(10000, graph.nodes.size)
+            assertEquals(9999, graph.edges.size)
+        }
+
+        assertTrue("10000 notes graph should take < 10000ms, took $elapsed ms", elapsed < 10000)
+    }
+
+    @Test
     fun testOrphanDetectionSinglePass() = runTest {
         val connected1 = createTestNote("c1", "Connected 1", "Links to [[Connected 2]]")
         val connected2 = createTestNote("c2", "Connected 2", "Just text")

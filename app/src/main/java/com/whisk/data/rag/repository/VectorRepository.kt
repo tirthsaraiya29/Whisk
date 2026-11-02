@@ -77,6 +77,10 @@ class VectorRepository(
         return vectorDao.getAllVectorsForModel(modelId)
     }
 
+    suspend fun getAllVectorsDirect(): List<EmbeddingVectorEntity> {
+        return vectorDao.getAllVectorsDirect()
+    }
+
     suspend fun deleteVectorByChunkId(chunkId: String) {
         vectorDao.deleteVectorByChunkId(chunkId)
     }

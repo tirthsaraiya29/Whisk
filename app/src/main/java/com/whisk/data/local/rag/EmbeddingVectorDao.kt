@@ -13,6 +13,9 @@ interface EmbeddingVectorDao {
     @Query("SELECT * FROM embedding_vectors WHERE modelId = :modelId")
     suspend fun getAllVectorsForModel(modelId: String): List<EmbeddingVectorEntity>
 
+    @Query("SELECT * FROM embedding_vectors")
+    suspend fun getAllVectorsDirect(): List<EmbeddingVectorEntity>
+
     @Query("SELECT * FROM embedding_vectors WHERE sourceObjectId = :objectId")
     suspend fun getVectorsForObject(objectId: String): List<EmbeddingVectorEntity>
 

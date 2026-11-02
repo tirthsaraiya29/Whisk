@@ -1,20 +1,35 @@
 package com.whisk
 
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import com.whisk.data.repository.ExportImportRepository
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ExportImportSanitizationTest {
 
     @Test
-    fun testZipSlipPathSanitization() {
+    fun testValidZipEntryName() {
         val safeEntryName = "notes/architecture_001.md"
-        val maliciousEntryName = "../../../etc/passwd.md"
+        val result = ExportImportRepository.sanitizeZipEntryName(safeEntryName)
+        assertEquals("notes/architecture_001.md", result)
+    }
 
-        val isSafeValid = !safeEntryName.contains("..") && (safeEntryName.endsWith(".md") || safeEntryName.endsWith(".txt"))
-        val isMaliciousValid = !maliciousEntryName.contains("..") && (maliciousEntryName.endsWith(".md") || maliciousEntryName.endsWith(".txt"))
+    @Test(expected = SecurityException::class)
+    fun testZipPathTraversalRejected() {
+        ExportImportRepository.sanitizeZipEntryName("../../../etc/passwd.md")
+    }
 
-        assertTrue(isSafeValid)
-        assertFalse(isMaliciousValid)
+    @Test(expected = SecurityException::class)
+    fun testZipBackslashTraversalRejected() {
+        ExportImportRepository.sanitizeZipEntryName("notes\\..\\secret.txt")
+    }
+
+    @Test(expected = SecurityException::class)
+    fun testZipAbsoluteWindowsPathRejected() {
+        ExportImportRepository.sanitizeZipEntryName("C:\\Windows\\System32\\cmd.exe")
+    }
+
+    @Test(expected = SecurityException::class)
+    fun testZipLeadingSlashPathRejected() {
+        ExportImportRepository.sanitizeZipEntryName("/etc/passwd")
     }
 }

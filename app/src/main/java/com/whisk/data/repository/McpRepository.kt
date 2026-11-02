@@ -2,6 +2,7 @@ package com.whisk.data.repository
 
 import com.whisk.domain.model.McpTool
 import com.whisk.domain.model.McpToolLog
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -214,7 +215,15 @@ class McpRepository(
 
             val initBody = initPayload.toRequestBody("application/json".toMediaType())
             val initRequest = Request.Builder().url(endpointUrl).post(initBody).build()
-            val initResponse = client.newCall(initRequest).execute()
+            val initCall = client.newCall(initRequest)
+            val initResponse = try {
+                initCall.execute()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                _isConnected.value = false
+                updateServerState(serverConfig.id, McpConnectionState.ERROR, e.message)
+                return@withContext false
+            }
 
             if (!initResponse.isSuccessful) {
                 _isConnected.value = false
@@ -232,7 +241,15 @@ class McpRepository(
 
             val listBody = listPayload.toRequestBody("application/json".toMediaType())
             val listRequest = Request.Builder().url(endpointUrl).post(listBody).build()
-            val listResponse = client.newCall(listRequest).execute()
+            val listCall = client.newCall(listRequest)
+            val listResponse = try {
+                listCall.execute()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                _isConnected.value = false
+                updateServerState(serverConfig.id, McpConnectionState.ERROR, e.message)
+                return@withContext false
+            }
 
             if (listResponse.isSuccessful) {
                 val respStr = listResponse.body.string()
@@ -270,6 +287,7 @@ class McpRepository(
                 false
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             _discoveredTools.value = emptyList()
             _isConnected.value = false
             updateServerState(serverConfig.id, McpConnectionState.ERROR, e.message)
@@ -305,51 +323,72 @@ class McpRepository(
         )
         _executionLogs.value = listOf(initialLog) + _executionLogs.value
 
-        if (requiresApproval(endpointUrl, toolName)) {
-            val deferred = CompletableDeferred<Boolean>()
-            pendingDeferreds[requestId] = deferred
+        try {
+            if (requiresApproval(endpointUrl, toolName)) {
+                val deferred = CompletableDeferred<Boolean>()
+                pendingDeferreds[requestId] = deferred
 
-            val approvalReq = McpApprovalRequest(
-                id = requestId,
-                serverId = serverId,
-                endpointUrl = endpointUrl,
-                toolName = toolName,
-                argumentsJson = argumentsJson,
-                expiresAt = System.currentTimeMillis() + timeoutMs,
-            )
+                val approvalReq = McpApprovalRequest(
+                    id = requestId,
+                    serverId = serverId,
+                    endpointUrl = endpointUrl,
+                    toolName = toolName,
+                    argumentsJson = argumentsJson,
+                    expiresAt = System.currentTimeMillis() + timeoutMs,
+                )
 
-            _pendingApprovalRequests.value = _pendingApprovalRequests.value + approvalReq
+                _pendingApprovalRequests.value = _pendingApprovalRequests.value + approvalReq
 
-            val timeoutJob = scope.launch {
-                delay(timeoutMs)
-                if (pendingDeferreds.containsKey(requestId)) {
-                    _pendingApprovalRequests.value = _pendingApprovalRequests.value.map {
-                        if (it.id == requestId) it.copy(status = ApprovalStatus.EXPIRED) else it
-                    }.filter { it.status == ApprovalStatus.PENDING }
-                    pendingDeferreds.remove(requestId)?.complete(false)
+                val timeoutJob = scope.launch {
+                    delay(timeoutMs)
+                    if (pendingDeferreds.containsKey(requestId)) {
+                        _pendingApprovalRequests.value = _pendingApprovalRequests.value.map {
+                            if (it.id == requestId) it.copy(status = ApprovalStatus.EXPIRED) else it
+                        }.filter { it.status == ApprovalStatus.PENDING }
+                        pendingDeferreds.remove(requestId)?.complete(false)
+                    }
+                }
+                pendingTimeoutJobs[requestId] = timeoutJob
+
+                val isApproved = try {
+                    deferred.await()
+                } finally {
+                    pendingTimeoutJobs.remove(requestId)?.cancel()
+                    pendingDeferreds.remove(requestId)
+                    _pendingApprovalRequests.value = _pendingApprovalRequests.value.filter { it.id != requestId }
+                }
+
+                if (!isApproved) {
+                    val updatedLog = initialLog.copy(
+                        status = "FAILED",
+                        result = "Execution denied or timed out after ${timeoutMs / 1000}s.",
+                    )
+                    _executionLogs.value = _executionLogs.value.map { if (it.id == requestId) updatedLog else it }
+                    return@withContext "Execution denied or timed out after ${timeoutMs / 1000}s."
                 }
             }
-            pendingTimeoutJobs[requestId] = timeoutJob
 
-            val isApproved = deferred.await()
-            if (!isApproved) {
-                val updatedLog = initialLog.copy(
-                    status = "FAILED",
-                    result = "Execution denied or timed out after ${timeoutMs / 1000}s.",
-                )
-                _executionLogs.value = _executionLogs.value.map { if (it.id == requestId) updatedLog else it }
-                return@withContext "Execution denied or timed out after ${timeoutMs / 1000}s."
-            }
-        }
+            val jsonRpcId = UUID.randomUUID().toString()
+            val cleanArgs = argumentsJson.ifBlank { "{}" }
+            val payload = """{"jsonrpc":"2.0","id":"$jsonRpcId","method":"tools/call","params":{"name":"$toolName","arguments":$cleanArgs}}"""
 
-        val jsonRpcId = UUID.randomUUID().toString()
-        val cleanArgs = argumentsJson.ifBlank { "{}" }
-        val payload = """{"jsonrpc":"2.0","id":"$jsonRpcId","method":"tools/call","params":{"name":"$toolName","arguments":$cleanArgs}}"""
-
-        try {
             val body = payload.toRequestBody("application/json".toMediaType())
             val request = Request.Builder().url(endpointUrl).post(body).build()
-            val response = client.newCall(request).execute()
+            val call = client.newCall(request)
+
+            val response = try {
+                call.execute()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                val errorResult = "Execution error: ${e.message}"
+                val updatedLog = initialLog.copy(
+                    status = "FAILED",
+                    result = errorResult,
+                )
+                _executionLogs.value = _executionLogs.value.map { if (it.id == requestId) updatedLog else it }
+                return@withContext errorResult
+            }
+
             val respStr = response.body.string()
 
             if (response.isSuccessful) {
@@ -370,6 +409,7 @@ class McpRepository(
                 errorResult
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             val errorResult = "Execution error: ${e.message}"
             val updatedLog = initialLog.copy(
                 status = "FAILED",

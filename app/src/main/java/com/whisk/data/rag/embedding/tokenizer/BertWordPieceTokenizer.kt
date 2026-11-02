@@ -1,6 +1,7 @@
 package com.whisk.data.rag.embedding.tokenizer
 
 import java.io.InputStream
+import java.text.Normalizer
 
 data class TokenizationResult(
     val inputIds: LongArray,
@@ -25,7 +26,9 @@ class BertWordPieceTokenizer(
     val padTokenId: Long = (vocabMap[padToken] ?: 0).toLong()
 
     fun tokenize(text: String, maxLength: Int = 128): TokenizationResult {
-        val cleanText = text.lowercase().trim()
+        val normalizedText = Normalizer.normalize(text, Normalizer.Form.NFD)
+            .replace(Regex("\\p{Mn}"), "")
+        val cleanText = normalizedText.lowercase().trim()
         if (cleanText.isEmpty()) {
             return buildResult(emptyList(), maxLength)
         }

@@ -4,6 +4,7 @@ import com.whisk.data.local.NoteDao
 import com.whisk.data.rag.repository.VectorRepository
 import com.whisk.domain.rag.chunking.DocumentChunker
 import com.whisk.domain.rag.embedding.EmbeddingProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -15,6 +16,19 @@ data class RetrievalFilter(
     val minRrfScore: Float = 0.005f,
 )
 
+sealed class SearchResult {
+    data class Success(
+        val chunks: List<RetrievedChunk>,
+        val isDegraded: Boolean = false,
+        val degradedReason: String? = null,
+    ) : SearchResult()
+
+    data class Failure(
+        val error: Throwable,
+        val message: String,
+    ) : SearchResult()
+}
+
 class HybridSearchEngine(
     private val noteDao: NoteDao,
     private val vectorRepository: VectorRepository,
@@ -25,18 +39,22 @@ class HybridSearchEngine(
         query: String,
         topK: Int = 10,
         filter: RetrievalFilter = RetrievalFilter(),
-    ): List<RetrievedChunk> = withContext(Dispatchers.Default) {
+    ): SearchResult = withContext(Dispatchers.Default) {
         val cleanQuery = query.trim()
-        if (cleanQuery.isBlank()) return@withContext emptyList()
+        if (cleanQuery.isBlank()) return@withContext SearchResult.Success(emptyList())
+
+        var ftsError: Throwable? = null
+        var vectorError: Throwable? = null
 
         // 1. Keyword search via FTS
         val ftsNotes = try {
             noteDao.searchNotesFts(cleanQuery).first()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            ftsError = e
             emptyList()
         }
 
-        // Chunk FTS notes dynamically or match chunk text
         val ftsChunks = mutableListOf<RetrievedChunk>()
         ftsNotes.forEachIndexed { rankIdx, note ->
             if (filter.typeId != null && note.typeId != filter.typeId) return@forEachIndexed
@@ -64,16 +82,26 @@ class HybridSearchEngine(
         }
 
         // 2. Local semantic vector search
-        val queryVector = embeddingProvider.generateEmbedding(cleanQuery)
-        val vectorResults = try {
-            vectorRepository.searchSimilarChunks(
+        var vectorResults = emptyList<com.whisk.data.rag.repository.VectorSearchResult>()
+        try {
+            val queryVector = embeddingProvider.generateEmbedding(cleanQuery)
+            vectorResults = vectorRepository.searchSimilarChunks(
                 queryVector = queryVector,
                 modelId = embeddingProvider.modelId,
                 topK = topK * 2,
                 typeIdFilter = filter.typeId,
             )
-        } catch (_: Exception) {
-            emptyList()
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            vectorError = e
+        }
+
+        if (ftsError != null && vectorError != null) {
+            val combinedError = vectorError ?: ftsError ?: IllegalStateException("Search error")
+            return@withContext SearchResult.Failure(
+                error = combinedError,
+                message = "Hybrid search failed (FTS: ${ftsError?.message}, Vector: ${vectorError?.message})",
+            )
         }
 
         // 3. Reciprocal Rank Fusion (RRF)
@@ -133,6 +161,13 @@ class HybridSearchEngine(
             }
         }
 
-        finalChunks.take(topK)
+        val isDegraded = vectorError != null
+        val degradedReason = if (vectorError != null) "Vector embedding search unavailable: ${vectorError.message}. Keyword FTS fallback used." else null
+
+        SearchResult.Success(
+            chunks = finalChunks.take(topK),
+            isDegraded = isDegraded,
+            degradedReason = degradedReason,
+        )
     }
 }

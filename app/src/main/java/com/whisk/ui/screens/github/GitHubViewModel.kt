@@ -156,7 +156,7 @@ class GitHubViewModel(
             val endpoint = tool?.serverEndpoint
                 ?.ifBlank { null }
                 ?: mcpRepository.activeServer.value?.endpointUrl
-                ?: "http://localhost:8080/mcp"
+                ?: return@launch
 
             mcpRepository.invokeTool(endpoint, toolName, argsJson)
         }

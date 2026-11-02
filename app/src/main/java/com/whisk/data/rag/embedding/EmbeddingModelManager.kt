@@ -182,6 +182,17 @@ class EmbeddingModelManager(private val context: Context? = null) {
         )
     }
 
+    fun getDelegatingProvider(): EmbeddingProvider {
+        return object : EmbeddingProvider {
+            override val modelId: String get() = getActiveProvider().modelId
+            override val dimensions: Int get() = getActiveProvider().dimensions
+            override suspend fun generateEmbedding(text: String): FloatArray =
+                getActiveProvider().generateEmbedding(text)
+            override suspend fun generateEmbeddings(texts: List<String>): List<FloatArray> =
+                getActiveProvider().generateEmbeddings(texts)
+        }
+    }
+
     fun checkModelStatus() {
         val file = getModelFile()
         if (file.exists()) {

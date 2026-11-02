@@ -1,5 +1,7 @@
 package com.whisk.data.rag.repository
 
+import androidx.room.RoomDatabase
+import androidx.room.withTransaction
 import com.whisk.data.local.rag.DocumentChunkDao
 import com.whisk.data.local.rag.DocumentChunkEntity
 import com.whisk.data.local.rag.EmbeddingVectorDao
@@ -16,11 +18,19 @@ data class VectorSearchResult(
 class VectorRepository(
     private val chunkDao: DocumentChunkDao,
     private val vectorDao: EmbeddingVectorDao,
+    private val database: RoomDatabase? = null,
 ) {
 
     suspend fun saveChunkVectors(chunks: List<DocumentChunkEntity>, vectors: List<EmbeddingVectorEntity>) {
-        if (chunks.isNotEmpty()) chunkDao.insertChunks(chunks)
-        if (vectors.isNotEmpty()) vectorDao.insertVectors(vectors)
+        if (database != null) {
+            database.withTransaction {
+                if (chunks.isNotEmpty()) chunkDao.insertChunks(chunks)
+                if (vectors.isNotEmpty()) vectorDao.insertVectors(vectors)
+            }
+        } else {
+            if (chunks.isNotEmpty()) chunkDao.insertChunks(chunks)
+            if (vectors.isNotEmpty()) vectorDao.insertVectors(vectors)
+        }
     }
 
     suspend fun replaceObjectVectorsAtomic(
@@ -28,15 +38,31 @@ class VectorRepository(
         chunks: List<DocumentChunkEntity>,
         vectors: List<EmbeddingVectorEntity>,
     ) {
-        chunkDao.deleteChunksForObject(objectId)
-        vectorDao.deleteVectorsForObject(objectId)
-        if (chunks.isNotEmpty()) chunkDao.insertChunks(chunks)
-        if (vectors.isNotEmpty()) vectorDao.insertVectors(vectors)
+        if (database != null) {
+            database.withTransaction {
+                chunkDao.deleteChunksForObject(objectId)
+                vectorDao.deleteVectorsForObject(objectId)
+                if (chunks.isNotEmpty()) chunkDao.insertChunks(chunks)
+                if (vectors.isNotEmpty()) vectorDao.insertVectors(vectors)
+            }
+        } else {
+            chunkDao.deleteChunksForObject(objectId)
+            vectorDao.deleteVectorsForObject(objectId)
+            if (chunks.isNotEmpty()) chunkDao.insertChunks(chunks)
+            if (vectors.isNotEmpty()) vectorDao.insertVectors(vectors)
+        }
     }
 
     suspend fun deleteObjectVectors(objectId: String) {
-        chunkDao.deleteChunksForObject(objectId)
-        vectorDao.deleteVectorsForObject(objectId)
+        if (database != null) {
+            database.withTransaction {
+                chunkDao.deleteChunksForObject(objectId)
+                vectorDao.deleteVectorsForObject(objectId)
+            }
+        } else {
+            chunkDao.deleteChunksForObject(objectId)
+            vectorDao.deleteVectorsForObject(objectId)
+        }
     }
 
     suspend fun getAllChunksDirect(): List<DocumentChunkEntity> {
@@ -56,8 +82,15 @@ class VectorRepository(
     }
 
     suspend fun clearAll() {
-        chunkDao.deleteAllChunks()
-        vectorDao.deleteAllVectors()
+        if (database != null) {
+            database.withTransaction {
+                chunkDao.deleteAllChunks()
+                vectorDao.deleteAllVectors()
+            }
+        } else {
+            chunkDao.deleteAllChunks()
+            vectorDao.deleteAllVectors()
+        }
     }
 
     suspend fun searchSimilarChunks(

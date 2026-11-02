@@ -298,15 +298,16 @@ class AiViewModel(
         _messages.value = _messages.value + userMsg + initialAssistantMsg
         _isGenerating.value = true
 
-        viewModelScope.launch {
-            chatRepository.saveMessage(currentSessionId, userMsg)
-            chatRepository.saveMessage(currentSessionId, initialAssistantMsg)
-            persistCurrentSession()
-        }
-
         val config = uiState.value.config
 
         generationJob = viewModelScope.launch {
+            // Await initial message persistence before starting stream pipeline
+            try {
+                chatRepository.saveMessage(currentSessionId, userMsg)
+                chatRepository.saveMessage(currentSessionId, initialAssistantMsg)
+                persistCurrentSession()
+            } catch (_: Exception) {}
+
             // Run RAG hybrid retrieval if enabled
             val retrievedChunks = if (_isVaultRagEnabled.value && hybridSearchEngine != null) {
                 _isSearchingVault.value = true
@@ -412,9 +413,9 @@ class AiViewModel(
     }
 
     fun stopGeneration() {
-        activeGenerationId = null
-        generationJob?.cancel()
+        val jobToCancel = generationJob
         generationJob = null
+        jobToCancel?.cancel()
         _isGenerating.value = false
         persistCurrentSession()
     }

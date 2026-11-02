@@ -170,12 +170,12 @@ class MainActivity : ComponentActivity() {
         localGemmaManager = LocalGemmaManager(this)
         remoteAiManager = RemoteAiManager()
 
-        vectorRepository = VectorRepository(database.documentChunkDao(), database.embeddingVectorDao())
+        vectorRepository = VectorRepository(database.documentChunkDao(), database.embeddingVectorDao(), database)
         indexingRepository = IndexingRepository(database.indexingStateDao(), database.documentChunkDao())
         embeddingModelManager = EmbeddingModelManager(this)
         documentIndexer = DocumentIndexer(database.noteDao(), database.relationshipDao(), vectorRepository, indexingRepository, embeddingModelManager)
-        hybridSearchEngine = HybridSearchEngine(database.noteDao(), vectorRepository, embeddingModelManager.getActiveProvider())
-        relatedKnowledgeRepository = RelatedKnowledgeRepository(database.noteDao(), database.relationshipDao(), vectorRepository, embeddingModelManager.getActiveProvider())
+        hybridSearchEngine = HybridSearchEngine(database.noteDao(), vectorRepository, embeddingModelManager.getDelegatingProvider())
+        relatedKnowledgeRepository = RelatedKnowledgeRepository(database.noteDao(), database.relationshipDao(), vectorRepository, embeddingModelManager.getDelegatingProvider())
 
         handleShareIntent(intent)
 

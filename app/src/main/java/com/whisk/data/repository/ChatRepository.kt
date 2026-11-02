@@ -48,6 +48,14 @@ class ChatRepository(private val chatDao: ChatDao) {
         chatDao.insertMessage(ChatMessageEntity.fromDomain(sessionId, message))
     }
 
+    suspend fun sanitizeInterruptedMessages(): Int {
+        return chatDao.sanitizeInterruptedMessages()
+    }
+
+    suspend fun updateMessageContentAndStatus(messageId: String, content: String, status: String): Int {
+        return chatDao.updateMessageContentAndStatus(messageId, content, status)
+    }
+
     suspend fun deleteSession(sessionId: String) {
         chatDao.deleteSessionAndMessages(sessionId)
     }

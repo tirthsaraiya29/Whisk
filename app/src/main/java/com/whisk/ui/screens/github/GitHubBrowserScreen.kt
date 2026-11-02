@@ -89,6 +89,42 @@ fun GitHubBrowserScreen(
                 singleLine = true,
             )
 
+            // Display Repo Error Banner if present
+            state.repoError?.let { error ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(
+                        text = "GitHub Error: ${error.message}",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(12.dp),
+                    )
+                }
+            }
+
+            // Display Details Error Banner if present
+            state.detailsError?.let { error ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(
+                        text = "Details Error: ${error.message}",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(12.dp),
+                    )
+                }
+            }
+
             // Category Navigation Tabs
             @Suppress("DEPRECATION")
             TabRow(selectedTabIndex = selectedTabIndex) {

@@ -22,6 +22,9 @@ interface EmbeddingVectorDao {
     @Query("DELETE FROM embedding_vectors WHERE sourceObjectId = :objectId")
     suspend fun deleteVectorsForObject(objectId: String): Int
 
+    @Query("DELETE FROM embedding_vectors WHERE chunkId = :chunkId")
+    suspend fun deleteVectorByChunkId(chunkId: String): Int
+
     @Query("DELETE FROM embedding_vectors WHERE modelId = :modelId")
     suspend fun deleteVectorsForModel(modelId: String): Int
 

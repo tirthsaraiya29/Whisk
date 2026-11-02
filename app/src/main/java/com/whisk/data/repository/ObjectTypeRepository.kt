@@ -5,6 +5,7 @@ import com.whisk.data.local.ObjectTypeDao
 import com.whisk.data.local.ObjectTypeDefinitionEntity
 import com.whisk.data.local.PropertyDao
 import com.whisk.data.local.PropertyDefinitionEntity
+import com.whisk.data.rag.repository.IndexingRepository
 import com.whisk.domain.model.BuiltInObjectTypes
 import com.whisk.domain.model.ObjectTypeDefinition
 import com.whisk.domain.model.PropertyType
@@ -22,6 +23,7 @@ class ObjectTypeRepository(
     private val objectTypeDao: ObjectTypeDao,
     private val noteDao: NoteDao,
     private val propertyDao: PropertyDao,
+    private val indexingRepository: IndexingRepository? = null,
 ) {
 
     val allObjectTypeDefinitions: Flow<List<ObjectTypeDefinition>> =
@@ -51,6 +53,8 @@ class ObjectTypeRepository(
         val targetDef = objectTypeDao.getObjectTypeDefinitionById(id)
         if (targetDef == null || targetDef.isBuiltIn) return // Protect built-in types
 
+        val affectedNotes = noteDao.getAllNotesDirect().filter { it.typeId == id }
+
         when (action) {
             CustomTypeDeleteAction.CONVERT_TO_NOTES -> {
                 objectTypeDao.reassignObjectsType(id, BuiltInObjectTypes.NOTE)
@@ -60,17 +64,19 @@ class ObjectTypeRepository(
                 objectTypeDao.reassignObjectsType(id, newType)
             }
             CustomTypeDeleteAction.ARCHIVE_OBJECTS -> {
-                val objects = noteDao.getAllNotesDirect().filter { it.typeId == id }
-                objects.forEach { obj ->
+                affectedNotes.forEach { obj ->
                     noteDao.updateNote(obj.copy(isArchived = true, updatedAt = System.currentTimeMillis()))
                 }
             }
             CustomTypeDeleteAction.DELETE_OBJECTS -> {
-                val objects = noteDao.getAllNotesDirect().filter { it.typeId == id }
-                objects.forEach { obj ->
+                affectedNotes.forEach { obj ->
                     noteDao.deleteNoteById(obj.id)
                 }
             }
+        }
+
+        affectedNotes.forEach { obj ->
+            indexingRepository?.deleteIndexingState(obj.id)
         }
 
         objectTypeDao.deleteObjectTypeDefinitionById(id)

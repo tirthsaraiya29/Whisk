@@ -34,7 +34,7 @@ import com.whisk.data.local.rag.IndexingStateEntity
         EmbeddingVectorEntity::class,
         IndexingStateEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = false,
 )
 abstract class WhiskDatabase : RoomDatabase() {
@@ -318,6 +318,12 @@ abstract class WhiskDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN status TEXT NOT NULL DEFAULT 'COMPLETED'")
+            }
+        }
+
         fun getDatabase(context: Context): WhiskDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -325,7 +331,7 @@ abstract class WhiskDatabase : RoomDatabase() {
                     WhiskDatabase::class.java,
                     "whisk_database",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = false)
                     .build()
                 INSTANCE = instance

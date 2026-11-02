@@ -20,6 +20,10 @@ class IndexingRepository(
         return indexingStateDao.getIndexingState(objectId)
     }
 
+    suspend fun getAllIndexingStates(): List<IndexingStateEntity> {
+        return indexingStateDao.getAllIndexingStatesDirect()
+    }
+
     suspend fun saveIndexingState(state: IndexingStateEntity) {
         indexingStateDao.insertIndexingState(state)
     }

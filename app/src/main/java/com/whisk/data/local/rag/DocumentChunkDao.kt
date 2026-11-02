@@ -20,6 +20,9 @@ interface DocumentChunkDao {
     @Query("SELECT * FROM document_chunks WHERE sourceObjectType = :objectType")
     suspend fun getChunksByObjectType(objectType: String): List<DocumentChunkEntity>
 
+    @Query("SELECT * FROM document_chunks")
+    suspend fun getAllChunksDirect(): List<DocumentChunkEntity>
+
     @Query("SELECT COUNT(*) FROM document_chunks")
     suspend fun getTotalChunkCount(): Int
 
@@ -31,6 +34,9 @@ interface DocumentChunkDao {
 
     @Query("DELETE FROM document_chunks WHERE sourceObjectId = :objectId")
     suspend fun deleteChunksForObject(objectId: String): Int
+
+    @Query("DELETE FROM document_chunks WHERE id = :id")
+    suspend fun deleteChunkById(id: String): Int
 
     @Query("DELETE FROM document_chunks")
     suspend fun deleteAllChunks(): Int

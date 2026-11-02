@@ -7,6 +7,8 @@ import androidx.room.PrimaryKey
 import com.whisk.domain.model.AiMessage
 import com.whisk.domain.model.AiRole
 
+import com.whisk.domain.model.MessageStatus
+
 @Entity(
     tableName = "chat_messages",
     foreignKeys = [
@@ -29,6 +31,7 @@ data class ChatMessageEntity(
     val content: String,
     val timestamp: Long,
     val contextPreview: String? = null,
+    val status: String = "COMPLETED",
 ) {
     fun toDomain(): AiMessage {
         val aiRole = try {
@@ -36,12 +39,18 @@ data class ChatMessageEntity(
         } catch (_: Exception) {
             AiRole.ASSISTANT
         }
+        val msgStatus = try {
+            MessageStatus.valueOf(status)
+        } catch (_: Exception) {
+            MessageStatus.COMPLETED
+        }
         return AiMessage(
             id = id,
             role = aiRole,
             content = content,
             timestamp = timestamp,
             contextPreview = contextPreview,
+            status = msgStatus,
         )
     }
 
@@ -54,6 +63,7 @@ data class ChatMessageEntity(
                 content = message.content,
                 timestamp = message.timestamp,
                 contextPreview = message.contextPreview,
+                status = message.status.name,
             )
         }
     }

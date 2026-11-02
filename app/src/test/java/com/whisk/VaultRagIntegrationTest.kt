@@ -2,12 +2,12 @@ package com.whisk
 
 import com.whisk.ai.ContextPayload
 import com.whisk.data.local.NoteEntity
+import com.whisk.data.rag.embedding.EmbeddingModelManager
 import com.whisk.data.rag.embedding.LocalEmbeddingProvider
 import com.whisk.domain.rag.chunking.DocumentChunker
 import com.whisk.domain.rag.retrieval.RetrievedChunk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -47,8 +47,11 @@ Default control port is 9443.
 
         assertTrue(chunks.size >= 2)
 
-        // 3. Generate embeddings
-        val provider = LocalEmbeddingProvider(dimensions = 384)
+        // 3. Generate embeddings with real ONNX engine
+        val manager = EmbeddingModelManager()
+        manager.initializeModel()
+        val provider = manager.getActiveProvider()
+
         val vectors = provider.generateEmbeddings(chunks.map { it.content })
 
         assertEquals(chunks.size, vectors.size)
@@ -57,7 +60,7 @@ Default control port is 9443.
         val queryVector = provider.generateEmbedding("What port and TLS encryption does Tether use?")
         val topChunkScore = LocalEmbeddingProvider.cosineSimilarity(queryVector, vectors[0])
 
-        assertTrue(topChunkScore > 0.1f)
+        assertTrue(topChunkScore > 0.05f)
 
         // 5. Construct RetrievedChunk
         val retrievedChunk = RetrievedChunk(

@@ -23,9 +23,36 @@ class VectorRepository(
         if (vectors.isNotEmpty()) vectorDao.insertVectors(vectors)
     }
 
+    suspend fun replaceObjectVectorsAtomic(
+        objectId: String,
+        chunks: List<DocumentChunkEntity>,
+        vectors: List<EmbeddingVectorEntity>,
+    ) {
+        chunkDao.deleteChunksForObject(objectId)
+        vectorDao.deleteVectorsForObject(objectId)
+        if (chunks.isNotEmpty()) chunkDao.insertChunks(chunks)
+        if (vectors.isNotEmpty()) vectorDao.insertVectors(vectors)
+    }
+
     suspend fun deleteObjectVectors(objectId: String) {
         chunkDao.deleteChunksForObject(objectId)
         vectorDao.deleteVectorsForObject(objectId)
+    }
+
+    suspend fun getAllChunksDirect(): List<DocumentChunkEntity> {
+        return chunkDao.getAllChunksDirect()
+    }
+
+    suspend fun deleteChunkById(id: String) {
+        chunkDao.deleteChunkById(id)
+    }
+
+    suspend fun getAllVectorsForModel(modelId: String): List<EmbeddingVectorEntity> {
+        return vectorDao.getAllVectorsForModel(modelId)
+    }
+
+    suspend fun deleteVectorByChunkId(chunkId: String) {
+        vectorDao.deleteVectorByChunkId(chunkId)
     }
 
     suspend fun clearAll() {

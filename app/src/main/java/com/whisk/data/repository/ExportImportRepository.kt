@@ -17,24 +17,77 @@ import com.whisk.data.local.ObjectTypeDefinitionEntity
 import com.whisk.data.local.PropertyDefinitionEntity
 import com.whisk.data.local.TaskEntity
 import com.whisk.data.local.WhiskDatabase
+import com.whisk.data.local.rag.DocumentChunkEntity
+import com.whisk.data.local.rag.EmbeddingVectorEntity
+import com.whisk.data.local.rag.IndexingStateEntity
+import com.whisk.data.local.rag.IndexingStatus
+import com.whisk.data.rag.embedding.EmbeddingModelManager
 import com.whisk.domain.model.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.security.MessageDigest
+import java.util.Base64
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+enum class RestoreMode {
+    MERGE,
+    REPLACE,
+}
+
 @Serializable
 data class BackupManifest(
-    val version: Int,
-    val timestamp: Long,
+    val version: Int = 2,
+    val formatVersion: Int = 2,
+    val timestamp: Long = System.currentTimeMillis(),
+    val appVersion: String = "1.0",
     val dataChecksum: String,
+    val embeddingModelId: String? = null,
+    val embeddingDimensions: Int? = null,
+)
+
+@Serializable
+data class DocumentChunkDto(
+    val id: String,
+    val sourceObjectId: String,
+    val sourceObjectType: String,
+    val sourceTitle: String,
+    val headingPath: String = "",
+    val content: String,
+    val contentHash: String,
+    val sequence: Int,
+    val startOffset: Int,
+    val endOffset: Int,
+    val updatedAt: Long,
+)
+
+@Serializable
+data class EmbeddingVectorDto(
+    val chunkId: String,
+    val sourceObjectId: String,
+    val modelId: String,
+    val dimensions: Int,
+    val vectorBlobBase64: String,
+    val contentHash: String,
+    val updatedAt: Long,
+)
+
+@Serializable
+data class IndexingStateDto(
+    val objectId: String,
+    val objectType: String,
+    val contentHash: String,
+    val status: String,
+    val chunkCount: Int,
+    val lastIndexedAt: Long,
+    val failureReason: String? = null,
 )
 
 @Serializable
@@ -52,6 +105,9 @@ data class BackupData(
     val databaseViews: List<DatabaseViewDto> = emptyList(),
     val dailyNotes: List<DailyNoteMetadataDto> = emptyList(),
     val activityEvents: List<ActivityEventDto> = emptyList(),
+    val documentChunks: List<DocumentChunkDto> = emptyList(),
+    val embeddingVectors: List<EmbeddingVectorDto> = emptyList(),
+    val indexingStates: List<IndexingStateDto> = emptyList(),
 )
 
 @Serializable
@@ -211,9 +267,29 @@ class ExportImportRepository(
     private val context: Context,
     private val database: WhiskDatabase,
     private val notesRepository: NotesRepository,
+    private val embeddingModelManager: EmbeddingModelManager? = null,
 ) {
 
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
+
+    companion object {
+        const val MAX_ZIP_ENTRY_COUNT = 5000
+        const val MAX_SINGLE_ENTRY_BYTES = 50 * 1024 * 1024L // 50 MB
+        const val MAX_TOTAL_DECOMPRESSED_BYTES = 100 * 1024 * 1024L // 100 MB
+        const val MAX_MANIFEST_BYTES = 1 * 1024 * 1024L // 1 MB
+        const val MAX_JSON_BYTES = 50 * 1024 * 1024L // 50 MB
+
+        fun sanitizeZipEntryName(entryName: String): String {
+            val clean = entryName.trim()
+            if (clean.contains("..") || clean.startsWith("/") || clean.contains("\\..\\")) {
+                throw SecurityException("Security violation: Zip path traversal detected in entry '$entryName'")
+            }
+            if (clean.contains(":") || clean.contains("*") || clean.contains("?") || clean.contains("<") || clean.contains(">") || clean.contains("|")) {
+                throw SecurityException("Security violation: Illegal characters in entry name '$entryName'")
+            }
+            return clean
+        }
+    }
 
     suspend fun exportNoteToMarkdown(note: Note, outputStream: OutputStream) = withContext(Dispatchers.IO) {
         val markdownContent = buildString {
@@ -228,6 +304,10 @@ class ExportImportRepository(
     }
 
     suspend fun exportVaultToZip(outputStream: OutputStream) = withContext(Dispatchers.IO) {
+        val activeProvider = embeddingModelManager?.getActiveProvider()
+        val currentModelId = activeProvider?.modelId ?: "whisk-minilm-l6-v2-384d-v1"
+        val currentDimensions = activeProvider?.dimensions ?: 384
+
         val notes = database.noteDao().getAllNotesDirect().map {
             NoteDto(
                 id = it.id,
@@ -286,6 +366,16 @@ class ExportImportRepository(
             ActivityEventDto(it.id, it.eventType, it.timestamp, it.dateKey, it.relatedObjectId, it.relatedObjectTitle, it.metadata)
         }
 
+        val chunks = database.documentChunkDao().getAllChunksDirect().map {
+            DocumentChunkDto(it.id, it.sourceObjectId, it.sourceObjectType, it.sourceTitle, it.headingPath, it.content, it.contentHash, it.sequence, it.startOffset, it.endOffset, it.updatedAt)
+        }
+        val vectors = database.embeddingVectorDao().getAllVectorsForModel(currentModelId).map {
+            EmbeddingVectorDto(it.chunkId, it.sourceObjectId, it.modelId, it.dimensions, Base64.getEncoder().encodeToString(it.vectorBlob), it.contentHash, it.updatedAt)
+        }
+        val indexingStates = database.indexingStateDao().getAllIndexingStatesDirect().map {
+            IndexingStateDto(it.objectId, it.objectType, it.contentHash, it.status.name, it.chunkCount, it.lastIndexedAt, it.failureReason)
+        }
+
         val backupData = BackupData(
             notes = notes,
             folders = folders,
@@ -300,6 +390,9 @@ class ExportImportRepository(
             databaseViews = databaseViews,
             dailyNotes = dailyNotes,
             activityEvents = activityEvents,
+            documentChunks = chunks,
+            embeddingVectors = vectors,
+            indexingStates = indexingStates,
         )
         val dataJsonString = json.encodeToString(backupData)
         val dataBytes = dataJsonString.toByteArray(Charsets.UTF_8)
@@ -309,23 +402,24 @@ class ExportImportRepository(
 
         val manifest = BackupManifest(
             version = 2,
+            formatVersion = 2,
             timestamp = System.currentTimeMillis(),
+            appVersion = "1.0",
             dataChecksum = checksum,
+            embeddingModelId = currentModelId,
+            embeddingDimensions = currentDimensions,
         )
         val manifestBytes = json.encodeToString(manifest).toByteArray(Charsets.UTF_8)
 
         ZipOutputStream(outputStream).use { zipOut ->
-            // Manifest
             zipOut.putNextEntry(ZipEntry("manifest.json"))
             zipOut.write(manifestBytes)
             zipOut.closeEntry()
 
-            // Data
             zipOut.putNextEntry(ZipEntry("data.json"))
             zipOut.write(dataBytes)
             zipOut.closeEntry()
 
-            // Markdown notes
             notes.forEach { note ->
                 val safeTitle = note.title.replace(Regex("[^a-zA-Z0-9_-]"), "_")
                 val fileName = "notes/${safeTitle}_${note.id.take(6)}.md"
@@ -344,37 +438,63 @@ class ExportImportRepository(
         }
     }
 
-    suspend fun importVaultFromZip(uri: Uri): Int = withContext(Dispatchers.IO) {
-        var importedCount = 0
-        var dataJsonStr: String? = null
-        val maxSize = 100 * 1024 * 1024 // 100 MB limit
-        var legacyImportCount = 0
+    suspend fun importVaultFromZip(uri: Uri, mode: RestoreMode = RestoreMode.MERGE): Int = withContext(Dispatchers.IO) {
+        val inputStream: InputStream = context.contentResolver.openInputStream(uri)
+            ?: throw IllegalArgumentException("Cannot open stream for Uri: $uri")
+        importVaultFromInputStream(inputStream, mode)
+    }
 
-        val inputStream: InputStream = context.contentResolver.openInputStream(uri) ?: return@withContext 0
+    suspend fun importVaultFromInputStream(inputStream: InputStream, mode: RestoreMode = RestoreMode.MERGE): Int = withContext(Dispatchers.IO) {
+        var manifestBytes: ByteArray? = null
+        var dataJsonBytes: ByteArray? = null
+        var legacyImportCount = 0
+        val legacyNotes = mutableListOf<Note>()
+
+        var totalEntryCount = 0
+        var totalDecompressedBytes = 0L
+
         ZipInputStream(inputStream).use { zipIn ->
             var entry: ZipEntry? = zipIn.nextEntry
             while (entry != null) {
-                val entryName = entry.name
-                if (!entry.isDirectory && !entryName.contains("..")) {
-                    var bytesRead = 0
+                totalEntryCount++
+                if (totalEntryCount > MAX_ZIP_ENTRY_COUNT) {
+                    throw SecurityException("Security violation: ZIP contains too many entries (exceeds limit $MAX_ZIP_ENTRY_COUNT)")
+                }
+
+                val rawName = entry.name
+                if (!entry.isDirectory) {
+                    val entryName = sanitizeZipEntryName(rawName)
+                    var bytesRead = 0L
                     val buffer = ByteArray(8192)
-                    val outputStream = java.io.ByteArrayOutputStream()
+                    val outStream = ByteArrayOutputStream()
                     var count: Int
                     while (zipIn.read(buffer).also { count = it } != -1) {
-                        outputStream.write(buffer, 0, count)
+                        outStream.write(buffer, 0, count)
                         bytesRead += count
-                        if (bytesRead > maxSize) {
-                            throw SecurityException("Zip entry too large")
+                        totalDecompressedBytes += count
+
+                        if (bytesRead > MAX_SINGLE_ENTRY_BYTES) {
+                            throw SecurityException("Security violation: ZIP entry '$entryName' exceeds single entry limit of $MAX_SINGLE_ENTRY_BYTES bytes")
+                        }
+                        if (totalDecompressedBytes > MAX_TOTAL_DECOMPRESSED_BYTES) {
+                            throw SecurityException("Security violation: Total decompressed bytes exceed limit of $MAX_TOTAL_DECOMPRESSED_BYTES bytes")
                         }
                     }
 
-                    val bytes = outputStream.toByteArray()
+                    val bytes = outStream.toByteArray()
 
-                    if (entryName == "data.json") {
-                        dataJsonStr = String(bytes, Charsets.UTF_8)
+                    if (entryName == "manifest.json") {
+                        if (bytes.size > MAX_MANIFEST_BYTES) {
+                            throw SecurityException("Security violation: manifest.json exceeds maximum allowed size")
+                        }
+                        manifestBytes = bytes
+                    } else if (entryName == "data.json") {
+                        if (bytes.size > MAX_JSON_BYTES) {
+                            throw SecurityException("Security violation: data.json exceeds maximum allowed size")
+                        }
+                        dataJsonBytes = bytes
                     } else if (entryName.endsWith(".md") || entryName.endsWith(".txt")) {
-                        // Fallback import logic for older markdown exports or bare markdown files
-                        if (dataJsonStr == null && !entryName.startsWith("notes/")) {
+                        if (!entryName.startsWith("notes/")) {
                             val text = String(bytes, Charsets.UTF_8)
                             val lines = text.lines()
                             val title = lines.firstOrNull { it.startsWith("# ") }?.removePrefix("# ")?.trim()
@@ -384,13 +504,7 @@ class ExportImportRepository(
                             } else {
                                 text
                             }
-                            val note = Note(
-                                title = title,
-                                body = body,
-                                tags = listOf("imported"),
-                            )
-                            notesRepository.saveNote(note)
-                            legacyImportCount++
+                            legacyNotes.add(Note(title = title, body = body, tags = listOf("imported")))
                         }
                     }
                 }
@@ -399,9 +513,45 @@ class ExportImportRepository(
             }
         }
 
-        if (dataJsonStr != null) {
-            val backupData = json.decodeFromString<BackupData>(dataJsonStr)
+        if (dataJsonBytes != null) {
+            if (manifestBytes == null) {
+                throw IllegalArgumentException("Backup archive is invalid: missing manifest.json")
+            }
+
+            val manifest = try {
+                json.decodeFromString<BackupManifest>(String(manifestBytes, Charsets.UTF_8))
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Backup archive is invalid: malformed manifest.json - ${e.message}")
+            }
+
+            val computedSha256 = MessageDigest.getInstance("SHA-256").digest(dataJsonBytes)
+                .joinToString("") { "%02x".format(it) }
+
+            if (!computedSha256.equals(manifest.dataChecksum, ignoreCase = true)) {
+                throw SecurityException("Backup integrity check failed: SHA-256 checksum mismatch. Expected '${manifest.dataChecksum}', computed '$computedSha256'. Archive may be corrupted or tampered.")
+            }
+
+            val backupData = try {
+                json.decodeFromString<BackupData>(String(dataJsonBytes, Charsets.UTF_8))
+            } catch (e: Exception) {
+                throw IllegalArgumentException("Backup archive is invalid: malformed data.json - ${e.message}")
+            }
+
+            validateBackupData(backupData)
+
+            val activeProvider = embeddingModelManager?.getActiveProvider()
+            val currentModelId = activeProvider?.modelId ?: "whisk-minilm-l6-v2-384d-v1"
+            val currentDimensions = activeProvider?.dimensions ?: 384
+
+            val isModelCompatible = (manifest.embeddingModelId == currentModelId && manifest.embeddingDimensions == currentDimensions)
+
+            var importedCount = 0
+
             database.withTransaction {
+                if (mode == RestoreMode.REPLACE) {
+                    database.clearAllTables()
+                }
+
                 val folderDao = database.folderDao()
                 val noteDao = database.noteDao()
                 val canvasDao = database.canvasDao()
@@ -413,6 +563,9 @@ class ExportImportRepository(
                 val databaseViewDao = database.databaseViewDao()
                 val dailyNoteDao = database.dailyNoteDao()
                 val activityEventDao = database.activityEventDao()
+                val chunkDao = database.documentChunkDao()
+                val vectorDao = database.embeddingVectorDao()
+                val indexingStateDao = database.indexingStateDao()
 
                 backupData.objectTypeDefinitions.forEach { otd ->
                     objectTypeDao.insertObjectTypeDefinition(ObjectTypeDefinitionEntity(otd.id, otd.name, otd.description, otd.icon, otd.isBuiltIn, otd.configurationJson, otd.position, otd.isArchived, otd.createdAt, otd.updatedAt))
@@ -476,10 +629,60 @@ class ExportImportRepository(
                 backupData.activityEvents.forEach { ev ->
                     activityEventDao.insertEvent(ActivityEventEntity(ev.id, ev.eventType, ev.timestamp, ev.dateKey, ev.relatedObjectId, ev.relatedObjectTitle, ev.metadata))
                 }
+
+                if (backupData.documentChunks.isNotEmpty()) {
+                    val chunkEntities = backupData.documentChunks.map { c ->
+                        DocumentChunkEntity(c.id, c.sourceObjectId, c.sourceObjectType, c.sourceTitle, c.headingPath, c.content, c.contentHash, c.sequence, c.startOffset, c.endOffset, c.updatedAt)
+                    }
+                    chunkDao.insertChunks(chunkEntities)
+                }
+
+                if (isModelCompatible && backupData.embeddingVectors.isNotEmpty()) {
+                    val vectorEntities = backupData.embeddingVectors.map { v ->
+                        EmbeddingVectorEntity(v.chunkId, v.sourceObjectId, v.modelId, v.dimensions, Base64.getDecoder().decode(v.vectorBlobBase64), v.contentHash, v.updatedAt)
+                    }
+                    vectorDao.insertVectors(vectorEntities)
+
+                    backupData.indexingStates.forEach { st ->
+                        val statusEnum = try { IndexingStatus.valueOf(st.status) } catch (_: Exception) { IndexingStatus.INDEXED }
+                        indexingStateDao.insertIndexingState(IndexingStateEntity(st.objectId, st.objectType, st.contentHash, statusEnum, st.chunkCount, st.lastIndexedAt, st.failureReason))
+                    }
+                } else {
+                    backupData.notes.forEach { n ->
+                        indexingStateDao.insertIndexingState(
+                            IndexingStateEntity(
+                                objectId = n.id,
+                                objectType = n.typeId,
+                                contentHash = "",
+                                status = IndexingStatus.PENDING,
+                                chunkCount = 0,
+                                lastIndexedAt = System.currentTimeMillis(),
+                                failureReason = "Model or vector dimensions changed on restore",
+                            ),
+                        )
+                    }
+                }
             }
             importedCount
         } else {
+            legacyNotes.forEach { note ->
+                notesRepository.saveNote(note)
+                legacyImportCount++
+            }
             legacyImportCount
+        }
+    }
+
+    private fun validateBackupData(data: BackupData) {
+        data.notes.forEach { n ->
+            if (n.id.isBlank() || n.title.isBlank()) {
+                throw IllegalArgumentException("Invalid note record in backup: ID and title must not be blank")
+            }
+        }
+        data.folders.forEach { f ->
+            if (f.id.isBlank() || f.name.isBlank()) {
+                throw IllegalArgumentException("Invalid folder record in backup: ID and name must not be blank")
+            }
         }
     }
 }

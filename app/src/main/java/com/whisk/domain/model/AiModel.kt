@@ -12,12 +12,18 @@ enum class AiRole {
 }
 
 @Serializable
+enum class MessageStatus {
+    GENERATING, COMPLETED, CANCELLED, INTERRUPTED, FAILED
+}
+
+@Serializable
 data class AiMessage(
     val id: String = java.util.UUID.randomUUID().toString(),
     val role: AiRole,
     val content: String,
     val timestamp: Long = System.currentTimeMillis(),
     val contextPreview: String? = null,
+    val status: MessageStatus = MessageStatus.COMPLETED,
 )
 
 data class LocalModelStatus(

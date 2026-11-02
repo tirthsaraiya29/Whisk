@@ -4,6 +4,7 @@ import com.whisk.data.local.NoteDao
 import com.whisk.data.local.ObjectRelationshipEntity
 import com.whisk.data.local.ObjectTypeDao
 import com.whisk.data.local.RelationshipDao
+import com.whisk.data.rag.repository.IndexingRepository
 import com.whisk.domain.model.ObjectRelationship
 import com.whisk.domain.model.RelationshipDetail
 import com.whisk.domain.model.RelationshipType
@@ -15,6 +16,7 @@ class RelationshipRepository(
     private val relationshipDao: RelationshipDao,
     private val noteDao: NoteDao,
     private val objectTypeDao: ObjectTypeDao,
+    private val indexingRepository: IndexingRepository? = null,
 ) {
 
     fun getRelationshipsForObject(objectId: String): Flow<List<RelationshipDetail>> {
@@ -61,15 +63,24 @@ class RelationshipRepository(
             createdAt = System.currentTimeMillis(),
         )
         relationshipDao.insertRelationship(entity)
+        indexingRepository?.deleteIndexingState(sourceObjectId)
+        indexingRepository?.deleteIndexingState(targetObjectId)
         return true
     }
 
     suspend fun removeRelationship(id: String) {
+        val rel = relationshipDao.getAllRelationshipsDirect().find { it.id == id }
         relationshipDao.deleteRelationshipById(id)
+        if (rel != null) {
+            indexingRepository?.deleteIndexingState(rel.sourceObjectId)
+            indexingRepository?.deleteIndexingState(rel.targetObjectId)
+        }
     }
 
     suspend fun removeRelationshipsBetween(objA: String, objB: String) {
         relationshipDao.deleteRelationshipsBetweenObjects(objA, objB)
+        indexingRepository?.deleteIndexingState(objA)
+        indexingRepository?.deleteIndexingState(objB)
     }
 
     fun getAllRelationships(): Flow<List<ObjectRelationship>> {

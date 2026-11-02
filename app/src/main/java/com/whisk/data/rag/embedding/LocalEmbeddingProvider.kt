@@ -1,86 +1,42 @@
 package com.whisk.data.rag.embedding
 
+import com.whisk.data.rag.embedding.tokenizer.BertWordPieceTokenizer
 import com.whisk.domain.rag.embedding.EmbeddingProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.security.MessageDigest
 import kotlin.math.sqrt
 
 class LocalEmbeddingProvider(
+    private val inferenceEngine: OnnxEmbeddingInferenceEngine? = null,
+    private val tokenizer: BertWordPieceTokenizer? = null,
     private val modelFile: File? = null,
-    override val modelId: String = "whisk-local-minilm-v1",
+    override val modelId: String = "whisk-minilm-l6-v2-384d-v1",
     override val dimensions: Int = 384,
+    val isModelReady: Boolean = false,
 ) : EmbeddingProvider {
 
     override suspend fun generateEmbedding(text: String): FloatArray = withContext(Dispatchers.Default) {
-        val vector = computeDenseSemanticVector(text, dimensions)
-        normalizeVector(vector)
+        val cleanText = text.trim()
+        if (cleanText.isEmpty()) {
+            return@withContext FloatArray(dimensions)
+        }
+
+        if (inferenceEngine != null && tokenizer != null && isModelReady) {
+            val tokenResult = tokenizer.tokenize(cleanText)
+            return@withContext inferenceEngine.runInference(tokenResult)
+        }
+
+        throw IllegalStateException(
+            "Local ONNX Embedding Model is not ready (State: NOT_READY). " +
+                "Ensure EmbeddingModelManager.initializeModel() has been completed before generating embeddings.",
+        )
     }
 
     override suspend fun generateEmbeddings(texts: List<String>): List<FloatArray> = withContext(Dispatchers.Default) {
         texts.map { text ->
-            val v = computeDenseSemanticVector(text, dimensions)
-            normalizeVector(v)
+            generateEmbedding(text)
         }
-    }
-
-    private fun computeDenseSemanticVector(text: String, dim: Int): FloatArray {
-        val vector = FloatArray(dim)
-        val cleanText = text.lowercase().trim()
-        if (cleanText.isEmpty()) return vector
-
-        // Tokenize into words and n-grams
-        val words = cleanText.split(Regex("[^a-z0-9_\\-]+")).filter { it.isNotBlank() }
-
-        for (i in words.indices) {
-            val word = words[i]
-            addWordHashToVector(word, vector, weight = 1.0f)
-
-            // Add bi-gram context
-            if (i < words.size - 1) {
-                val bigram = "${word}_${words[i + 1]}"
-                addWordHashToVector(bigram, vector, weight = 0.5f)
-            }
-        }
-
-        // Add subword char 3-gram hashes for out-of-vocabulary / technical identifiers
-        for (w in words) {
-            if (w.length >= 3) {
-                for (j in 0..w.length - 3) {
-                    val trigram = w.substring(j, j + 3)
-                    addWordHashToVector(trigram, vector, weight = 0.2f)
-                }
-            }
-        }
-
-        return vector
-    }
-
-    private fun addWordHashToVector(term: String, vector: FloatArray, weight: Float) {
-        val md = MessageDigest.getInstance("SHA-512")
-        val hashBytes = md.digest(term.toByteArray())
-
-        // Map hash bytes into multiple dimension indices deterministically
-        for (i in 0 until hashBytes.size step 2) {
-            val idx = Math.floorMod(((hashBytes[i].toInt() and 0xFF) shl 8) or (hashBytes[i + 1].toInt() and 0xFF), vector.size)
-            val sign = if ((hashBytes[i].toInt() and 1) == 0) 1f else -1f
-            vector[idx] += sign * weight
-        }
-    }
-
-    private fun normalizeVector(vector: FloatArray): FloatArray {
-        var sumSquares = 0.0f
-        for (v in vector) {
-            sumSquares += v * v
-        }
-        val norm = sqrt(sumSquares)
-        if (norm > 1e-6f) {
-            for (i in vector.indices) {
-                vector[i] /= norm
-            }
-        }
-        return vector
     }
 
     companion object {

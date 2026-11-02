@@ -139,6 +139,32 @@ class FakeChatDao : ChatDao {
         _messages.value = _messages.value.filter { it.id !in newIds } + messages
     }
 
+    override suspend fun sanitizeInterruptedMessages(): Int {
+        var count = 0
+        _messages.value = _messages.value.map { msg ->
+            if (msg.status == "GENERATING") {
+                count++
+                msg.copy(status = "INTERRUPTED")
+            } else {
+                msg
+            }
+        }
+        return count
+    }
+
+    override suspend fun updateMessageContentAndStatus(messageId: String, content: String, status: String): Int {
+        var count = 0
+        _messages.value = _messages.value.map { msg ->
+            if (msg.id == messageId) {
+                count++
+                msg.copy(content = content, status = status)
+            } else {
+                msg
+            }
+        }
+        return count
+    }
+
     override suspend fun deleteMessagesForSession(sessionId: String): Int {
         val count = _messages.value.count { it.sessionId == sessionId }
         _messages.value = _messages.value.filter { it.sessionId != sessionId }

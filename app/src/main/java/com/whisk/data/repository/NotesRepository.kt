@@ -6,6 +6,8 @@ import com.whisk.data.local.NoteDao
 import com.whisk.data.local.NoteEntity
 import com.whisk.data.local.TaskDao
 import com.whisk.data.local.TaskEntity
+import com.whisk.data.rag.repository.IndexingRepository
+import com.whisk.data.rag.repository.VectorRepository
 import com.whisk.domain.model.Backlink
 import com.whisk.domain.model.Folder
 import com.whisk.domain.model.Note
@@ -25,6 +27,8 @@ class NotesRepository(
     private val noteDao: NoteDao,
     private val folderDao: FolderDao,
     private val taskDao: TaskDao,
+    private val vectorRepository: VectorRepository? = null,
+    private val indexingRepository: IndexingRepository? = null,
 ) {
 
     val allNotes: Flow<List<Note>> = noteDao.getAllNotes().map { entities ->
@@ -59,6 +63,7 @@ class NotesRepository(
 
     suspend fun changeObjectType(noteId: String, newTypeId: String) {
         noteDao.updateObjectType(noteId, newTypeId)
+        indexingRepository?.deleteIndexingState(noteId)
     }
 
     suspend fun duplicateNote(noteId: String): Note? {
@@ -85,11 +90,17 @@ class NotesRepository(
         val entity = NoteEntity.fromDomain(note.copy(updatedAt = System.currentTimeMillis()))
         noteDao.insertNote(entity)
         syncTasksForNote(note)
+        if (note.isArchived) {
+            vectorRepository?.deleteObjectVectors(note.id)
+            indexingRepository?.deleteIndexingState(note.id)
+        }
     }
 
     suspend fun deleteNote(id: String) {
         noteDao.deleteNoteById(id)
         taskDao.deleteTasksForNote(id)
+        vectorRepository?.deleteObjectVectors(id)
+        indexingRepository?.deleteIndexingState(id)
     }
 
     fun searchNotes(query: String): Flow<List<Note>> {

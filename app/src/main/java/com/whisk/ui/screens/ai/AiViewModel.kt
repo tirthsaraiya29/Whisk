@@ -16,6 +16,7 @@ import com.whisk.domain.model.AiMessage
 import com.whisk.domain.model.AiProviderType
 import com.whisk.domain.model.AiRole
 import com.whisk.domain.model.LocalModelStatus
+import com.whisk.domain.model.MessageStatus
 import com.whisk.domain.model.Note
 import com.whisk.domain.rag.retrieval.HybridSearchEngine
 import com.whisk.domain.rag.retrieval.RetrievalFilter
@@ -79,10 +80,18 @@ class AiViewModel(
     private val _retrievedSources = MutableStateFlow<List<CitationReference>>(emptyList())
 
     private var generationJob: Job? = null
+    private var activeGenerationId: String? = null
     private var messageObserveJob: Job? = null
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = false }
 
     init {
+        // Sanitize any left-over generating messages from process termination
+        viewModelScope.launch {
+            try {
+                chatRepository.sanitizeInterruptedMessages()
+            } catch (_: Exception) {}
+        }
+
         // Observe sessions from Room
         viewModelScope.launch {
             chatRepository.allSessions.collect { sessionEntities ->
@@ -126,6 +135,7 @@ class AiViewModel(
         messageObserveJob?.cancel()
         messageObserveJob = viewModelScope.launch {
             chatRepository.getMessagesForSession(sessionId).collect { msgs ->
+                // Ensure interrupted status is preserved
                 _messages.value = msgs
             }
         }
@@ -272,16 +282,27 @@ class AiViewModel(
         }
 
         val currentSessionId = _activeSessionId.value ?: return
+        val generationId = UUID.randomUUID().toString()
+        activeGenerationId = generationId
 
-        val userMsg = AiMessage(role = AiRole.USER, content = userText)
+        val userMsg = AiMessage(role = AiRole.USER, content = userText, status = MessageStatus.COMPLETED)
         val assistantMsgId = UUID.randomUUID().toString()
-        val initialAssistantMsg = AiMessage(id = assistantMsgId, role = AiRole.ASSISTANT, content = "")
+        val initialAssistantMsg = AiMessage(
+            id = assistantMsgId,
+            role = AiRole.ASSISTANT,
+            content = "",
+            status = MessageStatus.GENERATING,
+        )
 
         val existingHistory = _messages.value
         _messages.value = _messages.value + userMsg + initialAssistantMsg
         _isGenerating.value = true
 
-        persistCurrentSession()
+        viewModelScope.launch {
+            chatRepository.saveMessage(currentSessionId, userMsg)
+            chatRepository.saveMessage(currentSessionId, initialAssistantMsg)
+            persistCurrentSession()
+        }
 
         val config = uiState.value.config
 
@@ -335,44 +356,63 @@ class AiViewModel(
 
             val contentBuilder = StringBuilder()
             var lastUpdateMs = 0L
+            var finalStatus = MessageStatus.COMPLETED
 
             try {
                 streamFlow.collect { chunk ->
+                    if (activeGenerationId != generationId || _activeSessionId.value != currentSessionId) {
+                        return@collect
+                    }
                     contentBuilder.append(chunk)
                     val now = System.currentTimeMillis()
-                    if ((now - lastUpdateMs) > 100L) {
+                    if ((now - lastUpdateMs) > 250L) {
                         lastUpdateMs = now
                         val currentText = contentBuilder.toString()
                         _messages.value = _messages.value.map { msg ->
-                            if (msg.id == assistantMsgId) msg.copy(content = currentText) else msg
+                            if (msg.id == assistantMsgId) msg.copy(content = currentText, status = MessageStatus.GENERATING) else msg
                         }
+                        // Incremental durable persistence
+                        chatRepository.updateMessageContentAndStatus(assistantMsgId, currentText, MessageStatus.GENERATING.name)
                     }
                 }
             } catch (e: Exception) {
-                val errText = "Error during generation: ${e.message}"
-                _messages.value = _messages.value.map { msg ->
-                    if (msg.id == assistantMsgId) msg.copy(content = errText) else msg
+                if (e is kotlinx.coroutines.CancellationException) {
+                    finalStatus = MessageStatus.CANCELLED
+                } else {
+                    finalStatus = MessageStatus.FAILED
+                    val errText = "Error during generation: ${e.message}"
+                    contentBuilder.clear().append(errText)
                 }
             } finally {
-                _isGenerating.value = false
-                val finalRes = contentBuilder.toString()
-                val finalAssistantMsg = AiMessage(id = assistantMsgId, role = AiRole.ASSISTANT, content = finalRes)
-                _messages.value = _messages.value.map { msg ->
-                    if (msg.id == assistantMsgId) finalAssistantMsg else msg
+                if (activeGenerationId == generationId && _activeSessionId.value == currentSessionId) {
+                    _isGenerating.value = false
+                    val finalRes = contentBuilder.toString()
+                    val finalAssistantMsg = AiMessage(
+                        id = assistantMsgId,
+                        role = AiRole.ASSISTANT,
+                        content = finalRes,
+                        status = finalStatus,
+                    )
+                    _messages.value = _messages.value.map { msg ->
+                        if (msg.id == assistantMsgId) finalAssistantMsg else msg
+                    }
+
+                    chatRepository.saveMessage(currentSessionId, finalAssistantMsg)
+                    persistCurrentSession()
+
+                    if (finalRes.contains("```") && finalStatus == MessageStatus.COMPLETED) {
+                        _generatedEditPreview.value = finalRes
+                    }
                 }
-
-                chatRepository.saveMessage(currentSessionId, userMsg)
-                chatRepository.saveMessage(currentSessionId, finalAssistantMsg)
-                persistCurrentSession()
-
-                if (finalRes.contains("```")) {
-                    _generatedEditPreview.value = finalRes
+                if (activeGenerationId == generationId) {
+                    activeGenerationId = null
                 }
             }
         }
     }
 
     fun stopGeneration() {
+        activeGenerationId = null
         generationJob?.cancel()
         generationJob = null
         _isGenerating.value = false

@@ -15,6 +15,9 @@ interface IndexingStateDao {
     suspend fun getAllIndexingStates(): List<IndexingStateEntity>
 
     @Query("SELECT * FROM indexing_states")
+    suspend fun getAllIndexingStatesDirect(): List<IndexingStateEntity>
+
+    @Query("SELECT * FROM indexing_states")
     fun getAllIndexingStatesFlow(): Flow<List<IndexingStateEntity>>
 
     @Query("SELECT COUNT(*) FROM indexing_states WHERE status = 'INDEXED'")

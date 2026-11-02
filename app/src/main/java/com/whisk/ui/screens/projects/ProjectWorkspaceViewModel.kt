@@ -155,9 +155,9 @@ class ProjectWorkspaceViewModel(
 
         _uiState.value = _uiState.value.copy(isLoadingRepo = true)
         try {
-            val repo = gitHubRepository.getRepository(owner, name)
-            val issues = gitHubRepository.getIssues("$owner/$name")
-            val prs = gitHubRepository.getPullRequests("$owner/$name")
+            val repo = gitHubRepository.getRepository(owner, name).getOrNull()
+            val issues = gitHubRepository.getIssues("$owner/$name").getOrNull() ?: emptyList()
+            val prs = gitHubRepository.getPullRequests("$owner/$name").getOrNull() ?: emptyList()
             _uiState.value = _uiState.value.copy(
                 linkedRepo = repo,
                 repoIssues = issues,

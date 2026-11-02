@@ -8,121 +8,157 @@ import com.whisk.domain.model.GraphNode
 import com.whisk.domain.model.KnowledgeGraph
 import com.whisk.domain.model.NodeType
 import com.whisk.domain.model.RelationshipType
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 
 class GraphRepository(
     private val noteDao: NoteDao,
     private val relationshipDao: RelationshipDao? = null,
 ) {
 
-    suspend fun buildGlobalGraph(): KnowledgeGraph {
+    suspend fun buildGlobalGraph(): KnowledgeGraph = withContext(Dispatchers.IO) {
         val notes = noteDao.getAllNotesDirect()
-        val nodesMap = mutableMapOf<String, GraphNode>()
-        val edges = mutableListOf<GraphEdge>()
-        val linkRegex = Regex("\\[\\[(.*?)]]")
+        val relationships = relationshipDao?.getAllRelationshipsDirect() ?: emptyList()
 
-        val titleToIdMap = notes.associateBy({ it.title }, { it.id })
+        withContext(Dispatchers.Default) {
+            coroutineContext.ensureActive()
 
-        // 1. Create Object / Note Nodes
-        notes.forEach { note ->
-            val isOrphan = !linkRegex.containsMatchIn(note.body) &&
-                notes.none { other -> (other.id != note.id) && other.body.contains("[[${note.title}]]") }
-            val node = GraphNode(
-                id = note.id,
-                label = note.title,
-                type = NodeType.NOTE,
-                subtitle = "TYPE: ${note.typeId.uppercase()}",
-                isOrphan = isOrphan,
-                isArchived = note.isArchived,
-                noteId = note.id,
-                objectTypeId = note.typeId,
-            )
-            nodesMap[note.id] = node
+            val nodesMap = mutableMapOf<String, GraphNode>()
+            val edges = mutableListOf<GraphEdge>()
+            val linkRegex = Regex("\\[\\[(.*?)]]")
 
-            // Tags
-            if (note.tags.isNotBlank()) {
-                val tagsList = note.tags.split(",").asSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList()
-                tagsList.forEach { tag ->
-                    val tagNodeId = "tag_$tag"
-                    if (!nodesMap.containsKey(tagNodeId)) {
-                        nodesMap[tagNodeId] = GraphNode(
-                            id = tagNodeId,
-                            label = "#$tag",
-                            type = NodeType.TAG,
+            val titleToIdMap = notes.associateBy({ it.title.lowercase() }, { it.id })
+
+            val outgoingLinksCountMap = mutableMapOf<String, Int>()
+            val incomingLinksCountMap = mutableMapOf<String, Int>()
+            val explicitEdges = mutableListOf<GraphEdge>()
+
+            // 1. Single pass: parse outgoing wikilinks for each note
+            for (note in notes) {
+                coroutineContext.ensureActive()
+                val matches = linkRegex.findAll(note.body)
+                for (match in matches) {
+                    val targetTitle = match.groupValues[1].trim().lowercase()
+                    val targetId = titleToIdMap[targetTitle]
+                    if (targetId != null && targetId != note.id) {
+                        outgoingLinksCountMap[note.id] = (outgoingLinksCountMap[note.id] ?: 0) + 1
+                        incomingLinksCountMap[targetId] = (incomingLinksCountMap[targetId] ?: 0) + 1
+                        explicitEdges.add(
+                            GraphEdge(
+                                sourceId = note.id,
+                                targetId = targetId,
+                                type = EdgeType.EXPLICIT_LINK,
+                                label = "links to",
+                            ),
                         )
                     }
-                    edges.add(
-                        GraphEdge(
-                            sourceId = note.id,
-                            targetId = tagNodeId,
-                            type = EdgeType.TAG_MEMBERSHIP,
-                        ),
-                    )
                 }
             }
-        }
 
-        // 2. Create Explicit Markdown Link Edges
-        notes.forEach { note ->
-            val matches = linkRegex.findAll(note.body)
-            matches.forEach { match ->
-                val targetTitle = match.groupValues[1].trim()
-                val targetId = titleToIdMap[targetTitle]
-                if (targetId != null && targetId != note.id) {
-                    edges.add(
-                        GraphEdge(
-                            sourceId = note.id,
-                            targetId = targetId,
-                            type = EdgeType.EXPLICIT_LINK,
-                            label = "links to",
-                        ),
-                    )
+            // 2. Process first-class object relationships
+            val hasRelationshipSet = mutableSetOf<String>()
+            val relationshipEdges = mutableListOf<GraphEdge>()
+
+            for (rel in relationships) {
+                coroutineContext.ensureActive()
+                hasRelationshipSet.add(rel.sourceObjectId)
+                hasRelationshipSet.add(rel.targetObjectId)
+                val relType = RelationshipType.fromString(rel.relationshipType)
+                relationshipEdges.add(
+                    GraphEdge(
+                        sourceId = rel.sourceObjectId,
+                        targetId = rel.targetObjectId,
+                        type = EdgeType.OBJECT_RELATIONSHIP,
+                        label = relType.displayName.lowercase(),
+                    ),
+                )
+            }
+
+            // 3. Build nodes with O(1) orphan calculation
+            for (note in notes) {
+                coroutineContext.ensureActive()
+                val outgoingCount = outgoingLinksCountMap[note.id] ?: 0
+                val incomingCount = incomingLinksCountMap[note.id] ?: 0
+                val hasTags = note.tags.isNotBlank()
+                val hasRels = hasRelationshipSet.contains(note.id)
+
+                val isOrphan = (outgoingCount == 0 && incomingCount == 0 && !hasTags && !hasRels)
+
+                val node = GraphNode(
+                    id = note.id,
+                    label = note.title,
+                    type = NodeType.NOTE,
+                    subtitle = "TYPE: ${note.typeId.uppercase()}",
+                    isOrphan = isOrphan,
+                    isArchived = note.isArchived,
+                    noteId = note.id,
+                    objectTypeId = note.typeId,
+                )
+                nodesMap[note.id] = node
+
+                // Tag nodes
+                if (hasTags) {
+                    val tagsList = note.tags.split(",").asSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList()
+                    tagsList.forEach { tag ->
+                        val tagNodeId = "tag_$tag"
+                        if (!nodesMap.containsKey(tagNodeId)) {
+                            nodesMap[tagNodeId] = GraphNode(
+                                id = tagNodeId,
+                                label = "#$tag",
+                                type = NodeType.TAG,
+                            )
+                        }
+                        edges.add(
+                            GraphEdge(
+                                sourceId = note.id,
+                                targetId = tagNodeId,
+                                type = EdgeType.TAG_MEMBERSHIP,
+                            ),
+                        )
+                    }
                 }
             }
-        }
 
-        // 3. Create First-Class Object Relationships Edges
-        relationshipDao?.let { dao ->
-            val relationships = dao.getAllRelationshipsDirect()
-            relationships.forEach { rel ->
-                if (nodesMap.containsKey(rel.sourceObjectId) && nodesMap.containsKey(rel.targetObjectId)) {
-                    val relType = RelationshipType.fromString(rel.relationshipType)
-                    edges.add(
-                        GraphEdge(
-                            sourceId = rel.sourceObjectId,
-                            targetId = rel.targetObjectId,
-                            type = EdgeType.OBJECT_RELATIONSHIP,
-                            label = relType.displayName.lowercase(),
-                        ),
-                    )
+            // Combine edges
+            edges.addAll(explicitEdges)
+
+            for (relEdge in relationshipEdges) {
+                if (nodesMap.containsKey(relEdge.sourceId) && nodesMap.containsKey(relEdge.targetId)) {
+                    edges.add(relEdge)
                 }
             }
-        }
 
-        return KnowledgeGraph(nodes = nodesMap.values.toList(), edges = edges)
+            KnowledgeGraph(nodes = nodesMap.values.toList(), edges = edges)
+        }
     }
 
-    suspend fun buildLocalGraph(centerNoteId: String, depth: Int = 1): KnowledgeGraph {
+    suspend fun buildLocalGraph(centerNoteId: String, depth: Int = 1): KnowledgeGraph = withContext(Dispatchers.IO) {
         val globalGraph = buildGlobalGraph()
-        val selectedIds = mutableSetOf(centerNoteId)
+        withContext(Dispatchers.Default) {
+            val selectedIds = mutableSetOf(centerNoteId)
 
-        var currentBoundary = setOf(centerNoteId)
-        repeat(depth) {
-            val nextBoundary = mutableSetOf<String>()
-            globalGraph.edges.forEach { edge ->
-                if (edge.sourceId in currentBoundary) {
-                    nextBoundary.add(edge.targetId)
+            var currentBoundary = setOf(centerNoteId)
+            repeat(depth) {
+                coroutineContext.ensureActive()
+                val nextBoundary = mutableSetOf<String>()
+                globalGraph.edges.forEach { edge ->
+                    if (edge.sourceId in currentBoundary) {
+                        nextBoundary.add(edge.targetId)
+                    }
+                    if (edge.targetId in currentBoundary) {
+                        nextBoundary.add(edge.sourceId)
+                    }
                 }
-                if (edge.targetId in currentBoundary) {
-                    nextBoundary.add(edge.sourceId)
-                }
+                selectedIds.addAll(nextBoundary)
+                currentBoundary = nextBoundary
             }
-            selectedIds.addAll(nextBoundary)
-            currentBoundary = nextBoundary
+
+            val filteredNodes = globalGraph.nodes.filter { it.id in selectedIds }
+            val filteredEdges = globalGraph.edges.filter { it.sourceId in selectedIds && it.targetId in selectedIds }
+
+            KnowledgeGraph(nodes = filteredNodes, edges = filteredEdges)
         }
-
-        val filteredNodes = globalGraph.nodes.filter { it.id in selectedIds }
-        val filteredEdges = globalGraph.edges.filter { it.sourceId in selectedIds && it.targetId in selectedIds }
-
-        return KnowledgeGraph(nodes = filteredNodes, edges = filteredEdges)
     }
 }

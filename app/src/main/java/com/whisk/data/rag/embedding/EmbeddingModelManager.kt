@@ -8,8 +8,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.security.MessageDigest
 import kotlin.math.sqrt
 
 enum class ModelLifecycleState {
@@ -39,80 +42,110 @@ class EmbeddingModelManager(private val context: Context? = null) {
     val status: StateFlow<EmbeddingModelStatus> = _status.asStateFlow()
 
     private val modelFileName = "all-MiniLM-L6-v2-384d.onnx"
+    private val initMutex = Mutex()
 
     private var tokenizer: BertWordPieceTokenizer? = null
     private var inferenceEngine: OnnxEmbeddingInferenceEngine? = null
 
-    suspend fun initializeModel(): Boolean = withContext(Dispatchers.Default) {
+    suspend fun initializeModel(): Boolean = initMutex.withLock {
+        if (_status.value.state == ModelLifecycleState.READY && inferenceEngine != null) {
+            return true
+        }
+
         _status.value = _status.value.copy(
             state = ModelLifecycleState.LOADING,
             statusText = "Loading MiniLM ONNX model & tokenizer...",
         )
 
-        try {
-            // 1. Load Tokenizer vocabulary
-            val vocabLines = try {
-                context?.assets?.open("models/vocab.txt")?.use { it.bufferedReader().readLines() }
-                    ?: Thread.currentThread().contextClassLoader?.getResourceAsStream("models/vocab.txt")?.use { it.bufferedReader().readLines() }
-                    ?: EmbeddingModelManager::class.java.classLoader?.getResourceAsStream("models/vocab.txt")?.use { it.bufferedReader().readLines() }
-                    ?: EmbeddingModelManager::class.java.getResourceAsStream("/models/vocab.txt")?.use { it.bufferedReader().readLines() }
-                    ?: BertWordPieceTokenizer.defaultVocabList()
-            } catch (_: Exception) {
-                BertWordPieceTokenizer.defaultVocabList()
-            }
+        withContext(Dispatchers.Default) {
+            try {
+                // 1. Load Tokenizer vocabulary
+                val vocabLines = try {
+                    context?.assets?.open("models/vocab.txt")?.use { it.bufferedReader().readLines() }
+                } catch (_: Exception) {
+                    null
+                } ?: try {
+                    Thread.currentThread().contextClassLoader?.getResourceAsStream("models/vocab.txt")?.use { it.bufferedReader().readLines() }
+                        ?: EmbeddingModelManager::class.java.classLoader?.getResourceAsStream("models/vocab.txt")?.use { it.bufferedReader().readLines() }
+                        ?: EmbeddingModelManager::class.java.getResourceAsStream("/models/vocab.txt")?.use { it.bufferedReader().readLines() }
+                        ?: EmbeddingModelManager::class.java.getResourceAsStream("/assets/models/vocab.txt")?.use { it.bufferedReader().readLines() }
+                } catch (_: Exception) {
+                    null
+                } ?: run {
+                    val candidateVocabFiles = listOf(
+                        File("src/main/assets/models/vocab.txt"),
+                        File("app/src/main/assets/models/vocab.txt"),
+                    )
+                    candidateVocabFiles.firstOrNull { it.exists() && it.length() > 0 }?.readLines()
+                } ?: BertWordPieceTokenizer.defaultVocabList()
 
-            val loadedTokenizer = BertWordPieceTokenizer(
-                if (vocabLines.isNotEmpty()) vocabLines else BertWordPieceTokenizer.defaultVocabList(),
-            )
-            tokenizer = loadedTokenizer
-
-            // 2. Load Model Bytes
-            var modelBytes: ByteArray? = try {
-                context?.assets?.open("models/$modelFileName")?.use { it.readBytes() }
-            } catch (_: Exception) {
-                val file = getModelFile()
-                if (file.exists() && file.length() > 0) {
-                    file.readBytes()
-                } else null
-            }
-
-            if (modelBytes == null || modelBytes.isEmpty()) {
-                modelBytes = OnnxModelFactory.createMiniLmModelBytes(vocabLines)
-            }
-
-            val env = OrtEnvironment.getEnvironment()
-            val session = env.createSession(modelBytes)
-            val engine = OnnxEmbeddingInferenceEngine(session, env, _status.value.dimensions)
-
-            // 3. Perform test inference
-            val testTokenization = loadedTokenizer.tokenize("Whisk semantic vector search test")
-            val testVector = engine.runInference(testTokenization)
-
-            // 4. Validate output dimensionality & numerical sanity
-            if (validateVector(testVector, _status.value.dimensions)) {
-                inferenceEngine = engine
-                _status.value = _status.value.copy(
-                    state = ModelLifecycleState.READY,
-                    statusText = "MiniLM 384d ONNX Model Ready (On-Device Inference)",
-                    downloadedBytes = modelBytes.size.toLong(),
-                    totalBytes = modelBytes.size.toLong(),
+                val loadedTokenizer = BertWordPieceTokenizer(
+                    if (vocabLines.isNotEmpty()) vocabLines else BertWordPieceTokenizer.defaultVocabList(),
                 )
-                true
-            } else {
-                engine.close()
+                tokenizer = loadedTokenizer
+
+                // 2. Load Model Bytes
+                val modelBytes: ByteArray? = try {
+                    context?.assets?.open("models/$modelFileName")?.use { it.readBytes() }
+                } catch (_: Exception) {
+                    null
+                } ?: try {
+                    Thread.currentThread().contextClassLoader?.getResourceAsStream("models/$modelFileName")?.use { it.readBytes() }
+                        ?: EmbeddingModelManager::class.java.classLoader?.getResourceAsStream("models/$modelFileName")?.use { it.readBytes() }
+                        ?: EmbeddingModelManager::class.java.getResourceAsStream("/models/$modelFileName")?.use { it.readBytes() }
+                        ?: EmbeddingModelManager::class.java.getResourceAsStream("/assets/models/$modelFileName")?.use { it.readBytes() }
+                } catch (_: Exception) {
+                    null
+                } ?: run {
+                    val candidateFiles = listOf(
+                        File("src/main/assets/models/$modelFileName"),
+                        File("app/src/main/assets/models/$modelFileName"),
+                        getModelFile(),
+                    )
+                    candidateFiles.firstOrNull { it.exists() && it.length() > 0 }?.readBytes()
+                }
+
+                if (modelBytes == null || modelBytes.isEmpty()) {
+                    _status.value = _status.value.copy(
+                        state = ModelLifecycleState.ERROR,
+                        statusText = "Pretrained MiniLM ONNX model file '$modelFileName' not found in assets or storage.",
+                    )
+                    return@withContext false
+                }
+
+                val env = OrtEnvironment.getEnvironment()
+                val session = env.createSession(modelBytes)
+                val engine = OnnxEmbeddingInferenceEngine(session, env, _status.value.dimensions)
+
+                // 3. Perform test inference with genuine model
+                val testTokenization = loadedTokenizer.tokenize("Whisk semantic vector search test")
+                val testVector = engine.runInference(testTokenization)
+
+                // 4. Validate output dimensionality & numerical sanity
+                if (validateVector(testVector, _status.value.dimensions)) {
+                    inferenceEngine = engine
+                    _status.value = _status.value.copy(
+                        state = ModelLifecycleState.READY,
+                        statusText = "MiniLM 384d ONNX Model Ready (On-Device Inference)",
+                        downloadedBytes = modelBytes.size.toLong(),
+                        totalBytes = modelBytes.size.toLong(),
+                    )
+                    true
+                } else {
+                    engine.close()
+                    _status.value = _status.value.copy(
+                        state = ModelLifecycleState.INCOMPATIBLE,
+                        statusText = "Model output failed numerical validation",
+                    )
+                    false
+                }
+            } catch (e: Exception) {
                 _status.value = _status.value.copy(
-                    state = ModelLifecycleState.INCOMPATIBLE,
-                    statusText = "Model output failed numerical validation",
+                    state = ModelLifecycleState.ERROR,
+                    statusText = "Model initialization error: ${e.message}",
                 )
                 false
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            _status.value = _status.value.copy(
-                state = ModelLifecycleState.ERROR,
-                statusText = "Model initialization error: ${e.message}",
-            )
-            false
         }
     }
 
@@ -156,6 +189,14 @@ class EmbeddingModelManager(private val context: Context? = null) {
                 downloadedBytes = file.length(),
                 totalBytes = file.length(),
             )
+        }
+    }
+
+    companion object {
+        fun computeSha256(bytes: ByteArray): String {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val hash = digest.digest(bytes)
+            return hash.joinToString("") { "%02x".format(it) }
         }
     }
 }

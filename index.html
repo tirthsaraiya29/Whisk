@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Whisk — A workspace where notes, context, and intelligence meet</title>
+<meta name="description" content="Whisk is a local-first knowledge workspace. Markdown notes, contextual AI, and connected thinking — in one considered place." />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-500-normal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-600-normal.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/instrument-serif@latest/latin-400-normal.css" />
+<style>
+  /* ---------- Design tokens ---------- */
+  :root {
+    --bg: #0A0A0B;
+    --bg-elev: #111113;
+    --bg-elev-2: #161618;
+    --surface: rgba(255, 255, 255, 0.03);
+    --surface-strong: rgba(255, 255, 255, 0.05);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.12);
+    --text: #F2EFE9;
+    --text-muted: #8A8780;
+    --text-dim: #5C5A55;
+    --accent: #D9A86C;        /* warm amber */
+    --accent-soft: #E8C596;
+    --accent-glow: rgba(217, 168, 108, 0.18);
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 22px;
+    --max: 1200px;
+    --ease: cubic-bezier(.2,.7,.2,1);
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-serif: 'Instrument Serif', 'Times New Roman', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+  }
+
+  /* Ambient background glow */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(217, 168, 108, 0.08), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 30%, rgba(217, 168, 108, 0.03), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Grain overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+    mix-blend-mode: overlay;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+  button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+  .container {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 28px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ---------- Navigation ---------- */
+  .nav {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    width: calc(100% - 28px);
+    max-width: 1100px;
+    padding: 10px 14px 10px 20px;
+    background: rgba(14, 14, 16, 0.72);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background .3s var(--ease), border-color .3s var(--ease);
+  }
+  .nav.scrolled { background: rgba(10, 10, 11, 0.88); border-color: var(--border-strong); }
+
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; font-size: 15px; }
+  .brand-mark {
+    width: 26px; height: 26px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent) 0%, #B8854A 100%);
+    border-radius: 7px;
+    color: #1a1408;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset, 0 4px 12px rgba(217,168,108,0.25);
+  }
+  .brand-mark svg { width: 15px; height: 15px; }
+
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    padding: 8px 14px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    border-radius: 999px;
+    transition: color .2s var(--ease), background .2s var(--ease);
+  }
+  .nav-links a:hover { color: var(--text); background: var(--surface); }
+
+  .nav-cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    font-size: 13px; font-weight: 500;
+    color: #1a1408;
+    background: var(--text);
+    border-radius: 999px;
+    transition: transform .2s var(--ease), background .2s var(--ease);
+  }
+  .nav-cta:hover { background: var(--accent-soft); transform: translateY(-1px); }
+
+  .nav-toggle { display: none; padding: 8px; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 160px 0 80px;
+    position: relative;
+  }
+  .hero-inner { text-align: center; max-width: 860px; margin: 0 auto; }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    margin-bottom: 28px;
+    letter-spacing: 0.02em;
+  }
+  .eyebrow .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+
+  h1.hero-title {
+    font-family: var(--font-serif);
+    font-size: clamp(44px, 7vw, 84px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+    margin-bottom: 24px;
+  }
+  h1.hero-title em {
+    font-style: italic;
+    color: var(--accent-soft);
+    font-weight: 400;
+  }
+
+  .hero-sub {
+    font-size: clamp(16px, 1.5vw, 18.5px);
+    color: var(--text-muted);
+    max-width: 620px;
+    margin: 0 auto 40px;
+    line-height: 1.55;
+  }
+
+  .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px;
+    font-size: 14.5px; font-weight: 500;
+    border-radius: 999px;
+    transition: transform .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--text);
+    color: #0a0a0b;
+  }
+  .btn-primary:hover { background: var(--accent-soft); transform: translateY(-1px); }
+  .btn-ghost {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  .btn-ghost:hover { background: var(--surface-strong); border-color: var(--border-strong); }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* ---------- Product mockup ---------- */
+  .product-stage {
+    margin-top: 72px;
+    position: relative;
+    perspective: 1800px;
+  }
+  .product-stage::before {
+    content: '';
+    position: absolute;
+    inset: -40px;
+    background: radial-gradient(ellipse 70% 50% at 50% 50%, var(--accent-glow), transparent 70%);
+    filter: blur(40px);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .mockup {
+    position: relative;
+    z-index: 2;
+    background: #0C0C0E;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow:
+      0 30px 80px -20px rgba(0,0,0,0.7),
+      0 10px 30px -10px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(255,255,255,0.02) inset;
+    transform: rotateX(2deg);
+    transition: transform .8s var(--ease);
+  }
+  .mockup:hover { transform: rotateX(0deg); }
+
+  .mockup-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    background: #0E0E10;
+    border-bottom: 1px solid var(--border);
+  }
+  .traffic { display: flex; gap: 6px; }
+  .traffic span { width: 11px; height: 11px; border-radius: 50%; background: #2a2a2d; }
+  .traffic span:nth-child(1) { background: #ff5f57; }
+  .traffic span:nth-child(2) { background: #febc2e; }
+  .traffic span:nth-child(3) { background: #28c840; }
+  .mockup-title {
+    flex: 1; text-align: center;
+    font-size: 12px; color: var(--text-dim);
+    letter-spacing: 0.02em;
+  }
+
+  .mockup-body {
+    display: grid;
+    grid-template-columns: 220px 1fr 280px;
+    min-height: 460px;
+  }
+
+  /* Sidebar */
+  .m-sidebar {
+    background: #0B0B0D;
+    border-right: 1px solid var(--border);
+    padding: 16px 12px;
+    font-size: 12.5px;
+  }
+  .m-sidebar-section { margin-bottom: 18px; }
+  .m-sidebar-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    padding: 4px 8px;
+    margin-bottom: 4px;
+  }
+  .m-tree-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .m-tree-item.active { background: var(--surface-strong); color: var(--text); }
+  .m-tree-item .m-icon { width: 12px; height: 12px; opacity: 0.7; }
+  .m-tree-item .m-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); opacity: 0.8; }
+
+  /* Editor */
+  .m-editor {
+    padding: 32px 40px;
+    background: #0C0C0E;
+    overflow: hidden;
+  }
+  .m-breadcrumb { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; letter-spacing: 0.02em; }
+  .m-doc-title {
+    font-family: var(--font-serif);
+    font-size: 30px;
+    line-height: 1.15;
+    margin-bottom: 18px;
+    letter-spacing: -0.01em;
+  }
+  .m-doc-body { font-size: 13.5px; line-height: 1.7; color: #c8c4bc; }
+  .m-doc-body p { margin-bottom: 12px; }
+  .m-doc-body .m-h2 {
+    font-size: 16px;
+    color: var(--text);
+    margin: 22px 0 10px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .m-doc-body code {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    background: var(--surface-strong);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent-soft);
+  }
+  .m-doc-body .m-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    background: var(--accent-glow);
+    color: var(--accent-soft);
+    border-radius: 999px;
+    margin-right: 4px;
+    border: 1px solid rgba(217,168,108,0.2);
+  }
+  .m-cursor {
+    display: inline-block;
+    width: 2px; height: 14px;
+    background: var(--accent);
+    vertical-align: middle;
+    animation: blink 1.2s infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+  /* Right panel - graph + AI */
+  .m-right {
+    background: #0B0B0D;
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .m-panel-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+  .m-panel-head .m-tabs { display: flex; gap: 2px; }
+  .m-panel-head .m-tab {
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 11px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text-muted);
+  }
+  .m-panel-head .m-tab.active { background: var(--surface-strong); color: var(--text); }
+
+  .m-graph {
+    flex: 1;
+    position: relative;
+    min-height: 200px;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(217,168,108,0.06), transparent 50%),
+      radial-gradient(circle at 70% 60%, rgba(217,168,108,0.04), transparent 50%);
+  }
+  .m-graph svg { width: 100%; height: 100%; }
+
+  .m-ai {
+    border-top: 1px solid var(--border);
+    padding: 14px;
+    background: rgba(217,168,108,0.02);
+  }
+  .m-ai-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .m-ai-label .m-spark {
+    width: 10px; height: 10px;
+    color: var(--accent);
+  }
+  .m-ai-bubble {
+    font-size: 12px;
+    line-height: 1.55;
+    color: #b8b4ac;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .m-ai-bubble strong { color: var(--accent-soft); font-weight: 500; }
+
+  /* ---------- Section base ---------- */
+  section { padding: 120px 0; position: relative; }
+  .section-head { max-width: 720px; margin-bottom: 72px; }
+  .section-head.center { margin: 0 auto 72px; text-align: center; }
+  .section-eyebrow {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 18px;
+    font-weight: 500;
+  }
+  h2.section-title {
+    font-family: var(--font-serif);
+    font-size: clamp(34px, 4.5vw, 54px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    margin-bottom: 20px;
+  }
+  h2.section-title em { font-style: italic; color: var(--accent-soft); }
+  .section-lead {
+    font-size: 17px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 560px;
+  }
+  .section-head.center .section-lead { margin: 0 auto; }
+
+  /* ---------- Philosophy ---------- */
+  .philosophy { border-top: 1px solid var(--border); }
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .principle {
+    background: var(--bg);
+    padding: 44px 36px;
+    transition: background .3s var(--ease);
+  }
+  .principle:hover { background: var(--bg-elev); }
+  .principle-num {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+  }
+  .principle h3 {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+  .principle p {
+    font-size: 14.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ---------- Features ---------- */
+  .features { border-top: 1px solid var(--border); }
+  .feature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    padding: 80px 0;
+    border-top: 1px solid var(--border);
+  }
+  .feature:first-of-type { border-top: none; padding-top: 0; }
+  .feature.reverse .feature-copy { order: 2; }
+  .feature.reverse .feature-visual { order: 1; }
+
+  .feature-copy .feature-num {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .feature-copy h3 {
+    font-family: var(--font-serif);
+    font-size: clamp(28px, 3vw, 38px);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    font-weight: 400;
+    margin-bottom: 18px;
+  }
+  .feature-copy h3 em { font-style: italic; color: var(--accent-soft); }
+  .feature-copy p {
+    font-size: 15.5px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+  .feature-copy ul {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .feature-copy li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px;
+    color: #b8b4ac;
+  }
+  .feature-copy li svg {
+    width: 14px; height: 14px;
+    color: var(--accent);
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Feature visuals */
+  .feature-visual {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: linear-gradient(180deg, #101012 0%, #0B0B0D 100%);
+    border: 1px solid var(--border);
+    min-height: 380px;
+    padding: 24px;
+  }
+  .feature-visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(217,168,108,0.06), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Visual 1: Markdown editor */
+  .v-editor {
+    background: #0C0C0E;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    position: relative;
+    z-index: 1;
+  }
+  .v-editor .v-line { display: block; white-space: pre-wrap; }
+  .v-editor .v-h1 { color: var(--text); font-size: 18px; font-weight: 600; font-family: var(--font-sans); margin-bottom: 6px; }
+  .v-editor .v-h2 { color: var(--text); font-size: 15px; font-weight: 500; font-family: var(--font-sans); margin: 10px 0 4px; }
+  .v-editor .v-md { color: var(--text-dim); }
+  .v-editor .v-text { color: #c8c4bc; }
+  .v-editor .v-link { color: var(--accent-soft); }
+  .v-editor .v-bold { color: var(--text); font-weight: 600; }
+  .v-editor .v-tag { color: var(--accent); }
+
+  /* Visual 2: Graph */
+  .v-graph {
+    position: relative;
+    width: 100%;
+    height: 340px;
+    z-index: 1;
+  }
+  .v-graph svg { width: 100%; height: 100%; }
+  .v-graph-node {
+    fill: var(--bg-elev-2);
+    stroke: var(--border-strong);
+    stroke-width: 1;
+    transition: all .3s var(--ease);
+  }
+  .v-graph-node.accent {
+    fill: var(--accent);
+    stroke: var(--accent);
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+  }
+  .v-graph-edge { stroke: var(--border-strong); stroke-width: 1; fill: none; }
+  .v-graph-edge.accent { stroke: var(--accent); opacity: 0.6; }
+  .v-graph-label {
+    fill: var(--text-muted);
+    font-size: 10px;
+    font-family: var(--font-sans);
+    text-anchor: middle;
+  }
+
+  /* Visual 3: AI conversation */
+  .v-ai {
+    display: flex; flex-direction: column; gap: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .v-ai-msg {
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    max-width: 90%;
+  }
+  .v-ai-msg.user {
+    background: var(--surface-strong);
+    border: 1px solid var(--border);
+    color: var(--text);
+    align-self: flex-end;
+  }
+  .v-ai-msg.ai {
+    background: rgba(217,168,108,0.06);
+    border: 1px solid rgba(217,168,108,0.15);
+    color: #d4cfc5;
+    align-self: flex-start;
+  }
+  .v-ai-msg .v-ai-role {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .v-ai-msg.ai .v-ai-role { color: var(--accent); }
+  .v-ai-msg code {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent-soft);
+  }
+
+  /* Visual 4: Search */
+  .v-search {
+    position: relative;
+    z-index: 1;
+  }
+  .v-search-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface-strong);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .v-search-bar svg { width: 14px; height: 14px; color: var(--text-dim); }
+  .v-search-bar input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-size: 13.5px; font-family: inherit;
+  }
+  .v-search-bar .v-kbd {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+  .v-result {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-elev);
+    margin-bottom: 8px;
+    transition: border-color .2s var(--ease);
+  }
+  .v-result:hover { border-color: var(--border-strong); }
+  .v-result-title { font-size: 13.5px; color: var(--text); margin-bottom: 4px; font-weight: 500; }
+  .v-result-path { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+  .v-result-snippet { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+  .v-result-snippet mark {
+    background: var(--accent-glow);
+    color: var(--accent-soft);
+    padding: 0 3px;
+    border-radius: 2px;
+  }
+
+  /* Visual 5: GitHub */
+  .v-gh {
+    position: relative;
+    z-index: 1;
+  }
+  .v-gh-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-elev);
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .v-gh-row .v-gh-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--surface-strong);
+    display: grid; place-items: center;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .v-gh-row .v-gh-icon svg { width: 14px; height: 14px; }
+  .v-gh-row .v-gh-main { flex: 1; min-width: 0; }
+  .v-gh-row .v-gh-title { color: var(--text); font-weight: 500; margin-bottom: 2px; }
+  .v-gh-row .v-gh-sub { font-size: 11.5px; color: var(--text-dim); }
+  .v-gh-row .v-gh-badge {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(40,200,64,0.1);
+    color: #5fd97a;
+    border: 1px solid rgba(40,200,64,0.2);
+  }
+  .v-gh-row .v-gh-badge.merged {
+    background: rgba(130,80,223,0.1);
+    color: #b59bf0;
+    border-color: rgba(130,80,223,0.2);
+  }
+
+  /* ---------- AI Workspace ---------- */
+  .ai-workspace { border-top: 1px solid var(--border); }
+  .ai-showcase {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+  .ai-showcase-visual {
+    position: relative;
+    background: linear-gradient(180deg, #101012 0%, #0B0B0D 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    min-height: 440px;
+  }
+  .ai-showcase-visual::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-lg);
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(217,168,108,0.08), transparent 60%);
+    pointer-events: none;
+  }
+  .ai-context-stack {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .ai-ctx {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12.5px;
+  }
+  .ai-ctx .ai-ctx-icon {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    background: var(--surface-strong);
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .ai-ctx .ai-ctx-icon svg { width: 12px; height: 12px; }
+  .ai-ctx .ai-ctx-label { color: var(--text-muted); flex: 1; }
+  .ai-ctx .ai-ctx-label strong { color: var(--text); font-weight: 500; }
+  .ai-ctx .ai-ctx-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--accent-glow);
+    color: var(--accent-soft);
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+  .ai-prompt {
+    position: relative;
+    z-index: 1;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .ai-prompt-row { display: flex; gap: 10px; align-items: flex-end; }
+  .ai-prompt-text {
+    flex: 1;
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .ai-prompt-text em { color: var(--accent-soft); font-style: normal; }
+  .ai-prompt-send {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #1a1408;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .ai-prompt-send svg { width: 14px; height: 14px; }
+
+  .ai-features-list {
+    display: flex; flex-direction: column; gap: 28px;
+    margin-top: 40px;
+  }
+  .ai-feat { display: flex; gap: 16px; }
+  .ai-feat-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: grid; place-items: center;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .ai-feat-icon svg { width: 16px; height: 16px; }
+  .ai-feat h4 { font-size: 15px; font-weight: 500; margin-bottom: 4px; letter-spacing: -0.005em; }
+  .ai-feat p { font-size: 13.5px; color: var(--text-muted); line-height: 1.55; }
+
+  /* ---------- Privacy ---------- */
+  .privacy { border-top: 1px solid var(--border); }
+  .privacy-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .privacy-item {
+    background: var(--bg);
+    padding: 36px 32px;
+    transition: background .3s var(--ease);
+  }
+  .privacy-item:hover { background: var(--bg-elev); }
+  .privacy-item .p-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: grid; place-items: center;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .privacy-item .p-icon svg { width: 16px; height: 16px; }
+  .privacy-item h4 { font-size: 16px; font-weight: 500; margin-bottom: 8px; letter-spacing: -0.005em; }
+  .privacy-item p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ---------- Final CTA ---------- */
+  .final-cta {
+    padding: 140px 0;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .final-cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 50%, rgba(217,168,108,0.08), transparent 70%);
+    pointer-events: none;
+  }
+  .final-cta h2 {
+    font-family: var(--font-serif);
+    font-size: clamp(40px, 6vw, 72px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .final-cta h2 em { font-style: italic; color: var(--accent-soft); }
+  .final-cta p {
+    font-size: 17px;
+    color: var(--text-muted);
+    max-width: 520px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+    position: relative;
+  }
+  .final-cta .cta-row { position: relative; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 50px 0 40px;
+  }
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 50px;
+  }
+  .footer-brand p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 16px;
+    max-width: 300px;
+  }
+  .footer-col h5 {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col a {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    transition: color .2s var(--ease);
+  }
+  .footer-col a:hover { color: var(--text); }
+  .footer-bottom {
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .8s var(--ease), transform .8s var(--ease);
+  }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 960px) {
+    .nav-links { display: none; }
+    .nav-toggle { display: block; }
+    .nav.open .nav-links {
+      display: flex;
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0; right: 0;
+      flex-direction: column;
+      background: rgba(14,14,16,0.95);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      gap: 0;
+    }
+    .nav.open .nav-links a { padding: 12px 16px; width: 100%; }
+    .nav.open .nav-cta { margin-top: 6px; justify-content: center; }
+
+    .mockup-body { grid-template-columns: 1fr; }
+    .m-sidebar, .m-right { display: none; }
+
+    .principles { grid-template-columns: 1fr; }
+    .feature { grid-template-columns: 1fr; gap: 40px; padding: 60px 0; }
+    .feature.reverse .feature-copy { order: 1; }
+    .feature.reverse .feature-visual { order: 2; }
+
+    .ai-showcase { grid-template-columns: 1fr; gap: 40px; }
+    .privacy-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr 1fr; gap: 30px; }
+    .footer-brand { grid-column: 1 / -1; }
+
+    section { padding: 80px 0; }
+    .hero { padding: 120px 0 60px; }
+    .final-cta { padding: 100px 0; }
+  }
+
+  @media (max-width: 560px) {
+    .container { padding: 0 20px; }
+    .nav { padding: 8px 8px 8px 16px; }
+    .nav-cta span { display: none; }
+    .footer-inner { grid-template-columns: 1fr; }
+    .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+    .feature-visual { min-height: 320px; padding: 18px; }
+    .v-editor { font-size: 11.5px; padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav class="nav" id="nav">
+  <a href="#top" class="brand" aria-label="Whisk home">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 7c4 0 6 3 10 3s4-3 6-3"/>
+        <path d="M4 12c4 0 6 3 10 3s4-3 6-3"/>
+        <path d="M4 17c4 0 6 3 10 3s4-3 6-3"/>
+      </svg>
+    </span>
+    Whisk
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a href="#philosophy">Philosophy</a>
+    <a href="#features">Features</a>
+    <a href="#ai">AI</a>
+    <a href="#privacy">Privacy</a>
+    <a href="https://github.com/tirthsaraiya29/Whisk" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/tirthsaraiya29/Whisk" target="_blank" rel="noopener" class="nav-cta">
+      <span>View source</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M7 17L17 7M7 7h10v10"/></svg>
+    </a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+  </button>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="eyebrow reveal">
+        <span class="dot"></span>
+        <span>Local-first knowledge workspace</span>
+      </div>
+      <h1 class="hero-title reveal">
+        Notes that <em>remember</em><br/>
+        what you're thinking about.
+      </h1>
+      <p class="hero-sub reveal">
+        Whisk is a workspace where markdown notes, connected ideas, and contextual AI sit in the same room.
+        Built for people who want their tools to understand the work — not just store it.
+      </p>
+      <div class="cta-row reveal">
+        <a href="https://github.com/tirthsaraiya29/Whisk" target="_blank" rel="noopener" class="btn btn-primary">
+          Get Whisk
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="https://github.com/tirthsaraiya29/Whisk" target="_blank" rel="noopener" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+    </div>
+
+    <!-- Product mockup -->
+    <div class="product-stage reveal">
+      <div class="mockup">
+        <div class="mockup-bar">
+          <div class="traffic"><span></span><span></span><span></span></div>
+          <div class="mockup-title">Whisk — workspace</div>
+          <div style="width:52px"></div>
+        </div>
+        <div class="mockup-body">
+          <!-- Sidebar -->
+          <aside class="m-sidebar">
+            <div class="m-sidebar-section">
+              <div class="m-sidebar-label">Workspace</div>
+              <div class="m-tree-item active">
+                <span class="m-dot"></span>
+                <span>Research notes</span>
+              </div>
+              <div class="m-tree-item">
+                <svg class="m-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+                <span>Daily journal</span>
+              </div>
+              <div class="m-tree-item">
+                <svg class="m-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+                <span>Project ideas</span>
+              </div>
+              <div class="m-tree-item">
+                <svg class="m-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+                <span>Reading log</span>
+              </div>
+            </div>
+            <div class="m-sidebar-section">
+              <div class="m-sidebar-label">Graph</div>
+              <div class="m-tree-item">
+                <svg class="m-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M8 7l8 10M16 7L8 17"/></svg>
+                <span>Knowledge map</span>
+              </div>
+              <div class="m-tree-item">
+                <svg class="m-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
+                <span>Backlinks</span>
+              </div>
+            </div>
+            <div class="m-sidebar-section">
+              <div class="m-sidebar-label">AI</div>
+              <div class="m-tree-item">
+                <svg class="m-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+                <span>Assistant</span>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Editor -->
+          <main class="m-editor">
+            <div class="m-breadcrumb">workspace / research notes</div>
+            <h2 class="m-doc-title">On context and the shape of thought</h2>
+            <div class="m-doc-body">
+              <p><span class="m-tag">#thinking</span><span class="m-tag">#notes</span></p>
+              <p style="margin-top:10px">A note is only as useful as the context around it. The best ideas don't arrive in isolation — they grow from the friction between things you've already written, read, and half-remembered.</p>
+              <div class="m-h2">The problem with folders</div>
+              <p>Most tools ask you to decide where a thought belongs before you've finished thinking it. Whisk lets notes <code>link</code> to each other, so the structure emerges from the work itself.</p>
+              <div class="m-h2">What changes</div>
+              <p>When your editor knows what's on the page, what's in the graph, and what you've been working on — the assistance stops being generic<span class="m-cursor"></span></p>
+            </div>
+          </main>
+
+          <!-- Right panel -->
+          <aside class="m-right">
+            <div class="m-panel-head">
+              <span>Context</span>
+              <div class="m-tabs">
+                <span class="m-tab active">Graph</span>
+                <span class="m-tab">Links</span>
+              </div>
+            </div>
+            <div class="m-graph">
+              <svg viewBox="0 0 280 200" preserveAspectRatio="xMidYMid meet">
+                <!-- Edges -->
+                <line class="v-graph-edge" x1="60" y1="60" x2="140" y2="100"/>
+                <line class="v-graph-edge" x1="220" y1="50" x2="140" y2="100"/>
+                <line class="v-graph-edge accent" x1="140" y1="100" x2="90" y2="160"/>
+                <line class="v-graph-edge accent" x1="140" y1="100" x2="200" y2="160"/>
+                <line class="v-graph-edge" x1="90" y1="160" x2="200" y2="160"/>
+                <line class="v-graph-edge" x1="60" y1="60" x2="40" y2="130"/>
+                <line class="v-graph-edge" x1="220" y1="50" x2="250" y2="120"/>
+                <!-- Nodes -->
+                <circle class="v-graph-node" cx="60" cy="60" r="5"/>
+                <circle class="v-graph-node" cx="220" cy="50" r="4"/>
+                <circle class="v-graph-node accent" cx="140" cy="100" r="8"/>
+                <circle class="v-graph-node" cx="90" cy="160" r="5"/>
+                <circle class="v-graph-node" cx="200" cy="160" r="5"/>
+                <circle class="v-graph-node" cx="40" cy="130" r="3"/>
+                <circle class="v-graph-node" cx="250" cy="120" r="3"/>
+                <!-- Labels -->
+                <text class="v-graph-label" x="60" y="50">context</text>
+                <text class="v-graph-label" x="220" y="40">structure</text>
+                <text class="v-graph-label" x="140" y="88" fill="#E8C596">this note</text>
+                <text class="v-graph-label" x="90" y="178">memory</text>
+                <text class="v-graph-label" x="200" y="178">tools</text>
+              </svg>
+            </div>
+            <div class="m-ai">
+              <div class="m-ai-label">
+                <svg class="m-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg>
+                Contextual AI
+              </div>
+              <div class="m-ai-bubble">
+                This note connects to <strong>3 others</strong> about structure and memory. Want me to draft a summary across them?
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ PHILOSOPHY ============ -->
+<section class="philosophy" id="philosophy">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">Philosophy</div>
+      <h2 class="section-title">Built around a few<br/>quiet <em>convictions.</em></h2>
+      <p class="section-lead">
+        Whisk isn't trying to be everything. It's built around a small set of beliefs about how people actually think, write, and work — and what gets in the way.
+      </p>
+    </div>
+
+    <div class="principles reveal">
+      <div class="principle">
+        <div class="principle-num">01</div>
+        <h3>Notes should stay connected.</h3>
+        <p>Ideas don't live in folders. Whisk treats every note as a node in a larger map — linked, referenced, and discoverable through the work itself.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-num">02</div>
+        <h3>AI should read the room.</h3>
+        <p>Generic assistants answer generic questions. Whisk's AI sees the note you're writing, the graph around it, and the workspace you're in — so its help is actually relevant.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-num">03</div>
+        <h3>Your data stays yours.</h3>
+        <p>Local-first by default. Your notes live on your machine, your models run where you point them, and nothing about your workspace has to touch a server you don't control.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-head center reveal">
+      <div class="section-eyebrow">Capabilities</div>
+      <h2 class="section-title">A workspace that <em>earns</em><br/>the things it promises.</h2>
+      <p class="section-lead">
+        Every feature below is something Whisk actually does today. No roadmaps dressed up as shipping, no integrations that live in a slide deck.
+      </p>
+    </div>
+
+    <!-- Feature 1: Markdown -->
+    <div class="feature reveal">
+      <div class="feature-copy">
+        <div class="feature-num">01 — Writing</div>
+        <h3>Markdown, rendered <em>the way you'd write it.</em></h3>
+        <p>
+          Whisk treats markdown as a first-class surface, not an import format. Headings, links, code, tags — all of it renders cleanly, edits quickly, and stays portable.
+        </p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Live-rendered markdown with familiar shortcuts</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Plain files on disk — open them anywhere</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Tags, links, and structure that survive export</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="v-editor">
+          <span class="v-line v-h1"># On slow software</span>
+          <span class="v-line v-text"></span>
+          <span class="v-line v-text">Most tools optimise for the first minute.</span>
+          <span class="v-line v-text">Whisk optimises for the <span class="v-bold">hundredth</span>.</span>
+          <span class="v-line v-text"></span>
+          <span class="v-line v-h2">## What that changes</span>
+          <span class="v-line v-text">- No account required to start</span>
+          <span class="v-line v-text">- No telemetry to opt out of</span>
+          <span class="v-line v-text">- Files you can read with <span class="v-md">`cat`</span></span>
+          <span class="v-line v-text"></span>
+          <span class="v-line v-text">See also: <span class="v-link">[[local-first principles]]</span> <span class="v-tag">#essay</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 2: Graph -->
+    <div class="feature reverse reveal">
+      <div class="feature-copy">
+        <div class="feature-num">02 — Connections</div>
+        <h3>A knowledge graph that grows <em>with the writing.</em></h3>
+        <p>
+          Every link you make, every tag you add, every note you reference — Whisk weaves it into a graph you can actually navigate. Not a novelty view. A working map of what you know.
+        </p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Interactive graph of notes, links, and tags</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Backlinks surfaced where they matter</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Structure that emerges instead of being imposed</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="v-graph">
+          <svg viewBox="0 0 500 340" preserveAspectRatio="xMidYMid meet">
+            <!-- Edges -->
+            <line class="v-graph-edge" x1="90" y1="80" x2="200" y2="130"/>
+            <line class="v-graph-edge" x1="410" y1="70" x2="310" y2="130"/>
+            <line class="v-graph-edge accent" x1="200" y1="130" x2="310" y2="130"/>
+            <line class="v-graph-edge accent" x1="200" y1="130" x2="150" y2="230"/>
+            <line class="v-graph-edge accent" x1="310" y1="130" x2="360" y2="230"/>
+            <line class="v-graph-edge" x1="150" y1="230" x2="250" y2="280"/>
+            <line class="v-graph-edge" x1="360" y1="230" x2="250" y2="280"/>
+            <line class="v-graph-edge" x1="90" y1="80" x2="60" y2="180"/>
+            <line class="v-graph-edge" x1="410" y1="70" x2="450" y2="170"/>
+            <line class="v-graph-edge" x1="60" y1="180" x2="150" y2="230"/>
+            <line class="v-graph-edge" x1="450" y1="170" x2="360" y2="230"/>
+            <line class="v-graph-edge" x1="250" y1="280" x2="250" y2="320"/>
+            <!-- Nodes -->
+            <circle class="v-graph-node" cx="90" cy="80" r="7"/>
+            <circle class="v-graph-node" cx="410" cy="70" r="6"/>
+            <circle class="v-graph-node accent" cx="200" cy="130" r="10"/>
+            <circle class="v-graph-node accent" cx="310" cy="130" r="9"/>
+            <circle class="v-graph-node" cx="150" cy="230" r="7"/>
+            <circle class="v-graph-node" cx="360" cy="230" r="7"/>
+            <circle class="v-graph-node" cx="250" cy="280" r="8"/>
+            <circle class="v-graph-node" cx="60" cy="180" r="4"/>
+            <circle class="v-graph-node" cx="450" cy="170" r="4"/>
+            <circle class="v-graph-node" cx="250" cy="320" r="3"/>
+            <!-- Labels -->
+            <text class="v-graph-label" x="90" y="68">tools</text>
+            <text class="v-graph-label" x="410" y="58">writing</text>
+            <text class="v-graph-label" x="200" y="115" fill="#E8C596">context</text>
+            <text class="v-graph-label" x="310" y="115" fill="#E8C596">memory</text>
+            <text class="v-graph-label" x="150" y="250">structure</text>
+            <text class="v-graph-label" x="360" y="250">ideas</text>
+            <text class="v-graph-label" x="250" y="300">practice</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 3: AI -->
+    <div class="feature reveal">
+      <div class="feature-copy">
+        <div class="feature-num">03 — Intelligence</div>
+        <h3>AI that works <em>inside</em> the workspace.</h3>
+        <p>
+          Whisk's assistant doesn't open in a separate tab. It lives next to your notes, reads the document you're in, and can reach into the graph around it. Help that's actually in context, not pasted into a chat window.
+        </p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Context-aware responses drawn from your notes</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Summaries, rewrites, and continuations in place</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Works with local models or the provider you choose</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="v-ai">
+          <div class="v-ai-msg user">
+            <div class="v-ai-role">You</div>
+            Summarise the notes linked to this one about local-first tools.
+          </div>
+          <div class="v-ai-msg ai">
+            <div class="v-ai-role">
+              <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg>
+              Whisk · llama-local
+            </div>
+            Three notes cluster around this one. <code>[[slow software]]</code> argues for tools that age well. <code>[[files over formats]]</code> pushes for plain-text portability. <code>[[no account needed]]</code> is a short manifesto on friction. The through-line: <strong>software that respects the second hour</strong>.
+          </div>
+          <div class="v-ai-msg user">
+            <div class="v-ai-role">You</div>
+            Draft a one-paragraph bridge between them.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 4: Search -->
+    <div class="feature reverse reveal">
+      <div class="feature-copy">
+        <div class="feature-num">04 — Retrieval</div>
+        <h3>Find things <em>fast,</em> without leaving the keyboard.</h3>
+        <p>
+          Whisk indexes your workspace locally. A single shortcut pulls up a command-style search that jumps you to notes, links, and references — with snippets that show you why the result matched.
+        </p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Instant full-text search across the workspace</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Keyboard-first, command-palette interaction</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Results ranked by relevance, not recency alone</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="v-search">
+          <div class="v-search-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" value="context" readonly />
+            <span class="v-kbd">⌘K</span>
+          </div>
+          <div class="v-result">
+            <div class="v-result-title">On context and the shape of thought</div>
+            <div class="v-result-path">workspace / research notes</div>
+            <div class="v-result-snippet">A note is only as useful as the <mark>context</mark> around it. The best ideas don't arrive in isolation…</div>
+          </div>
+          <div class="v-result">
+            <div class="v-result-title">What makes AI actually useful</div>
+            <div class="v-result-path">workspace / essays</div>
+            <div class="v-result-snippet">…the difference between a helpful tool and a noisy one is <mark>context</mark>. Without it, every answer is a guess.</div>
+          </div>
+          <div class="v-result">
+            <div class="v-result-title">Local-first principles</div>
+            <div class="v-result-path">workspace / notes</div>
+            <div class="v-result-snippet">Keep the <mark>context</mark> on the device. The network is a feature, not a requirement.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 5: GitHub -->
+    <div class="feature reveal">
+      <div class="feature-copy">
+        <div class="feature-num">05 — Development</div>
+        <h3>GitHub-aware, for people <em>who live in both.</em></h3>
+        <p>
+          If your thinking and your code share a roof, Whisk lets them stay that way. Notes can reference repositories, issues, and pull requests — and the workspace understands enough about GitHub to be useful without becoming another dashboard.
+        </p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Link notes to repos, issues, and PRs</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>MCP integration for tool-assisted workflows</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>One place for thinking and shipping</li>
+        </ul>
+      </div>
+      <div class="feature-visual">
+        <div class="v-gh">
+          <div class="v-gh-row">
+            <div class="v-gh-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+            </div>
+            <div class="v-gh-main">
+              <div class="v-gh-title">tirthsaraiya29/Whisk</div>
+              <div class="v-gh-sub">Linked workspace · 3 notes reference this repo</div>
+            </div>
+          </div>
+          <div class="v-gh-row">
+            <div class="v-gh-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+            </div>
+            <div class="v-gh-main">
+              <div class="v-gh-title">Add graph export to markdown</div>
+              <div class="v-gh-sub">PR #42 · opened 2 days ago</div>
+            </div>
+            <div class="v-gh-badge merged">merged</div>
+          </div>
+          <div class="v-gh-row">
+            <div class="v-gh-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="v-gh-main">
+              <div class="v-gh-title">Local model picker needs presets</div>
+              <div class="v-gh-sub">Issue #87 · discussed in [[AI workspace]]</div>
+            </div>
+            <div class="v-gh-badge">open</div>
+          </div>
+          <div class="v-gh-row">
+            <div class="v-gh-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="v-gh-main">
+              <div class="v-gh-title">Design review: search UX</div>
+              <div class="v-gh-sub">Discussion · captured in [[Product ideas]]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AI WORKSPACE ============ -->
+<section class="ai-workspace" id="ai">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">The AI workspace</div>
+      <h2 class="section-title">An assistant that knows <em>what you're working on.</em></h2>
+      <p class="section-lead">
+        Whisk doesn't bolt a chatbot onto a notes app. It builds the assistant out of the workspace itself — the note on screen, the links around it, the models you've chosen.
+      </p>
+    </div>
+
+    <div class="ai-showcase">
+      <div class="ai-showcase-visual reveal">
+        <div class="ai-context-stack">
+          <div class="ai-ctx">
+            <div class="ai-ctx-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="ai-ctx-label"><strong>Active note</strong> · On context and the shape of thought</div>
+            <span class="ai-ctx-tag">current</span>
+          </div>
+          <div class="ai-ctx">
+            <div class="ai-ctx-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M8 7l8 10M16 7L8 17"/></svg>
+            </div>
+            <div class="ai-ctx-label"><strong>3 linked notes</strong> from the surrounding graph</div>
+            <span class="ai-ctx-tag">context</span>
+          </div>
+          <div class="ai-ctx">
+            <div class="ai-ctx-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+            </div>
+            <div class="ai-ctx-label"><strong>Model</strong> · llama-3.1-8B · running locally</div>
+            <span class="ai-ctx-tag">local</span>
+          </div>
+        </div>
+        <div class="ai-prompt">
+          <div class="ai-prompt-row">
+            <div class="ai-prompt-text">
+              Where do the notes around this one <em>disagree</em> about what makes a good tool?
+            </div>
+            <div class="ai-prompt-send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <p style="font-size:15.5px;color:var(--text-muted);line-height:1.65;margin-bottom:8px;">
+          Most AI assistants start from a blank prompt. Whisk starts from your workspace — the document, its neighbours, the tags, the models you've picked — and builds the conversation on top.
+        </p>
+        <div class="ai-features-list">
+          <div class="ai-feat">
+            <div class="ai-feat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg>
+            </div>
+            <div>
+              <h4>Context, assembled for you</h4>
+              <p>Whisk gathers the relevant notes, links, and tags automatically — so you can ask about the work instead of copying it into a chat.</p>
+            </div>
+          </div>
+          <div class="ai-feat">
+            <div class="ai-feat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h8"/></svg>
+            </div>
+            <div>
+              <h4>Local models, your choice</h4>
+              <p>Point Whisk at the model you trust. Run it on your machine, on your server, or through the provider you prefer. The workspace doesn't care.</p>
+            </div>
+          </div>
+          <div class="ai-feat">
+            <div class="ai-feat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            </div>
+            <div>
+              <h4>Tools, not just text</h4>
+              <p>Through MCP, the assistant can reach into your workspace as a tool — editing notes, walking the graph, and acting on what it finds.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRIVACY ============ -->
+<section class="privacy" id="privacy">
+  <div class="container">
+    <div class="section-head center reveal">
+      <div class="section-eyebrow">Control</div>
+      <h2 class="section-title">Your workspace, <em>your machine,</em><br/>your rules.</h2>
+      <p class="section-lead">
+        Whisk is local-first because that's the simplest way to give you real control. No account to create, no data to migrate out later, no telemetry to audit.
+      </p>
+    </div>
+
+    <div class="privacy-grid reveal">
+      <div class="privacy-item">
+        <div class="p-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h4>Notes live on your disk</h4>
+        <p>Plain markdown files in a folder you choose. Open them with any editor, back them up with any tool, version them however you like.</p>
+      </div>
+      <div class="privacy-item">
+        <div class="p-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h4M6 14h8"/></svg>
+        </div>
+        <h4>Models you pick</h4>
+        <p>Run a local model, point at a self-hosted endpoint, or use a provider. Whisk doesn't decide for you — and it doesn't phone home either way.</p>
+      </div>
+      <div class="privacy-item">
+        <div class="p-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h4>No account required</h4>
+        <p>Download, open, start writing. There is no sign-up step, no cloud tier to upsell, and no moment where your workspace stops working without a subscription.</p>
+      </div>
+      <div class="privacy-item">
+        <div class="p-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h4>Portable by design</h4>
+        <p>Because Whisk stores your work as regular files, leaving is trivial. There's no export wizard because there's nothing to export — it's already your data.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final-cta">
+  <div class="container">
+    <h2 class="reveal">A quieter kind of <em>workspace.</em></h2>
+    <p class="reveal">
+      Whisk is open source, local-first, and built for people who want their tools to stay out of the way. If that sounds like the room you've been looking for — come take a seat.
+    </p>
+    <div class="cta-row reveal">
+      <a href="https://github.com/tirthsaraiya29/Whisk" target="_blank" rel="noopener" class="btn btn-primary">
+        Explore on GitHub
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#top" class="btn btn-ghost">Back to top</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7c4 0 6 3 10 3s4-3 6-3"/>
+              <path d="M4 12c4 0 6 3 10 3s4-3 6-3"/>
+              <path d="M4 17c4 0 6 3 10 3s4-3 6-3"/>
+            </svg>
+          </span>
+          Whisk
+        </div>
+        <p>A local-first knowledge workspace. Markdown notes, connected ideas, and contextual AI — in one considered place.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#ai">AI workspace</a></li>
+          <li><a href="#privacy">Privacy</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Project</h5>
+        <ul>
+          <li><a href="https://github.com/tirthsaraiya29/Whisk" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://github.com/tirthsaraiya29/Whisk/issues" target="_blank" rel="noopener">Issues</a></li>
+          <li><a href="https://github.com/tirthsaraiya29/Whisk/releases" target="_blank" rel="noopener">Releases</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Elsewhere</h5>
+        <ul>
+          <li><a href="#philosophy">Philosophy</a></li>
+          <li><a href="#top">Back to top</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 Whisk contributors. Released under the project's open-source licence.</div>
+      <div>Made with care, not with telemetry.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Nav scroll state
+  const nav = document.getElementById('nav');
+  const onScroll = () => {
+    if (window.scrollY > 20) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Mobile nav toggle
+  const toggle = document.getElementById('navToggle');
+  const navEl = document.getElementById('nav');
+  toggle.addEventListener('click', () => {
+    const open = navEl.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  // Close mobile nav on link click
+  document.querySelectorAll('#navLinks a').forEach(a => {
+    a.addEventListener('click', () => {
+      navEl.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Scroll reveal
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!prefersReduced) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  } else {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+  }
+
+  // Subtle parallax on the mockup (disabled for reduced motion)
+  if (!prefersReduced) {
+    const mockup = document.querySelector('.mockup');
+    if (mockup) {
+      let ticking = false;
+      window.addEventListener('mousemove', (e) => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          const x = (e.clientX / window.innerWidth - 0.5) * 2;
+          const y = (e.clientY / window.innerHeight - 0.5) * 2;
+          mockup.style.transform = `rotateX(${2 - y * 1.5}deg) rotateY(${x * 1.5}deg)`;
+          ticking = false;
+        });
+      });
+    }
+  }
+</script>
+</body>
+</html>

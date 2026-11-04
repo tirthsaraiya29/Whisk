@@ -39,9 +39,9 @@ class CloudBackupWorker(
                 taskDao = database.taskDao()
             )
             val exportRepo = ExportImportRepository(
-                noteDao = database.noteDao(),
+                context = applicationContext,
                 database = database,
-                context = applicationContext
+                notesRepository = notesRepository
             )
 
             // Generate zip export to cache
@@ -54,8 +54,8 @@ class CloudBackupWorker(
 
             // Optional E2EE encryption if key provided
             val payloadBytes = if (!encryptionKey.isNullOrBlank()) {
-                val e2eeEngine = E2EESyncEngine(encryptionKey)
-                e2eeEngine.encryptVaultPayload(rawBytes)
+                val e2eeEngine = E2EESyncEngine()
+                e2eeEngine.encryptBytes(rawBytes, encryptionKey.toCharArray())
             } else {
                 rawBytes
             }

@@ -52,15 +52,32 @@ class NotesViewModel(
         }
     }
 
+    private data class UiFilterState(
+        val filter: NoteFilter,
+        val query: String,
+        val selectedIds: Set<String>,
+        val isMultiSelect: Boolean,
+    )
+
+    private val _uiFilterState = combine(
+        _activeFilter,
+        _searchQuery,
+        _selectedNoteIds,
+        _isMultiSelectMode
+    ) { filter, query, selectedIds, isMultiSelect ->
+        UiFilterState(filter, query, selectedIds, isMultiSelect)
+    }
+
     val uiState: StateFlow<NotesUiState> = combine(
         notesRepository.allNotes,
         notesRepository.trashedNotes,
         notesRepository.folders,
-        _activeFilter,
-        _searchQuery,
-        _selectedNoteIds,
-        _isMultiSelectMode,
-    ) { allNotes, trashedNotes, folders, filter, query, selectedIds, isMultiSelect ->
+        _uiFilterState,
+    ) { allNotes, trashedNotes, folders, filterState ->
+        val filter = filterState.filter
+        val query = filterState.query
+        val selectedIds = filterState.selectedIds
+        val isMultiSelect = filterState.isMultiSelect
         // Extract tags dynamically from all vault notes
         val tagCounts = mutableMapOf<String, Int>()
         allNotes.forEach { note ->

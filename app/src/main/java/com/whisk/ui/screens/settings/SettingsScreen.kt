@@ -36,7 +36,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -75,6 +79,7 @@ fun SettingsScreen(
     onClearRagIndex: (() -> Unit)? = null,
     onNavigateToProperties: (() -> Unit)? = null,
     onNavigateToTypes: (() -> Unit)? = null,
+    onRunVaultHealthScanner: (() -> Unit)? = null,
     onMenuClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -84,6 +89,7 @@ fun SettingsScreen(
     var hfModelUrlText by rememberSaveable { mutableStateOf(state.aiConfig.hfModelUrl) }
     var hfTokenText by rememberSaveable { mutableStateOf(state.aiConfig.hfApiToken) }
     var useGpu by rememberSaveable { mutableStateOf(state.aiConfig.useGpuAccelerator) }
+    var temperatureVal by rememberSaveable { mutableFloatStateOf(state.aiConfig.temperature) }
 
     var showApiKeySecret by remember { mutableStateOf(false) }
     var showHfTokenSecret by remember { mutableStateOf(false) }
@@ -252,6 +258,9 @@ fun SettingsScreen(
                     "SYSTEM" to "SYSTEM DEFAULT",
                     "DARK" to "DARK OBSIDIAN (OLED)",
                     "LIGHT" to "LIGHT MONOCHROME",
+                    "CYBERPUNK" to "CYBERPUNK NEON",
+                    "AMBER_TERMINAL" to "AMBER TERMINAL (CRT)",
+                    "MONOKAI" to "MONOKAI PRO",
                 ).forEach { (modeKey, label) ->
                     val isSelected = state.themeMode == modeKey
                     Row(
@@ -485,6 +494,39 @@ fun SettingsScreen(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // AI Temperature Slider
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "TEMPERATURE: ${String.format(java.util.Locale.US, "%.2f", temperatureVal)}",
+                            fontFamily = DotMatrixFontFamily,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (temperatureVal < 0.3f) "PRECISE" else if (temperatureVal > 0.7f) "CREATIVE" else "BALANCED",
+                            fontFamily = DotMatrixFontFamily,
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Slider(
+                        value = temperatureVal,
+                        onValueChange = { temperatureVal = it },
+                        valueRange = 0.0f..1.0f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Box(
@@ -501,6 +543,7 @@ fun SettingsScreen(
                                     hfModelUrl = hfModelUrlText,
                                     hfApiToken = hfTokenText,
                                     useGpuAccelerator = useGpu,
+                                    temperature = temperatureVal,
                                 ),
                             )
                         }
@@ -676,6 +719,63 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }
+                }
+            }
+
+            // Vault Diagnostic & Self-Healing Section (Feature 14)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                    .padding(16.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.HealthAndSafety,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "VAULT HEALTH // DIAGNOSTIC & REPAIR",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Scan vault for broken wikilinks, orphan notes, duplicate titles, and circular links with one-tap auto-repair.",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = DotMatrixFontFamily,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary)
+                        .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onRunVaultHealthScanner?.invoke()
+                        }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "RUN VAULT HEALTH SCAN",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
                 }
             }
         }

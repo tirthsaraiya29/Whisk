@@ -61,7 +61,11 @@ import com.whisk.data.repository.NotesRepository
 import com.whisk.data.repository.ObjectTypeRepository
 import com.whisk.data.repository.PropertyRepository
 import com.whisk.data.repository.RelationshipRepository
+import com.whisk.diagnostic.VaultHealthScanner
 import com.whisk.domain.model.Note
+import com.whisk.widget.DailyNoteWidget
+import com.whisk.widget.QuickCaptureWidget
+import kotlinx.coroutines.Dispatchers
 import com.whisk.ui.components.CommandPalette
 import com.whisk.ui.components.SidebarDrawer
 import com.whisk.ui.components.WhiskBottomBar
@@ -178,7 +182,14 @@ class MainActivity : ComponentActivity() {
         hybridSearchEngine = HybridSearchEngine(database.noteDao(), vectorRepository, embeddingModelManager.getDelegatingProvider())
         relatedKnowledgeRepository = RelatedKnowledgeRepository(database.noteDao(), database.relationshipDao(), vectorRepository, embeddingModelManager.getDelegatingProvider())
 
-        handleShareIntent(intent)
+        // Eager native ONNX pre-warming on Dispatchers.Default to eliminate 120ms freeze on first query
+        lifecycleScope.launch(Dispatchers.Default) {
+            try {
+                embeddingModelManager.initializeModel()
+            } catch (_: Exception) {}
+        }
+
+        handleIntent(intent)
 
         setContent {
             val themeMode by preferencesManager.themeMode.collectAsStateWithLifecycle(initialValue = "SYSTEM")
@@ -215,26 +226,69 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private var onShortcutCommandPalette: (() -> Unit)? = null
+    private var onShortcutNewNote: (() -> Unit)? = null
+
+    fun registerShortcuts(onCommandPalette: () -> Unit, onNewNote: () -> Unit) {
+        onShortcutCommandPalette = onCommandPalette
+        onShortcutNewNote = onNewNote
+    }
+
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        if (event.action == android.view.KeyEvent.ACTION_DOWN) {
+            val isModifier = event.isCtrlPressed || (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q && event.isMetaPressed)
+            if (isModifier) {
+                if (event.keyCode == android.view.KeyEvent.KEYCODE_K) {
+                    onShortcutCommandPalette?.invoke()
+                    return true
+                } else if (event.keyCode == android.view.KeyEvent.KEYCODE_N) {
+                    onShortcutNewNote?.invoke()
+                    return true
+                }
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleShareIntent(intent)
+        handleIntent(intent)
     }
 
-    private fun handleShareIntent(intent: Intent?) {
-        if ((intent?.action == Intent.ACTION_SEND) && (intent.type == "text/plain")) {
-            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
-            val sharedSubject = intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: "Quick Capture"
-            if (sharedText.isNotBlank()) {
+    private fun handleIntent(intent: Intent?) {
+        if (intent == null) return
+        when (intent.action) {
+            Intent.ACTION_SEND -> {
+                if (intent.type == "text/plain") {
+                    val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
+                    val sharedSubject = intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: "Quick Capture"
+                    if (sharedText.isNotBlank()) {
+                        lifecycleScope.launch {
+                            val newNote = Note(
+                                title = sharedSubject.ifBlank { "Quick Capture" },
+                                body = sharedText,
+                                createdAt = System.currentTimeMillis(),
+                            )
+                            notesRepository.saveNote(newNote)
+                            Toast.makeText(this@MainActivity, "Captured quick note to vault", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            QuickCaptureWidget.ACTION_QUICK_CAPTURE -> {
                 lifecycleScope.launch {
                     val newNote = Note(
-                        title = sharedSubject.ifBlank { "Quick Capture" },
-                        body = sharedText,
+                        title = "Quick Note",
+                        body = "",
                         createdAt = System.currentTimeMillis(),
                     )
                     notesRepository.saveNote(newNote)
-                    Toast.makeText(this@MainActivity, "Captured quick note to vault", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Created new quick note", Toast.LENGTH_SHORT).show()
                 }
+            }
+            DailyNoteWidget.ACTION_OPEN_DAILY_NOTE -> {
+                Toast.makeText(this@MainActivity, "Opening daily log...", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -275,6 +329,21 @@ fun WhiskApp(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val allNotes by notesRepository.allNotes.collectAsStateWithLifecycle(initialValue = emptyList())
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Register hardware keyboard shortcuts (Ctrl+K, Ctrl+N)
+    LaunchedEffect(Unit) {
+        (context as? MainActivity)?.registerShortcuts(
+            onCommandPalette = { showCommandPalette = true },
+            onNewNote = {
+                scope.launch {
+                    val newNote = Note(title = "Untitled Note", body = "")
+                    notesRepository.saveNote(newNote)
+                    navController.navigate("note_detail/${newNote.id}")
+                }
+            }
+        )
+    }
 
     // Seed Welcome Note & Object Types
     LaunchedEffect(Unit) {
@@ -358,6 +427,13 @@ fun WhiskApp(
                     },
                     onFilterChange = { filter -> viewModel.setFilter(filter) },
                     onSearchQueryChange = { query -> viewModel.setSearchQuery(query) },
+                    onTogglePin = { note -> viewModel.togglePin(note) },
+                    onToggleFavorite = { note -> viewModel.toggleFavorite(note) },
+                    onToggleSelect = { id -> viewModel.toggleNoteSelection(id) },
+                    onLongClickNote = { id -> viewModel.enterMultiSelectMode(id) },
+                    onClearMultiSelect = { viewModel.clearMultiSelect() },
+                    onBatchDelete = { viewModel.batchDeleteSelected() },
+                    onRestoreNote = { id -> viewModel.restore(id) },
                     showHint = isFirstLaunch && !(hintsDismissed["links"] ?: false),
                     onDismissHint = {
                         scope.launch { preferencesManager.dismissHint("links") }
@@ -424,6 +500,11 @@ fun WhiskApp(
                             navController.navigate("note_detail/$createdId")
                         }
                     },
+                    onTogglePin = { viewModel.togglePin() },
+                    onDuplicateNote = { viewModel.duplicateNote { newId -> navController.navigate("note_detail/$newId") } },
+                    onUpdateAccentColor = { color -> viewModel.updateAccentColor(color) },
+                    onToggleBiometricLock = { viewModel.toggleBiometricLock() },
+                    onUnlockNote = { viewModel.unlockNote() },
                     allNotes = allNotes,
                 )
             }
@@ -610,6 +691,23 @@ fun WhiskApp(
                     onClearRagIndex = { viewModel.clearRagIndex() },
                     onNavigateToProperties = { navController.navigate("properties") },
                     onNavigateToTypes = { navController.navigate("object_types") },
+                    onRunVaultHealthScanner = {
+                        scope.launch {
+                            Toast.makeText(context, "Scanning vault health...", Toast.LENGTH_SHORT).show()
+                            val scanner = VaultHealthScanner(notesRepository)
+                            val report = scanner.scan()
+                            if (report.isClean) {
+                                Toast.makeText(context, "Vault Health Score: 100/100 (Optimal)", Toast.LENGTH_LONG).show()
+                            } else {
+                                if (report.brokenLinks.isNotEmpty()) {
+                                    val count = scanner.repairBrokenLinks(report.brokenLinks.mapNotNull { it.targetTitle })
+                                    Toast.makeText(context, "Auto-repaired $count broken links! Health Score: ${report.healthScore}/100", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(context, "Vault Health Score: ${report.healthScore}/100 (${report.totalIssues} issues found)", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }
+                    },
                 )
             }
 

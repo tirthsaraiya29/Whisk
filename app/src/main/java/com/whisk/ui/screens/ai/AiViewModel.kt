@@ -11,6 +11,7 @@ import com.whisk.data.rag.indexer.DocumentIndexer
 import com.whisk.data.rag.indexer.IndexingProgress
 import com.whisk.data.rag.repository.IndexingRepository
 import com.whisk.data.repository.ChatRepository
+import com.whisk.data.repository.NotesRepository
 import com.whisk.domain.model.AiConfig
 import com.whisk.domain.model.AiMessage
 import com.whisk.domain.model.AiProviderType

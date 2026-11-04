@@ -56,8 +56,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.whisk.ui.theme.DotGothicFontFamily
-import com.whisk.ui.theme.SpaceMonoFontFamily
+import com.whisk.ui.theme.DotMatrixFontFamily
+import com.whisk.ui.theme.VercelMonoFontFamily
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -424,7 +424,7 @@ fun ExcalidrawOverlay(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "PX: ${strokeWidth.toInt()}",
-                            fontFamily = SpaceMonoFontFamily,
+                            fontFamily = VercelMonoFontFamily,
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -443,7 +443,7 @@ fun ExcalidrawOverlay(
                         ) {
                             Text(
                                 text = "WIDTH ⟳",
-                                fontFamily = DotGothicFontFamily,
+                                fontFamily = DotMatrixFontFamily,
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -482,7 +482,7 @@ private fun ToolButton(
             )
             Text(
                 text = label,
-                fontFamily = SpaceMonoFontFamily,
+                fontFamily = VercelMonoFontFamily,
                 fontSize = 10.sp,
                 color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
             )

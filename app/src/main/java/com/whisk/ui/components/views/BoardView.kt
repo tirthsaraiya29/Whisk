@@ -160,6 +160,7 @@ private fun BoardCard(
     onOpen: () -> Unit,
     onMove: (String) -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
     val currentIdx = columns.indexOf(currentColumn)
     val prevCol = if (currentIdx > 0) columns[currentIdx - 1] else null
     val nextCol = if (currentIdx >= 0 && currentIdx < columns.size - 1) columns[currentIdx + 1] else null
@@ -168,7 +169,10 @@ private fun BoardCard(
         modifier = Modifier
             .fillMaxWidth()
             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(2.dp))
-            .clickable { onOpen() },
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onOpen()
+            },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(2.dp),
     ) {
@@ -214,7 +218,10 @@ private fun BoardCard(
             ) {
                 if (prevCol != null) {
                     IconButton(
-                        onClick = { onMove(prevCol) },
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onMove(prevCol)
+                        },
                         modifier = Modifier.size(22.dp),
                     ) {
                         Icon(
@@ -237,7 +244,10 @@ private fun BoardCard(
 
                 if (nextCol != null) {
                     IconButton(
-                        onClick = { onMove(nextCol) },
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onMove(nextCol)
+                        },
                         modifier = Modifier.size(22.dp),
                     ) {
                         Icon(

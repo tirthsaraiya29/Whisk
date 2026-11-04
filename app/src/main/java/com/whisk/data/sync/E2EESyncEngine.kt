@@ -68,4 +68,49 @@ class E2EESyncEngine {
         val decryptedBytes = cipher.doFinal(cipherText)
         String(decryptedBytes, Charsets.UTF_8)
     }
+
+    suspend fun encryptBytes(rawBytes: ByteArray, passphrase: CharArray): ByteArray = withContext(Dispatchers.Default) {
+        val random = SecureRandom()
+        val salt = ByteArray(SALT_LENGTH).also { random.nextBytes(it) }
+        val iv = ByteArray(IV_LENGTH).also { random.nextBytes(it) }
+
+        val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val spec = PBEKeySpec(passphrase, salt, ITERATIONS, KEY_LENGTH)
+        val secretKey = SecretKeySpec(factory.generateSecret(spec).encoded, "AES")
+
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, GCMParameterSpec(GCM_TAG_LENGTH, iv))
+
+        val cipherText = cipher.doFinal(rawBytes)
+
+        val combined = ByteArray(salt.size + iv.size + cipherText.size)
+        System.arraycopy(salt, 0, combined, 0, salt.size)
+        System.arraycopy(iv, 0, combined, salt.size, iv.size)
+        System.arraycopy(cipherText, 0, combined, salt.size + iv.size, cipherText.size)
+        combined
+    }
+
+    suspend fun decryptBytes(combined: ByteArray, passphrase: CharArray): ByteArray = withContext(Dispatchers.Default) {
+        if (combined.size < SALT_LENGTH + IV_LENGTH) {
+            throw IllegalArgumentException("Corrupted encrypted payload: insufficient bytes")
+        }
+
+        val salt = ByteArray(SALT_LENGTH)
+        val iv = ByteArray(IV_LENGTH)
+        val cipherTextLength = combined.size - SALT_LENGTH - IV_LENGTH
+        val cipherText = ByteArray(cipherTextLength)
+
+        System.arraycopy(combined, 0, salt, 0, SALT_LENGTH)
+        System.arraycopy(combined, SALT_LENGTH, iv, 0, IV_LENGTH)
+        System.arraycopy(combined, SALT_LENGTH + IV_LENGTH, cipherText, 0, cipherTextLength)
+
+        val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val spec = PBEKeySpec(passphrase, salt, ITERATIONS, KEY_LENGTH)
+        val secretKey = SecretKeySpec(factory.generateSecret(spec).encoded, "AES")
+
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, GCMParameterSpec(GCM_TAG_LENGTH, iv))
+
+        cipher.doFinal(cipherText)
+    }
 }

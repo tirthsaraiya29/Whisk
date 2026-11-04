@@ -151,6 +151,7 @@ class MarkdownVisualTransformation(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MarkdownEditor(
     title: String,

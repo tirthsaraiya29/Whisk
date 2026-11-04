@@ -237,7 +237,11 @@ class P2PCollaborationManager(
                 notes = transfers
             )
 
-            val socket = P2PTlsSecurity.createSSLSocket(peer.hostAddress, peer.port)
+            val socket = P2PTlsSecurity.createSSLSocket(peer.hostAddress, peer.port).apply {
+                val params = sslParameters
+                params.endpointIdentificationAlgorithm = "HTTPS"
+                sslParameters = params
+            }
             val writer = PrintWriter(socket.getOutputStream(), true)
             val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
 

@@ -22,9 +22,9 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.net.InetAddress
-import java.net.ServerSocket
-import java.net.Socket
 import java.util.UUID
+import javax.net.ssl.SSLServerSocket
+import javax.net.ssl.SSLSocket
 
 @Serializable
 data class P2PPeer(
@@ -73,7 +73,7 @@ class P2PCollaborationManager(
     private val _uiState = MutableStateFlow(P2PUiState())
     val uiState: StateFlow<P2PUiState> = _uiState.asStateFlow()
 
-    private var serverSocket: ServerSocket? = null
+    private var serverSocket: SSLServerSocket? = null
     private var serverJob: Job? = null
     private val serviceType = "_whisk-sync._tcp."
     private var localPort = 0
@@ -145,7 +145,7 @@ class P2PCollaborationManager(
     fun startServerAndDiscovery(scope: CoroutineScope) {
         scope.launch(Dispatchers.IO) {
             try {
-                serverSocket = ServerSocket(0)
+                serverSocket = P2PTlsSecurity.createSSLServerSocket(0)
                 localPort = serverSocket!!.localPort
 
                 val serviceInfo = NsdServiceInfo().apply {
@@ -168,7 +168,7 @@ class P2PCollaborationManager(
         serverJob = scope.launch(Dispatchers.IO) {
             while (serverSocket != null && !serverSocket!!.isClosed) {
                 try {
-                    val client = serverSocket!!.accept()
+                    val client = serverSocket!!.accept() as SSLSocket
                     scope.launch(Dispatchers.IO) { handleIncomingSync(client) }
                 } catch (e: Exception) {
                     break
@@ -177,7 +177,7 @@ class P2PCollaborationManager(
         }
     }
 
-    private suspend fun handleIncomingSync(socket: Socket) = withContext(Dispatchers.IO) {
+    private suspend fun handleIncomingSync(socket: SSLSocket) = withContext(Dispatchers.IO) {
         try {
             val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
             val writer = PrintWriter(socket.getOutputStream(), true)
@@ -237,7 +237,7 @@ class P2PCollaborationManager(
                 notes = transfers
             )
 
-            val socket = Socket(peer.hostAddress, peer.port)
+            val socket = P2PTlsSecurity.createSSLSocket(peer.hostAddress, peer.port)
             val writer = PrintWriter(socket.getOutputStream(), true)
             val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
 

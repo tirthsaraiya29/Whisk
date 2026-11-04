@@ -25,6 +25,12 @@ class FakeNoteDaoForGraph(private val notes: List<NoteEntity>) : NoteDao {
     override suspend fun getNoteByTitle(title: String): NoteEntity? = notes.find { it.title == title }
     override suspend fun getObjectsForPicker(query: String, typeId: String?, limit: Int): List<NoteEntity> = emptyList()
     override suspend fun updateObjectType(id: String, typeId: String): Int = 1
+    override suspend fun softDeleteNote(id: String, timestamp: Long): Int = 1
+    override suspend fun restoreNote(id: String): Int = 1
+    override fun getTrashedNotes(): Flow<List<NoteEntity>> = flowOf(emptyList())
+    override suspend fun purgeOldTrashedNotes(olderThanTimestamp: Long): Int = 0
+    override suspend fun togglePin(id: String, isPinned: Boolean): Int = 1
+    override suspend fun updateAccentColor(id: String, accentColor: String?): Int = 1
     override suspend fun insertNote(note: NoteEntity) {}
     override suspend fun updateNote(note: NoteEntity) {}
     override suspend fun deleteNoteById(id: String): Int = 0

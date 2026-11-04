@@ -105,6 +105,32 @@ class FakeNoteDao : NoteDao {
         insertNote(note.copy(typeId = typeId))
         return 1
     }
+    override suspend fun softDeleteNote(id: String, timestamp: Long): Int {
+        val note = getNoteById(id) ?: return 0
+        insertNote(note.copy(deletedAt = timestamp))
+        return 1
+    }
+    override suspend fun restoreNote(id: String): Int {
+        val note = getNoteById(id) ?: return 0
+        insertNote(note.copy(deletedAt = null))
+        return 1
+    }
+    override fun getTrashedNotes(): Flow<List<NoteEntity>> = _notes.map { list -> list.filter { it.deletedAt != null } }
+    override suspend fun purgeOldTrashedNotes(olderThanTimestamp: Long): Int {
+        val toDelete = _notes.value.filter { it.deletedAt != null && it.deletedAt!! < olderThanTimestamp }
+        _notes.value = _notes.value.filter { !(it.deletedAt != null && it.deletedAt!! < olderThanTimestamp) }
+        return toDelete.size
+    }
+    override suspend fun togglePin(id: String, isPinned: Boolean): Int {
+        val note = getNoteById(id) ?: return 0
+        insertNote(note.copy(isPinned = isPinned))
+        return 1
+    }
+    override suspend fun updateAccentColor(id: String, accentColor: String?): Int {
+        val note = getNoteById(id) ?: return 0
+        insertNote(note.copy(accentColor = accentColor))
+        return 1
+    }
 }
 
 class FakeFolderDao : FolderDao {

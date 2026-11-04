@@ -56,6 +56,12 @@ class KnowledgeAnalysisEngineTest {
             override fun getNotesByTypeId(typeId: String): kotlinx.coroutines.flow.Flow<List<com.whisk.data.local.NoteEntity>> = kotlinx.coroutines.flow.emptyFlow()
             override suspend fun getObjectsForPicker(query: String, typeId: String?, limit: Int): List<com.whisk.data.local.NoteEntity> = emptyList()
             override suspend fun updateObjectType(id: String, typeId: String): Int = 0
+            override suspend fun softDeleteNote(id: String, timestamp: Long): Int = 1
+            override suspend fun restoreNote(id: String): Int = 1
+            override fun getTrashedNotes(): kotlinx.coroutines.flow.Flow<List<com.whisk.data.local.NoteEntity>> = kotlinx.coroutines.flow.emptyFlow()
+            override suspend fun purgeOldTrashedNotes(olderThanTimestamp: Long): Int = 0
+            override suspend fun togglePin(id: String, isPinned: Boolean): Int = 1
+            override suspend fun updateAccentColor(id: String, accentColor: String?): Int = 1
         }
     }
 }

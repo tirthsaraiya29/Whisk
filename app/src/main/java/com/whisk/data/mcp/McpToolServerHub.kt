@@ -64,12 +64,10 @@ class McpToolServerHub(
             when (name) {
                 "search_vault_notes" -> {
                     val query = args.optString("query", "")
-                    val results = notesRepository.searchNotes(query)
-                    // Take first batch
-                    var notesList: List<Note> = emptyList()
-                    val job = kotlinx.coroutines.flow.firstOrNull {
-                        notesList = it
-                        true
+                    val notesList = try {
+                        notesRepository.searchNotes(query).first()
+                    } catch (_: Exception) {
+                        emptyList()
                     }
                     val jsonArray = JSONArray()
                     notesList.take(10).forEach { note ->

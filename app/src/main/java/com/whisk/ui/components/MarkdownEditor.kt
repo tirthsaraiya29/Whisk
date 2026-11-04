@@ -759,6 +759,21 @@ fun RenderMarkdownPreview(
                 codeBuilder.append(line).append("\n")
                 i++
             }
+            line.startsWith("$$") -> {
+                if (line.endsWith("$$") && line.length > 2) {
+                    KatexBlockView(code = line.removePrefix("$$").removeSuffix("$$"))
+                    i++
+                } else {
+                    val mathBuilder = StringBuilder()
+                    i++
+                    while (i < lines.size && !lines[i].startsWith("$$")) {
+                        mathBuilder.append(lines[i]).append("\n")
+                        i++
+                    }
+                    if (i < lines.size && lines[i].startsWith("$$")) i++
+                    KatexBlockView(code = mathBuilder.toString().trim())
+                }
+            }
             line.startsWith("> [!WARNING]") || line.startsWith("> [!IMPORTANT]") -> {
                 val calloutText = line.substringAfter("]").trim()
                 Card(

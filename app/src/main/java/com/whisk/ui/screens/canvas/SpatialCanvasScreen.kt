@@ -41,9 +41,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.whisk.canvas.CanvasTool
+import com.whisk.canvas.DrawingElement
+import com.whisk.canvas.ExcalidrawOverlay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -75,6 +79,9 @@ fun SpatialCanvasScreen(
     var showCanvasMenu by remember { mutableStateOf(false) }
     var canvasScale by remember { mutableFloatStateOf(1f) }
     var canvasOffset by remember { mutableStateOf(Offset.Zero) }
+    var activeTool by remember { mutableStateOf(CanvasTool.PAN_NAVIGATE) }
+    val drawingElements = remember { mutableStateListOf<DrawingElement>() }
+    var elementsRevision by remember { mutableStateOf(0) }
 
     val currentCanvas = state.currentCanvas
 
@@ -209,12 +216,16 @@ fun SpatialCanvasScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .pointerInput(Unit) {
-                                detectTransformGestures { _, pan, zoom, _ ->
-                                    canvasScale = (canvasScale * zoom).coerceIn(0.4f, 3.0f)
-                                    canvasOffset += pan
-                                }
-                            },
+                            .then(
+                                if (activeTool == CanvasTool.PAN_NAVIGATE) {
+                                    Modifier.pointerInput(Unit) {
+                                        detectTransformGestures { _, pan, zoom, _ ->
+                                            canvasScale = (canvasScale * zoom).coerceIn(0.4f, 3.0f)
+                                            canvasOffset += pan
+                                        }
+                                    }
+                                } else Modifier
+                            ),
                     ) {
                         Box(
                             modifier = Modifier
@@ -263,7 +274,9 @@ fun SpatialCanvasScreen(
                                     CanvasCardItem(
                                         card = card,
                                         onDrag = { dx, dy ->
-                                            onUpdateCardPos(card.id, card.x + dx / canvasScale, card.y + dy / canvasScale)
+                                            if (activeTool == CanvasTool.PAN_NAVIGATE) {
+                                                onUpdateCardPos(card.id, card.x + dx / canvasScale, card.y + dy / canvasScale)
+                                            }
                                         },
                                         onDelete = { onDeleteCard(card.id) },
                                         onOpenNote = {
@@ -274,6 +287,17 @@ fun SpatialCanvasScreen(
                                 }
                             }
                         }
+
+                        // Native Vector Drawing Overlay (Feature 01: Excalidraw Engine)
+                        ExcalidrawOverlay(
+                            modifier = Modifier.fillMaxSize(),
+                            activeTool = activeTool,
+                            onToolChange = { activeTool = it },
+                            elements = drawingElements,
+                            onElementsChange = { elementsRevision++ },
+                            canvasScale = canvasScale,
+                            canvasOffset = canvasOffset
+                        )
                     }
                 }
             }

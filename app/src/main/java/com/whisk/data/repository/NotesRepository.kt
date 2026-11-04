@@ -67,6 +67,10 @@ class NotesRepository(
         return noteDao.getObjectsForPicker(query, typeId, limit).map { it.toDomain() }
     }
 
+    suspend fun getAllNotesDirect(): List<Note> = withContext(Dispatchers.IO) {
+        noteDao.getAllNotesDirect().map { it.toDomain() }
+    }
+
     suspend fun changeObjectType(noteId: String, newTypeId: String) {
         noteDao.updateObjectType(noteId, newTypeId)
         indexingRepository?.deleteIndexingState(noteId)

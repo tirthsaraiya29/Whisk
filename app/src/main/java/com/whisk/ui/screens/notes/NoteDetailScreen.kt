@@ -1,6 +1,7 @@
 package com.whisk.ui.screens.notes
 
 import android.app.DatePickerDialog
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -34,7 +36,13 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -104,12 +112,20 @@ fun NoteDetailScreen(
     onOpenProjectWorkspace: ((String) -> Unit)? = null,
     onConvertUnlinkedMention: ((matchedText: String, targetTitle: String) -> Unit)? = null,
     onCreateNoteFromBrokenLink: ((targetTitle: String) -> Unit)? = null,
+    onTogglePin: () -> Unit = {},
+    onDuplicateNote: () -> Unit = {},
+    onUpdateAccentColor: (String?) -> Unit = {},
+    onToggleBiometricLock: () -> Unit = {},
+    onUnlockNote: () -> Unit = {},
     allNotes: List<Note> = emptyList(),
 ) {
     val note = state.note ?: return
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var showBacklinksSheet by remember { mutableStateOf(false) }
     var showTypeMenu by remember { mutableStateOf(false) }
+    var showMoreMenu by remember { mutableStateOf(false) }
+    var showColorPicker by remember { mutableStateOf(false) }
 
     val folderName = (note.folder ?: "VAULT").ifBlank { "VAULT" }.uppercase()
     val breadcrumbTitle = "$folderName / ${note.title.ifBlank { "UNTITLED.MD" }.uppercase()}"
@@ -179,16 +195,137 @@ fun NoteDetailScreen(
                             tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
+
+                    // More Menu
+                    Box {
+                        IconButton(onClick = { showMoreMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+                        }
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(if (note.isPinned) "Unpin Note" else "Pin Note", fontFamily = DotMatrixFontFamily) },
+                                leadingIcon = { Icon(Icons.Default.PushPin, contentDescription = null) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onTogglePin()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(if (state.isBiometricLocked) "Unlock Biometrics" else "Lock with Biometrics", fontFamily = DotMatrixFontFamily) },
+                                leadingIcon = { Icon(if (state.isBiometricLocked) Icons.Default.LockOpen else Icons.Default.Lock, contentDescription = null) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onToggleBiometricLock()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Duplicate Note", fontFamily = DotMatrixFontFamily) },
+                                leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onDuplicateNote()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Copy Raw Markdown", fontFamily = DotMatrixFontFamily) },
+                                leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    val clip = android.content.ClipData.newPlainText("Markdown", note.body)
+                                    clipboard.setPrimaryClip(clip)
+                                    Toast.makeText(context, "Copied Markdown to clipboard", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Set Accent Color", fontFamily = DotMatrixFontFamily) },
+                                leadingIcon = { Icon(Icons.Default.Palette, contentDescription = null) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    showColorPicker = true
+                                }
+                            )
+                        }
+                    }
                 },
             )
         },
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background),
-        ) {
+        if (state.isBiometricLocked && !state.isUnlocked) {
+            // Brutalist Biometric Barrier Gate
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(24.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .border(1.dp, MaterialTheme.colorScheme.error)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+
+                    Text(
+                        text = "WHISK // ENCRYPTED NOTE",
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Text(
+                        text = "This document is biometrically locked to protect sensitive vault data.",
+                        fontFamily = DotMatrixFontFamily,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.primary)
+                            .border(1.dp, MaterialTheme.colorScheme.primary)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onUnlockNote()
+                            }
+                            .padding(horizontal = 24.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = "[UNLOCK WITH BIOMETRICS]",
+                            fontFamily = DotMatrixFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background),
+            ) {
             // Object Type & Flagship Workspace Header Bar
             Row(
                 modifier = Modifier
@@ -378,6 +515,54 @@ fun NoteDetailScreen(
                 modifier = Modifier.fillMaxSize(),
                 allNotes = allNotes,
             )
+        }
+    }
+    }
+
+    if (showColorPicker) {
+        val brutalistAccents = listOf(
+            "#00FFCC" to "CYBER NEON",
+            "#FF0055" to "RADICAL CRIMSON",
+            "#FFB800" to "AMBER TERMINAL",
+            "#00E5FF" to "ELECTRIC BLUE",
+            "#A855F7" to "NEON PURPLE",
+            "#22C55E" to "STATUS GREEN",
+            null to "RESET ACCENT"
+        )
+        ModalBottomSheet(
+            onDismissRequest = { showColorPicker = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(0.dp)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = "SET NOTE ACCENT COLOR",
+                    fontFamily = DotMatrixFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                brutalistAccents.forEach { (hex, name) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onUpdateAccentColor(hex)
+                                showColorPicker = false
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        if (hex != null) {
+                            Box(modifier = Modifier.size(20.dp).background(Color(android.graphics.Color.parseColor(hex))))
+                        } else {
+                            Box(modifier = Modifier.size(20.dp).border(1.dp, MaterialTheme.colorScheme.outline))
+                        }
+                        Text(name, fontFamily = DotMatrixFontFamily, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }
         }
     }
 

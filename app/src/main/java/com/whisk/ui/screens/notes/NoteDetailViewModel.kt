@@ -48,6 +48,7 @@ data class NoteDetailUiState(
     val saveState: SaveState = SaveState.IDLE,
     val isDeleted: Boolean = false,
     val isBiometricLocked: Boolean = false,
+    val isUnlocked: Boolean = false,
     val propertyItems: List<NotePropertyItem> = emptyList(),
     val allDefinitions: List<PropertyDefinition> = emptyList(),
     val objectTypes: List<ObjectTypeDefinition> = emptyList(),
@@ -297,6 +298,15 @@ class NoteDetailViewModel(
             }
             _uiState.update { it.copy(isDeleted = true) }
         }
+    }
+
+    fun unlockNote() {
+        _uiState.update { it.copy(isUnlocked = true) }
+    }
+
+    fun toggleBiometricLock() {
+        val current = _uiState.value.isBiometricLocked
+        _uiState.update { it.copy(isBiometricLocked = !current, isUnlocked = !current) }
     }
 
     fun flushPendingSave() {

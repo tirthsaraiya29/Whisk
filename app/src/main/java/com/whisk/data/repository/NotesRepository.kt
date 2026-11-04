@@ -14,11 +14,13 @@ import com.whisk.domain.model.Note
 import com.whisk.domain.model.NoteLink
 import com.whisk.domain.model.Tag
 import com.whisk.domain.model.TaskItem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 import com.whisk.domain.model.BrokenLinkItem
 import com.whisk.domain.model.UnlinkedMention
@@ -40,6 +42,10 @@ class NotesRepository(
     }
 
     val archivedNotes: Flow<List<Note>> = noteDao.getArchivedNotes().map { entities ->
+        entities.map { it.toDomain() }
+    }
+
+    val trashedNotes: Flow<List<Note>> = noteDao.getTrashedNotes().map { entities ->
         entities.map { it.toDomain() }
     }
 
@@ -103,6 +109,30 @@ class NotesRepository(
         indexingRepository?.deleteIndexingState(id)
     }
 
+    suspend fun softDeleteNote(id: String) {
+        val now = System.currentTimeMillis()
+        noteDao.softDeleteNote(id, now)
+        vectorRepository?.deleteObjectVectors(id)
+        indexingRepository?.deleteIndexingState(id)
+    }
+
+    suspend fun restoreNote(id: String) {
+        noteDao.restoreNote(id)
+    }
+
+    suspend fun purgeOldTrash(olderThanDays: Int = 30) {
+        val cutoff = System.currentTimeMillis() - (olderThanDays.toLong() * 24L * 60L * 60L * 1000L)
+        noteDao.purgeOldTrashedNotes(cutoff)
+    }
+
+    suspend fun togglePin(id: String, isPinned: Boolean) {
+        noteDao.togglePin(id, isPinned)
+    }
+
+    suspend fun updateAccentColor(id: String, accentColor: String?) {
+        noteDao.updateAccentColor(id, accentColor)
+    }
+
     fun searchNotes(query: String): Flow<List<Note>> {
         return noteDao.searchNotes(query).map { entities ->
             entities.map { it.toDomain() }
@@ -141,7 +171,7 @@ class NotesRepository(
         return links
     }
 
-    suspend fun getBacklinksForNote(noteTitle: String, noteId: String, aliases: List<String> = emptyList()): List<Backlink> {
+    suspend fun getBacklinksForNote(noteTitle: String, noteId: String, aliases: List<String> = emptyList()): List<Backlink> = withContext(Dispatchers.Default) {
         val allEntities = noteDao.getAllNotesDirect()
         val allNotes = allEntities.map { it.toDomain() }
         val backlinks = mutableListOf<Backlink>()
@@ -168,15 +198,15 @@ class NotesRepository(
                 )
             }
         }
-        return backlinks.sortedByDescending { it.updatedAt }
+        backlinks.sortedByDescending { it.updatedAt }
     }
 
-    suspend fun getUnlinkedMentionsForNote(note: Note): List<UnlinkedMention> {
+    suspend fun getUnlinkedMentionsForNote(note: Note): List<UnlinkedMention> = withContext(Dispatchers.Default) {
         val allNotes = noteDao.getAllNotesDirect().map { it.toDomain() }
-        return UnlinkedMentionDetector.findUnlinkedMentions(note, allNotes)
+        UnlinkedMentionDetector.findUnlinkedMentions(note, allNotes)
     }
 
-    suspend fun getBrokenLinks(): List<BrokenLinkItem> {
+    suspend fun getBrokenLinks(): List<BrokenLinkItem> = withContext(Dispatchers.Default) {
         val allNotes = noteDao.getAllNotesDirect().map { it.toDomain() }
         val brokenLinks = mutableListOf<BrokenLinkItem>()
 
@@ -198,7 +228,7 @@ class NotesRepository(
                 }
             }
         }
-        return brokenLinks
+        brokenLinks
     }
 
     suspend fun convertUnlinkedMentionToLink(sourceNoteId: String, matchedText: String, targetTitle: String) {

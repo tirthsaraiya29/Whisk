@@ -95,6 +95,8 @@ class DocumentIndexer(
     }
 
     suspend fun reconcileOrphans(): ReconciliationResult = withContext(Dispatchers.IO) {
+        // Automatically recover any states stuck in INDEXING from process termination
+        indexingRepository.resetStuckIndexingStates()
         val activeNotes = noteDao.getAllNotesDirect().filter { !it.isArchived }
         val activeNoteIds = activeNotes.map { it.id }.toSet()
 

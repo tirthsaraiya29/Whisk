@@ -52,4 +52,7 @@ interface IndexingStateDao {
 
     @Query("DELETE FROM indexing_states")
     suspend fun deleteAllIndexingStates(): Int
+
+    @Query("UPDATE indexing_states SET status = 'PENDING', failureReason = 'Recovered from interrupted indexing' WHERE status = 'INDEXING'")
+    suspend fun resetStuckIndexingStates(): Int
 }

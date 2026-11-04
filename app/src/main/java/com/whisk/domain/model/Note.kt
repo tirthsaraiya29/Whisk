@@ -20,6 +20,9 @@ data class Note(
     val description: String? = null,
     val icon: String? = null,
     val coverImage: String? = null,
+    val isPinned: Boolean = false,
+    val deletedAt: Long? = null,
+    val accentColor: String? = null,
 )
 
 data class NoteLink(

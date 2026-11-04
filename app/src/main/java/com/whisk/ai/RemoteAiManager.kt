@@ -33,6 +33,17 @@ open class RemoteAiManager {
         .readTimeout(60, TimeUnit.SECONDS)
         .build()
 
+    private fun formatHttpError(provider: String, code: Int, body: String): String {
+        return when (code) {
+            401 -> "[$provider] 401 Unauthorized: Invalid API key. Please check your credentials in Settings."
+            403 -> "[$provider] 403 Forbidden: Access denied. Check account permissions or API restrictions."
+            429 -> "[$provider] 429 Rate Limit Exceeded: Usage quota exhausted or rate limit triggered. Retry later."
+            500 -> "[$provider] 500 Internal Server Error: Remote model server failed to process request."
+            503 -> "[$provider] 503 Service Unavailable: Remote model is overloaded. Retry in a few moments."
+            else -> "[$provider] HTTP $code Error: ${body.take(200)}"
+        }
+    }
+
     suspend fun testConnection(config: AiConfig): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         if (config.providerType == AiProviderType.LOCAL_GEMMA) {
             return@withContext Pair(true, "Local Gemma engine ready.")
@@ -55,12 +66,22 @@ open class RemoteAiManager {
                         requestBuilder.header("Authorization", "Bearer ${config.apiKey}")
                     }
                     val response = client.newCall(requestBuilder.build()).execute()
-                    if (response.isSuccessful) Pair(true, "Connection successful.") else Pair(false, "HTTP ${response.code}: ${response.message}")
+                    if (response.isSuccessful) {
+                        Pair(true, "Connection successful.")
+                    } else {
+                        val errBody = response.body.string()
+                        Pair(false, formatHttpError(config.providerType.name, response.code, errBody))
+                    }
                 }
                 AiProviderType.GEMINI -> {
                     val url = "https://generativelanguage.googleapis.com/v1beta/models?key=${config.apiKey}"
                     val response = client.newCall(Request.Builder().url(url).get().build()).execute()
-                    if (response.isSuccessful) Pair(true, "Gemini API connected.") else Pair(false, "Gemini HTTP ${response.code}")
+                    if (response.isSuccessful) {
+                        Pair(true, "Gemini API connected.")
+                    } else {
+                        val errBody = response.body.string()
+                        Pair(false, formatHttpError("Gemini", response.code, errBody))
+                    }
                 }
                 AiProviderType.ANTHROPIC -> {
                     val url = "https://api.anthropic.com/v1/messages"
@@ -69,7 +90,12 @@ open class RemoteAiManager {
                         .header("anthropic-version", "2023-06-01")
                     val body = """{"model":"claude-3-haiku-20240307","max_tokens":1,"messages":[{"role":"user","content":"hi"}]}""".toRequestBody("application/json".toMediaType())
                     val response = client.newCall(requestBuilder.post(body).build()).execute()
-                    if (response.isSuccessful || (response.code == 400)) Pair(true, "Anthropic API connected.") else Pair(false, "Anthropic HTTP ${response.code}")
+                    if (response.isSuccessful || (response.code == 400)) {
+                        Pair(true, "Anthropic API connected.")
+                    } else {
+                        val errBody = response.body.string()
+                        Pair(false, formatHttpError("Anthropic", response.code, errBody))
+                    }
                 }
                 else -> Pair(false, "Unsupported provider type.")
             }
@@ -116,6 +142,7 @@ open class RemoteAiManager {
         val payload = JSONObject().apply {
             put("model", config.selectedModel.ifBlank { "gpt-4o-mini" })
             put("stream", true)
+            put("temperature", config.temperature)
             put(
                 "messages",
                 JSONArray().apply {
@@ -135,7 +162,7 @@ open class RemoteAiManager {
         val response = client.newCall(requestBuilder.build()).execute()
         if (!response.isSuccessful) {
             val errBody = response.body.string()
-            emit("API Request Failed [${response.code}]: $errBody")
+            emit(formatHttpError(config.providerType.name, response.code, errBody))
             return@flow
         }
 
@@ -186,6 +213,13 @@ open class RemoteAiManager {
                     )
                 },
             )
+            put(
+                "generationConfig",
+                JSONObject().apply {
+                    put("temperature", config.temperature)
+                    put("maxOutputTokens", config.maxTokens)
+                },
+            )
         }
 
         val request = Request.Builder()
@@ -196,7 +230,7 @@ open class RemoteAiManager {
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
             val errBody = response.body.string()
-            emit("Gemini Request Failed [${response.code}]: $errBody")
+            emit(formatHttpError("Gemini", response.code, errBody))
             return@flow
         }
 
@@ -234,6 +268,7 @@ open class RemoteAiManager {
         val payload = JSONObject().apply {
             put("model", model)
             put("max_tokens", config.maxTokens)
+            put("temperature", config.temperature)
             put("stream", true)
             put("system", systemPrompt)
             put(
@@ -254,7 +289,7 @@ open class RemoteAiManager {
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
             val errBody = response.body.string()
-            emit("Anthropic Request Failed [${response.code}]: $errBody")
+            emit(formatHttpError("Anthropic", response.code, errBody))
             return@flow
         }
 

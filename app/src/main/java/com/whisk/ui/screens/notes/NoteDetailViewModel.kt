@@ -1,12 +1,16 @@
 package com.whisk.ui.screens.notes
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.whisk.data.rag.repository.RelatedKnowledgeItem
+import com.whisk.data.rag.repository.RelatedKnowledgeRepository
 import com.whisk.data.repository.NotesRepository
 import com.whisk.data.repository.ObjectTypeRepository
 import com.whisk.data.repository.PropertyRepository
 import com.whisk.data.repository.RelationshipRepository
 import com.whisk.domain.model.Backlink
+import com.whisk.domain.model.BrokenLinkItem
 import com.whisk.domain.model.Note
 import com.whisk.domain.model.NotePropertyItem
 import com.whisk.domain.model.NotePropertyValue
@@ -14,25 +18,27 @@ import com.whisk.domain.model.ObjectTypeDefinition
 import com.whisk.domain.model.PropertyDefinition
 import com.whisk.domain.model.RelationshipDetail
 import com.whisk.domain.model.RelationshipType
+import com.whisk.domain.model.UnlinkedMention
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.UUID
-
-import com.whisk.domain.model.BrokenLinkItem
-import com.whisk.domain.model.UnlinkedMention
-
-import com.whisk.data.rag.repository.RelatedKnowledgeItem
-import com.whisk.data.rag.repository.RelatedKnowledgeRepository
+import kotlin.time.Duration.Companion.milliseconds
 
 enum class SaveState {
     IDLE, SAVING, SAVED, ERROR
 }
 
+@Immutable
 data class NoteDetailUiState(
     val note: Note? = null,
     val backlinks: List<Backlink> = emptyList(),
@@ -41,6 +47,7 @@ data class NoteDetailUiState(
     val relatedKnowledge: List<RelatedKnowledgeItem> = emptyList(),
     val saveState: SaveState = SaveState.IDLE,
     val isDeleted: Boolean = false,
+    val isBiometricLocked: Boolean = false,
     val propertyItems: List<NotePropertyItem> = emptyList(),
     val allDefinitions: List<PropertyDefinition> = emptyList(),
     val objectTypes: List<ObjectTypeDefinition> = emptyList(),
@@ -59,6 +66,7 @@ class NoteDetailViewModel(
     private val _uiState = MutableStateFlow(NoteDetailUiState())
     val uiState: StateFlow<NoteDetailUiState> = _uiState.asStateFlow()
 
+    private val saveMutex = Mutex()
     private var autoSaveJob: Job? = null
 
     init {
@@ -75,15 +83,24 @@ class NoteDetailViewModel(
                 val unlinkedMentions = notesRepository.getUnlinkedMentionsForNote(note)
                 val brokenLinks = notesRepository.getBrokenLinks().filter { it.sourceNoteId == note.id }
                 val related = relatedKnowledgeRepository?.getRelatedKnowledgeForNote(note.id, limit = 5) ?: emptyList()
-                _uiState.value = _uiState.value.copy(
-                    note = note,
-                    backlinks = backlinks,
-                    unlinkedMentions = unlinkedMentions,
-                    brokenLinks = brokenLinks,
-                    relatedKnowledge = related,
-                )
+                val isLocked = note.tags.any { it.equals("locked", ignoreCase = true) || it.equals("secret", ignoreCase = true) }
+
+                _uiState.update { current ->
+                    current.copy(
+                        note = note,
+                        backlinks = backlinks,
+                        unlinkedMentions = unlinkedMentions,
+                        brokenLinks = brokenLinks,
+                        relatedKnowledge = related,
+                        isBiometricLocked = isLocked,
+                    )
+                }
             }
         }
+    }
+
+    fun unlockBiometric() {
+        _uiState.update { it.copy(isBiometricLocked = false) }
     }
 
     fun convertUnlinkedMention(matchedText: String, targetTitle: String) {
@@ -105,12 +122,12 @@ class NoteDetailViewModel(
     private fun observeProperties() {
         viewModelScope.launch {
             propertyRepository.getPropertyItemsForNote(noteId).collect { items ->
-                _uiState.value = _uiState.value.copy(propertyItems = items)
+                _uiState.update { it.copy(propertyItems = items) }
             }
         }
         viewModelScope.launch {
             propertyRepository.nonArchivedPropertyDefinitions.collect { defs ->
-                _uiState.value = _uiState.value.copy(allDefinitions = defs)
+                _uiState.update { it.copy(allDefinitions = defs) }
             }
         }
     }
@@ -119,14 +136,14 @@ class NoteDetailViewModel(
         objectTypeRepository?.let { repo ->
             viewModelScope.launch {
                 repo.nonArchivedObjectTypeDefinitions.collect { types ->
-                    _uiState.value = _uiState.value.copy(objectTypes = types)
+                    _uiState.update { it.copy(objectTypes = types) }
                 }
             }
         }
         relationshipRepository?.let { repo ->
             viewModelScope.launch {
                 repo.getRelationshipsForObject(noteId).collect { rels ->
-                    _uiState.value = _uiState.value.copy(relationships = rels)
+                    _uiState.update { it.copy(relationships = rels) }
                 }
             }
         }
@@ -135,9 +152,11 @@ class NoteDetailViewModel(
     fun changeObjectType(newTypeId: String) {
         val current = _uiState.value.note ?: return
         val updated = current.copy(typeId = newTypeId, updatedAt = System.currentTimeMillis())
-        _uiState.value = _uiState.value.copy(note = updated)
+        _uiState.update { it.copy(note = updated) }
         viewModelScope.launch {
-            notesRepository.saveNote(updated)
+            saveMutex.withLock {
+                notesRepository.saveNote(updated)
+            }
         }
     }
 
@@ -198,24 +217,24 @@ class NoteDetailViewModel(
             body = body,
             updatedAt = System.currentTimeMillis(),
         )
-        _uiState.value = _uiState.value.copy(
-            note = updated,
-            saveState = SaveState.SAVING,
-        )
+        _uiState.update {
+            it.copy(note = updated, saveState = SaveState.SAVING)
+        }
 
-        // Debounced autosave
+        // Debounced atomic autosave
         autoSaveJob?.cancel()
         autoSaveJob = viewModelScope.launch {
-            delay(600.milliseconds)
+            delay(500.milliseconds)
             try {
-                notesRepository.saveNote(updated)
+                saveMutex.withLock {
+                    notesRepository.saveNote(updated)
+                }
                 val backlinks = notesRepository.getBacklinksForNote(updated.title, updated.id)
-                _uiState.value = _uiState.value.copy(
-                    backlinks = backlinks,
-                    saveState = SaveState.SAVED,
-                )
+                _uiState.update {
+                    it.copy(backlinks = backlinks, saveState = SaveState.SAVED)
+                }
             } catch (_: Exception) {
-                _uiState.value = _uiState.value.copy(saveState = SaveState.ERROR)
+                _uiState.update { it.copy(saveState = SaveState.ERROR) }
             }
         }
     }
@@ -223,16 +242,60 @@ class NoteDetailViewModel(
     fun toggleFavorite() {
         val current = _uiState.value.note ?: return
         val updated = current.copy(isFavorite = !current.isFavorite)
-        _uiState.value = _uiState.value.copy(note = updated)
+        _uiState.update { it.copy(note = updated) }
         viewModelScope.launch {
-            notesRepository.saveNote(updated)
+            saveMutex.withLock {
+                notesRepository.saveNote(updated)
+            }
+        }
+    }
+
+    fun togglePin() {
+        val current = _uiState.value.note ?: return
+        val updated = current.copy(isPinned = !current.isPinned)
+        _uiState.update { it.copy(note = updated) }
+        viewModelScope.launch {
+            saveMutex.withLock {
+                notesRepository.togglePin(current.id, updated.isPinned)
+            }
+        }
+    }
+
+    fun updateAccentColor(color: String?) {
+        val current = _uiState.value.note ?: return
+        val updated = current.copy(accentColor = color)
+        _uiState.update { it.copy(note = updated) }
+        viewModelScope.launch {
+            saveMutex.withLock {
+                notesRepository.updateAccentColor(current.id, color)
+            }
+        }
+    }
+
+    fun duplicateNote(onDuplicated: (String) -> Unit) {
+        viewModelScope.launch {
+            val duplicated = notesRepository.duplicateNote(noteId)
+            if (duplicated != null) {
+                onDuplicated(duplicated.id)
+            }
         }
     }
 
     fun deleteNote() {
         viewModelScope.launch {
-            notesRepository.deleteNote(noteId)
-            _uiState.value = _uiState.value.copy(isDeleted = true)
+            saveMutex.withLock {
+                notesRepository.deleteNote(noteId)
+            }
+            _uiState.update { it.copy(isDeleted = true) }
+        }
+    }
+
+    fun softDeleteNote() {
+        viewModelScope.launch {
+            saveMutex.withLock {
+                notesRepository.softDeleteNote(noteId)
+            }
+            _uiState.update { it.copy(isDeleted = true) }
         }
     }
 
@@ -240,17 +303,13 @@ class NoteDetailViewModel(
         autoSaveJob?.cancel()
         val note = _uiState.value.note ?: return
         if (_uiState.value.saveState == SaveState.SAVING) {
-            viewModelScope.launch {
+            // Use independent IO scope + NonCancellable so back-navigation cannot abort the save
+            CoroutineScope(Dispatchers.IO + NonCancellable).launch {
                 try {
-                    notesRepository.saveNote(note)
-                    val backlinks = notesRepository.getBacklinksForNote(note.title, note.id)
-                    _uiState.value = _uiState.value.copy(
-                        backlinks = backlinks,
-                        saveState = SaveState.SAVED,
-                    )
-                } catch (_: Exception) {
-                    _uiState.value = _uiState.value.copy(saveState = SaveState.ERROR)
-                }
+                    saveMutex.withLock {
+                        notesRepository.saveNote(note)
+                    }
+                } catch (_: Exception) {}
             }
         }
     }

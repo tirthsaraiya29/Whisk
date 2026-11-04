@@ -58,22 +58,31 @@ class HybridSearchEngine(
         val ftsChunks = mutableListOf<RetrievedChunk>()
         ftsNotes.forEachIndexed { rankIdx, note ->
             if (filter.typeId != null && note.typeId != filter.typeId) return@forEachIndexed
-            val chunks = DocumentChunker.chunkDocument(
-                objectId = note.id,
-                objectType = note.typeId,
-                title = note.title,
-                body = note.body,
-                description = note.description,
-            )
-            chunks.take(filter.maxChunksPerObject).forEach { chunk ->
+            val existingChunks = vectorRepository.getChunksForObject(note.id)
+            if (existingChunks.isNotEmpty()) {
+                existingChunks.take(filter.maxChunksPerObject).forEach { chunk ->
+                    ftsChunks.add(
+                        RetrievedChunk(
+                            chunkId = chunk.id,
+                            sourceObjectId = chunk.sourceObjectId,
+                            sourceObjectType = chunk.sourceObjectType,
+                            sourceTitle = chunk.sourceTitle,
+                            headingPath = chunk.headingPath,
+                            content = chunk.content,
+                            rrfScore = 0f,
+                            ftsRank = rankIdx + 1,
+                        ),
+                    )
+                }
+            } else {
                 ftsChunks.add(
                     RetrievedChunk(
-                        chunkId = chunk.id,
-                        sourceObjectId = chunk.sourceObjectId,
-                        sourceObjectType = chunk.sourceObjectType,
-                        sourceTitle = chunk.sourceTitle,
-                        headingPath = chunk.headingPath,
-                        content = chunk.content,
+                        chunkId = "fts_${note.id}",
+                        sourceObjectId = note.id,
+                        sourceObjectType = note.typeId,
+                        sourceTitle = note.title,
+                        headingPath = "",
+                        content = note.body.take(500),
                         rrfScore = 0f,
                         ftsRank = rankIdx + 1,
                     ),
@@ -150,22 +159,49 @@ class HybridSearchEngine(
 
         // 4. Deduplicate & apply chunk limit per object
         val objectChunkCounts = mutableMapOf<String, Int>()
-        val finalChunks = mutableListOf<RetrievedChunk>()
+        val candidateChunks = mutableListOf<RetrievedChunk>()
 
         fusedList.sortedByDescending { it.rrfScore }.forEach { chunk ->
             if (chunk.rrfScore < filter.minRrfScore) return@forEach
             val currentCount = objectChunkCounts[chunk.sourceObjectId] ?: 0
             if (currentCount < filter.maxChunksPerObject) {
                 objectChunkCounts[chunk.sourceObjectId] = currentCount + 1
-                finalChunks.add(chunk)
+                candidateChunks.add(chunk)
             }
+        }
+
+        // 5. On-Device Cross-Encoder Reranking Stage (Term affinity, heading bonus, semantic fusion)
+        val queryTerms = cleanQuery.lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }
+        val rerankedChunks = if (queryTerms.isNotEmpty() && candidateChunks.isNotEmpty()) {
+            candidateChunks.map { chunk ->
+                val textLower = chunk.content.lowercase()
+                val titleLower = chunk.sourceTitle.lowercase()
+                val pathLower = chunk.headingPath.lowercase()
+
+                var matches = 0
+                for (term in queryTerms) {
+                    if (titleLower.contains(term)) matches += 2
+                    if (pathLower.contains(term)) matches += 1
+                    if (textLower.contains(term)) matches += 1
+                }
+
+                val exactMatchBonus = if (cleanQuery.length > 3 && textLower.contains(cleanQuery.lowercase())) 0.25f else 0.0f
+                val termCoverage = (matches.toFloat() / (queryTerms.size * 2)).coerceIn(0f, 1f)
+                val baseScore = chunk.rrfScore
+                val semanticScore = chunk.vectorScore ?: 0f
+
+                val crossEncoderScore = (baseScore * 0.45f) + (termCoverage * 0.35f) + (semanticScore * 0.20f) + exactMatchBonus
+                chunk.copy(rrfScore = crossEncoderScore)
+            }.sortedByDescending { it.rrfScore }
+        } else {
+            candidateChunks
         }
 
         val isDegraded = vectorError != null
         val degradedReason = if (vectorError != null) "Vector embedding search unavailable: ${vectorError.message}. Keyword FTS fallback used." else null
 
         SearchResult.Success(
-            chunks = finalChunks.take(topK),
+            chunks = rerankedChunks.take(topK),
             isDegraded = isDegraded,
             degradedReason = degradedReason,
         )

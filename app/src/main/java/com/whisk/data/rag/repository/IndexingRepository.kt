@@ -36,4 +36,8 @@ class IndexingRepository(
         indexingStateDao.deleteAllIndexingStates()
         chunkDao.deleteAllChunks()
     }
+
+    suspend fun resetStuckIndexingStates(): Int {
+        return indexingStateDao.resetStuckIndexingStates()
+    }
 }

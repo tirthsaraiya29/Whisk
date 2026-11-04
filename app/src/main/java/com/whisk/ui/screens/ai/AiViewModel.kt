@@ -54,6 +54,9 @@ data class AiUiState(
     val isSearchingVault: Boolean = false,
     val retrievedSources: List<CitationReference> = emptyList(),
     val indexingProgress: IndexingProgress = IndexingProgress(),
+    val estimatedTokensUsed: Int = 0,
+    val maxContextTokens: Int = 4096,
+    val isLocalModelMissing: Boolean = false,
 )
 
 class AiViewModel(
@@ -170,6 +173,9 @@ class AiViewModel(
             Tuple5(ragEnabled, scopeType, isSearching, sources, indexProgress)
         },
     ) { (config, localStatus, messages, isGenerating), (contextPayload, editPreview, historySessions, title), (ragEnabled, scopeType, isSearching, sources, indexProgress) ->
+        val estimatedTokens = messages.sumOf { it.content.length } / 4
+        val isModelMissing = config.providerType == AiProviderType.LOCAL_GEMMA && !localStatus.isDownloaded
+
         AiUiState(
             config = config,
             localStatus = localStatus,
@@ -184,8 +190,34 @@ class AiViewModel(
             isSearchingVault = isSearching,
             retrievedSources = sources,
             indexingProgress = indexProgress,
+            estimatedTokensUsed = estimatedTokens,
+            maxContextTokens = config.maxTokens,
+            isLocalModelMissing = isModelMissing,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AiUiState())
+
+    fun exportChatToNote(notesRepository: NotesRepository, onExported: (String) -> Unit) {
+        val msgs = _messages.value
+        if (msgs.isEmpty()) return
+        viewModelScope.launch {
+            val title = "AI Conversation - ${_activeSessionTitle.value}"
+            val body = buildString {
+                append("# ").append(title).append("\n\n")
+                append("Exported: ").append(java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(java.util.Date())).append("\n\n")
+                msgs.forEach { m ->
+                    val roleLabel = if (m.role == AiRole.USER) "**User:**" else "**Whisk AI:**"
+                    append(roleLabel).append("\n\n").append(m.content).append("\n\n---\n\n")
+                }
+            }
+            val note = Note(
+                title = title,
+                body = body,
+                tags = listOf("ai-chat", "conversation"),
+            )
+            notesRepository.saveNote(note)
+            onExported(note.id)
+        }
+    }
 
     fun toggleVaultRag(enabled: Boolean) {
         _isVaultRagEnabled.value = enabled

@@ -25,6 +25,7 @@ object MarkdownParser {
         "(\\*(?<italic1>.*?)\\*)|" +
         "(_(?<italic2>.*?)_)|" +
         "(`(?<codeText>.*?)`)|" +
+        "(\\$(?<mathText>[^$\\n]+)\\$)|" +
         "(~~(?<strike>.*?)~~)",
     )
 
@@ -58,6 +59,7 @@ object MarkdownParser {
                 val boldText = match.groups["bold1"]?.value ?: match.groups["bold2"]?.value
                 val italicText = match.groups["italic1"]?.value ?: match.groups["italic2"]?.value
                 val codeText = match.groups["codeText"]?.value
+                val mathText = match.groups["mathText"]?.value
                 val strikeText = match.groups["strike"]?.value
 
                 when {
@@ -134,6 +136,22 @@ object MarkdownParser {
                                 fontSize = 13.sp,
                                 background = codeBgColor,
                                 color = primaryColor,
+                            ),
+                            start = startPos,
+                            end = endPos,
+                        )
+                    }
+                    mathText != null -> {
+                        val startPos = length
+                        append(" $mathText ")
+                        val endPos = length
+                        addStyle(
+                            style = SpanStyle(
+                                fontFamily = FontFamily.Serif,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 14.sp,
+                                color = Color(0xFF00F0FF),
+                                background = codeBgColor,
                             ),
                             start = startPos,
                             end = endPos,

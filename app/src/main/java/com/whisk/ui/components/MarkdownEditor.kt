@@ -23,7 +23,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
@@ -199,6 +206,8 @@ fun MarkdownEditor(
     }
     val charCount = remember(body) { body.length }
     val lineCount = remember(body) { body.lines().size }
+    val readingTimeMinutes = remember(wordCount) { maxOf(1, (wordCount + 100) / 200) }
+    var showTocSheet by remember { mutableStateOf(false) }
 
     fun applyFormattingWithHaptic(prefix: String, suffix: String = "") {
         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
@@ -219,13 +228,33 @@ fun MarkdownEditor(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = "${wordCount}W // ${charCount}C // ${lineCount}L",
-                style = MaterialTheme.typography.labelSmall,
-                fontFamily = DotMatrixFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "${wordCount}W // ${charCount}C // ${readingTimeMinutes}M READ",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = DotMatrixFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                            showTocSheet = true
+                        }
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                ) {
+                    Text(
+                        text = "≡ TOC",
+                        fontFamily = DotMatrixFontFamily,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
 
             // Brutalist Mode Toggle Switcher
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -282,7 +311,13 @@ fun MarkdownEditor(
                     Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
                 }
                 IconButton(onClick = { applyFormattingWithHaptic("- ") }) {
-                    Icon(Icons.AutoMirrored.Filled.FormatListBulleted, contentDescription = "List")
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "List", modifier = Modifier.size(16.dp))
+                }
+                IconButton(onClick = { applyFormattingWithHaptic("- [ ] ") }) {
+                    Text("[ ]", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                }
+                IconButton(onClick = { applyFormattingWithHaptic("$$", "$$") }) {
+                    Icon(Icons.Default.Functions, contentDescription = "Math LaTeX", modifier = Modifier.size(16.dp))
                 }
                 IconButton(onClick = { applyFormattingWithHaptic("> [!NOTE] ") }) {
                     Icon(Icons.Default.FormatQuote, contentDescription = "Callout Note")
@@ -295,6 +330,9 @@ fun MarkdownEditor(
                 }
                 IconButton(onClick = { applyFormattingWithHaptic("[[", "]]") }) {
                     Icon(Icons.Default.Link, contentDescription = "Internal link")
+                }
+                IconButton(onClick = { applyFormattingWithHaptic("  ") }) {
+                    Text("->", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
@@ -333,6 +371,18 @@ fun MarkdownEditor(
                             note.aliases.any { it.contains(autocompleteQuery, ignoreCase = true) }
                     }.take(6)
                 } else emptyList()
+
+                // Tag auto-completion popup (#)
+                val lastHash = textUpToCursor.lastIndexOf('#')
+                val isTypingTag = lastHash != -1 && (lastHash == 0 || textUpToCursor[lastHash - 1].isWhitespace()) && !textUpToCursor.substring(lastHash).contains(' ')
+                val tagQuery = if (isTypingTag) textUpToCursor.substring(lastHash + 1) else ""
+                val allVaultTags = remember(allNotes) { allNotes.flatMap { it.tags }.distinct() }
+                val matchingTags = if (isTypingTag && allVaultTags.isNotEmpty()) {
+                    allVaultTags.filter { it.contains(tagQuery, ignoreCase = true) }.take(6)
+                } else emptyList()
+
+                val backtickCount = textUpToCursor.split("```").size - 1
+                val inCodeFence = backtickCount % 2 != 0
 
                 Column(modifier = Modifier.fillMaxSize().weight(1f)) {
                     if (matchingNotes.isNotEmpty()) {
@@ -396,6 +446,48 @@ fun MarkdownEditor(
                         }
                     }
 
+                    if (matchingTags.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .border(1.dp, Color(0xFFD97706), RoundedCornerShape(4.dp)),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState())
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                matchingTags.forEach { tag ->
+                                    Box(
+                                        modifier = Modifier
+                                            .border(1.dp, Color(0xFFD97706), RoundedCornerShape(0.dp))
+                                            .clickable {
+                                                val before = textUpToCursor.substring(0, lastHash)
+                                                val after = if (cursor < textFieldValue.text.length) textFieldValue.text.substring(cursor) else ""
+                                                val inserted = "#$tag "
+                                                val newFullText = before + inserted + after
+                                                val newCursor = before.length + inserted.length
+                                                textFieldValue = TextFieldValue(text = newFullText, selection = TextRange(newCursor))
+                                                onBodyChange(newFullText)
+                                            }
+                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    ) {
+                                        Text(
+                                            text = "#$tag",
+                                            fontFamily = DotMatrixFontFamily,
+                                            fontSize = 11.sp,
+                                            color = Color(0xFFD97706),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
@@ -426,14 +518,68 @@ fun MarkdownEditor(
                         OutlinedTextField(
                             value = textFieldValue,
                             onValueChange = { newValue ->
-                                textFieldValue = newValue
-                                if (newValue.text != body) {
-                                    onBodyChange(newValue.text)
+                                var nextVal = newValue
+                                val oldText = textFieldValue.text
+                                val newText = newValue.text
+                                val oldCursor = textFieldValue.selection.start
+                                val newCursor = newValue.selection.start
+
+                                // Auto-pairing closing brackets
+                                if (newText.length == oldText.length + 1 && newCursor > 0 && oldCursor == newCursor - 1) {
+                                    val insertedChar = newText[newCursor - 1]
+                                    val closingPair = when (insertedChar) {
+                                        '[' -> ']'
+                                        '(' -> ')'
+                                        '{' -> '}'
+                                        '"' -> '"'
+                                        '\'' -> '\''
+                                        '*' -> '*'
+                                        else -> null
+                                    }
+                                    if (closingPair != null) {
+                                        val autoPaired = newText.substring(0, newCursor) + closingPair + newText.substring(newCursor)
+                                        nextVal = TextFieldValue(autoPaired, selection = TextRange(newCursor))
+                                    }
+                                }
+
+                                // Smart bullet list continuation on Enter
+                                if (newText.length == oldText.length + 1 && newCursor > 0 && newText[newCursor - 1] == '\n') {
+                                    val lines = oldText.substring(0, oldCursor).lines()
+                                    val prevLine = lines.lastOrNull() ?: ""
+                                    val bulletPrefix = when {
+                                        prevLine.trimStart().startsWith("- [ ] ") -> "- [ ] "
+                                        prevLine.trimStart().startsWith("- [x] ") -> "- [ ] "
+                                        prevLine.trimStart().startsWith("- ") -> "- "
+                                        prevLine.trimStart().startsWith("* ") -> "* "
+                                        Regex("^(\\d+)\\.\\s").containsMatchIn(prevLine.trimStart()) -> {
+                                            val num = Regex("^(\\d+)\\.").find(prevLine.trimStart())?.groupValues?.get(1)?.toIntOrNull() ?: 1
+                                            "${num + 1}. "
+                                        }
+                                        else -> null
+                                    }
+                                    if (bulletPrefix != null) {
+                                        if (prevLine.trim() in listOf("- [ ]", "- [x]", "-", "*")) {
+                                            val stripped = oldText.substring(0, (oldCursor - prevLine.length).coerceAtLeast(0)) + "\n" + oldText.substring(oldCursor)
+                                            nextVal = TextFieldValue(stripped, selection = TextRange((oldCursor - prevLine.length + 1).coerceAtLeast(0)))
+                                        } else {
+                                            val continued = newText.substring(0, newCursor) + bulletPrefix + newText.substring(newCursor)
+                                            nextVal = TextFieldValue(continued, selection = TextRange(newCursor + bulletPrefix.length))
+                                        }
+                                    }
+                                }
+
+                                textFieldValue = nextVal
+                                if (nextVal.text != body) {
+                                    onBodyChange(nextVal.text)
                                 }
                             },
                             placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge, fontFamily = VercelMonoFontFamily) },
                             textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = VercelMonoFontFamily, lineHeight = 24.sp),
                             visualTransformation = visualTransformation,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = if (inCodeFence) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
+                                autoCorrectEnabled = !inCodeFence,
+                            ),
                             modifier = Modifier
                                 .fillMaxSize()
                                 .weight(1f)
@@ -501,6 +647,81 @@ fun MarkdownEditor(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                     RenderMarkdownPreview(body, onLinkClick, onBodyChange)
+                }
+            }
+        }
+
+        // Table of Contents Bottom Sheet
+        if (showTocSheet) {
+            val headings = remember(body) {
+                body.lines().mapIndexedNotNull { idx, l ->
+                    val trimmed = l.trimStart()
+                    when {
+                        trimmed.startsWith("### ") -> Triple(3, trimmed.removePrefix("### ").trim(), idx)
+                        trimmed.startsWith("## ") -> Triple(2, trimmed.removePrefix("## ").trim(), idx)
+                        trimmed.startsWith("# ") -> Triple(1, trimmed.removePrefix("# ").trim(), idx)
+                        else -> null
+                    }
+                }
+            }
+
+            ModalBottomSheet(
+                onDismissRequest = { showTocSheet = false },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                ) {
+                    Text(
+                        text = "TABLE OF CONTENTS (${headings.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontFamily = DotMatrixFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    if (headings.isEmpty()) {
+                        Text(
+                            text = "No headers (# H1, ## H2, ### H3) found in note.",
+                            fontFamily = VercelMonoFontFamily,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                        )
+                    } else {
+                        headings.forEach { (level, title, lineIdx) ->
+                            val indentDp = ((level - 1) * 16).dp
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        showTocSheet = false
+                                        val targetOffset = body.lines().take(lineIdx).sumOf { it.length + 1 }
+                                        textFieldValue = TextFieldValue(body, selection = TextRange(targetOffset.coerceIn(0, body.length)))
+                                    }
+                                    .padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Spacer(modifier = Modifier.width(indentDp))
+                                Text(
+                                    text = "H$level",
+                                    fontFamily = DotMatrixFontFamily,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = title,
+                                    fontFamily = VercelMonoFontFamily,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

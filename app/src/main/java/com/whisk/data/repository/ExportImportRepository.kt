@@ -675,9 +675,12 @@ class ExportImportRepository(
             }
             importedCount
         } else {
-            legacyNotes.forEach { note ->
-                notesRepository.saveNote(note)
-                legacyImportCount++
+            database.withTransaction {
+                legacyNotes.forEach { note ->
+                    val entity = NoteEntity.fromDomain(note)
+                    database.noteDao().insertNote(entity)
+                    legacyImportCount++
+                }
             }
             legacyImportCount
         }

@@ -69,6 +69,10 @@ class VectorRepository(
         return chunkDao.getAllChunksDirect()
     }
 
+    suspend fun getChunksForObject(objectId: String): List<DocumentChunkEntity> {
+        return chunkDao.getChunksForObject(objectId)
+    }
+
     suspend fun deleteChunkById(id: String) {
         chunkDao.deleteChunkById(id)
     }

@@ -10,6 +10,8 @@ import com.whisk.domain.model.Note
     tableName = "notes",
     indices = [
         Index(value = ["typeId"]),
+        Index(value = ["isPinned"]),
+        Index(value = ["deletedAt"]),
     ],
 )
 data class NoteEntity(
@@ -30,6 +32,9 @@ data class NoteEntity(
     @ColumnInfo(defaultValue = "NULL") val description: String? = null,
     @ColumnInfo(defaultValue = "NULL") val icon: String? = null,
     @ColumnInfo(defaultValue = "NULL") val coverImage: String? = null,
+    @ColumnInfo(defaultValue = "0") val isPinned: Boolean = false,
+    @ColumnInfo(defaultValue = "NULL") val deletedAt: Long? = null,
+    @ColumnInfo(defaultValue = "NULL") val accentColor: String? = null,
 ) {
     fun toDomain(): Note {
         return Note(
@@ -50,6 +55,9 @@ data class NoteEntity(
             description = description,
             icon = icon,
             coverImage = coverImage,
+            isPinned = isPinned,
+            deletedAt = deletedAt,
+            accentColor = accentColor,
         )
     }
 
@@ -73,6 +81,9 @@ data class NoteEntity(
                 description = note.description,
                 icon = note.icon,
                 coverImage = note.coverImage,
+                isPinned = note.isPinned,
+                deletedAt = note.deletedAt,
+                accentColor = note.accentColor,
             )
         }
     }

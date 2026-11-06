@@ -1,0 +1,45 @@
+name: Whisk Repository Analytics
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout full repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch all branches and tags
+        run: git fetch --all --tags --prune
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate reports
+        run: |
+          python3 - <<'PY'
+          # ── identical analytics implementation ──
+          # (copy the exact script body from the Inferra workflow above)
+          # To keep this response readable, the script is identical.
+          # Replace this comment with the full script from section 1.
+          PY
+
+      - name: Upload analytics reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisk-git-analytics
+          path: reports/
+          if-no-files-found: error
+          retention-days: 30

@@ -108,7 +108,19 @@ class McpRepositoryTest {
         val repository = McpRepository()
         val endpoint = "http://localhost:8080/mcp"
 
-        val writeTools = listOf("github_create_issue", "github_update_pull_request", "github_delete_branch", "github_push_commit")
+        val writeTools = listOf(
+            "github_create_issue",
+            "github_update_pull_request",
+            "github_delete_branch",
+            "github_push_commit",
+            "github_remove_collaborator",
+            "write_file",
+            "transfer_ownership",
+            "modify_permissions",
+            "erase_database",
+            "wipe_cache",
+            "get_and_transfer_data",
+        )
         val readTools = listOf("github_search_repositories", "github_get_issue", "github_list_commits")
 
         writeTools.forEach { name ->
@@ -118,5 +130,41 @@ class McpRepositoryTest {
         readTools.forEach { name ->
             assertFalse("Expected $name to NOT require approval", repository.requiresApproval(endpoint, name))
         }
+    }
+
+    @Test
+    fun testNestedCredentialSanitizationInLogs() = runBlocking {
+        val repository = McpRepository()
+        val endpoint = "http://localhost:8080/mcp"
+
+        val nestedArgs = """
+            {
+              "user": {
+                "name": "admin",
+                "secret_password": "supersecretpassword123"
+              },
+              "config": [
+                {"auth_token": "bearer-xyz-123"}
+              ]
+            }
+        """.trimIndent()
+
+        // Invoke tool (rejected so it completes quickly)
+        val invokeDeferred = async {
+            repository.invokeTool(endpoint, "github_delete_branch", nestedArgs, timeoutMs = 1000L)
+        }
+        kotlinx.coroutines.delay(50)
+        val pendingRequests = repository.pendingApprovalRequests.value
+        if (pendingRequests.isNotEmpty()) {
+            repository.resolveApproval(pendingRequests.first().id, approved = false)
+        }
+        invokeDeferred.await()
+
+        val logs = repository.executionLogs.value
+        assertTrue("Execution log should exist", logs.isNotEmpty())
+        val logArguments = logs.first().arguments
+        assertFalse("Logged arguments must not contain secret password", logArguments.contains("supersecretpassword123"))
+        assertFalse("Logged arguments must not contain bearer token", logArguments.contains("bearer-xyz-123"))
+        assertTrue("Logged arguments must contain masked value", logArguments.contains("******"))
     }
 }

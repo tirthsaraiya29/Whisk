@@ -179,10 +179,48 @@ class McpRepository(
     fun requiresApproval(endpointUrl: String, toolName: String): Boolean {
         if (trustedServers[endpointUrl] == true) return false
         if (explicitlyTrustedTools[endpointUrl]?.contains(toolName) == true) return false
-        val isWriteAction = toolName.contains("create") || toolName.contains("update") ||
-            toolName.contains("delete") || toolName.contains("push") ||
-            toolName.contains("exec") || toolName.contains("run")
-        return isWriteAction
+        // Default-deny: only confidently read-only verbs are approval-free.
+        return !isReadOnlyToolName(toolName)
+    }
+
+    private fun isReadOnlyToolName(toolName: String): Boolean {
+        // Normalize case and separators (._- / spaces) so "Get_File", "read-file", "LIST__items" can't bypass.
+        val tokens = toolName.lowercase().split(Regex("[^a-z0-9]+")).filter { it.isNotBlank() }
+        if (tokens.isEmpty()) return false
+        val writeVerbs = setOf(
+            "create", "add", "insert", "post", "put", "update", "edit", "modify", "rename", "move",
+            "copy", "duplicate", "delete", "remove", "destroy", "drop", "clear", "purge", "truncate",
+            "push", "write", "save", "store", "set", "upload", "import", "export", "transfer", "merge",
+            "rebase", "revert", "restore", "replace", "apply", "patch", "exec", "execute", "run", "invoke",
+            "call", "send", "submit", "commit", "approve", "close", "reopen", "assign", "archive",
+            "unarchive", "toggle", "enable", "disable", "grant", "revoke", "reset", "regenerate", "cancel",
+            "alter", "change", "swap", "shift", "convert", "transform", "wipe", "flush", "kill", "terminate",
+            "stop", "start", "restart", "boot", "reboot", "shutdown", "upgrade", "downgrade", "install",
+            "uninstall", "overwrite", "prune", "detach", "unbind", "unlink", "lock", "unlock", "sync",
+            "format", "clean", "dispatch", "publish", "deploy", "erase",
+        )
+        val readOnlyVerbs = setOf(
+            "get", "read", "list", "search", "fetch", "find", "query", "view", "show",
+            "describe", "check", "lookup", "browse", "select", "count", "ping", "status", "health",
+        )
+        val safeTokens = setOf(
+            "github", "mcp", "system", "local", "remote", "api", "file", "files", "note", "notes",
+            "vault", "user", "users", "data", "issue", "issues", "repo", "repository", "repositories",
+            "commit", "commits", "branch", "branches", "pr", "pull", "request", "requests", "info",
+            "item", "items", "all", "by", "id", "name", "tag", "tags", "and", "or", "with", "for",
+            "in", "on", "at", "to", "from", "detail", "details", "metadata", "history", "log", "logs",
+            "metric", "metrics", "summary",
+        )
+
+        // Any write verb means approval, even mixed with read verbs ("create_and_get").
+        if (tokens.any { it in writeVerbs }) return false
+
+        // Strict validation: every token in a read-only tool must be a known read verb or safe token,
+        // and at least one read verb must be present. Unrecognized tokens default to requiring approval.
+        val hasReadOnlyVerb = tokens.any { it in readOnlyVerbs }
+        val allTokensSafe = tokens.all { it in readOnlyVerbs || it in safeTokens }
+
+        return hasReadOnlyVerb && allTokensSafe
     }
 
     fun resolveApproval(requestId: String, approved: Boolean) {
@@ -440,20 +478,30 @@ class McpRepository(
     private fun sanitizeLogArguments(argumentsJson: String): String {
         return try {
             val parsed = jsonParser.parseToJsonElement(argumentsJson)
-            if (parsed is JsonObject) {
-                val secretKeys = listOf("token", "secret", "password", "key", "authorization", "auth")
-                val sanitizedMap = parsed.toMutableMap()
-                for (key in parsed.keys) {
-                    if (secretKeys.any { key.lowercase().contains(it) }) {
-                        sanitizedMap[key] = kotlinx.serialization.json.JsonPrimitive("******")
-                    }
-                }
-                JsonObject(sanitizedMap).toString()
-            } else {
-                argumentsJson
-            }
+            sanitizeJsonElement(parsed).toString()
         } catch (_: Exception) {
             argumentsJson
+        }
+    }
+
+    private fun sanitizeJsonElement(element: kotlinx.serialization.json.JsonElement): kotlinx.serialization.json.JsonElement {
+        val secretKeys = listOf("token", "secret", "password", "key", "authorization", "auth", "credential", "private_key", "bearer")
+        return when (element) {
+            is JsonObject -> {
+                val sanitizedMap = mutableMapOf<String, kotlinx.serialization.json.JsonElement>()
+                for ((key, value) in element) {
+                    if (secretKeys.any { key.lowercase().contains(it) }) {
+                        sanitizedMap[key] = kotlinx.serialization.json.JsonPrimitive("******")
+                    } else {
+                        sanitizedMap[key] = sanitizeJsonElement(value)
+                    }
+                }
+                JsonObject(sanitizedMap)
+            }
+            is JsonArray -> {
+                JsonArray(element.map { sanitizeJsonElement(it) })
+            }
+            else -> element
         }
     }
 

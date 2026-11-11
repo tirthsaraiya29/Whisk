@@ -10,21 +10,30 @@ class SecureStorageManager(context: Context) {
 
     private val sharedPreferences: SharedPreferences by lazy {
         try {
-            val masterKey = MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-
-            EncryptedSharedPreferences.create(
-                context,
-                "whisk_secure_vault_prefs",
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-            )
+            createEncryptedSharedPreferences(context)
         } catch (_: Exception) {
-            // Fallback to standard private shared preferences if KeyStore is unavailable (e.g. legacy test environment)
-            context.getSharedPreferences("whisk_secure_vault_fallback", Context.MODE_PRIVATE)
+            // Attempt recovery from KeyStore corruption by clearing corrupted prefs file
+            try {
+                context.deleteSharedPreferences("whisk_secure_vault_prefs")
+                createEncryptedSharedPreferences(context)
+            } catch (e: Exception) {
+                throw SecurityException("Secure key storage initialization failed. Secrets cannot be stored unencrypted.", e)
+            }
         }
+    }
+
+    private fun createEncryptedSharedPreferences(context: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        return EncryptedSharedPreferences.create(
+            context,
+            "whisk_secure_vault_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+        )
     }
 
     fun saveSecret(key: String, value: String) {

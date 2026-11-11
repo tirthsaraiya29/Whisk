@@ -67,7 +67,7 @@ class P2PCollaborationManager(
     private val deviceId: String = UUID.randomUUID().toString(),
     private val deviceName: String = "${Build.MANUFACTURER} ${Build.MODEL}"
 ) {
-    private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+    private val nsdManager: NsdManager? by lazy { context.getSystemService(Context.NSD_SERVICE) as? NsdManager }
     private val json = Json { ignoreUnknownKeys = true }
 
     private val _uiState = MutableStateFlow(P2PUiState())
@@ -103,7 +103,7 @@ class P2PCollaborationManager(
 
         override fun onServiceFound(serviceInfo: NsdServiceInfo) {
             if (serviceInfo.serviceType == serviceType && serviceInfo.serviceName.contains("Whisk")) {
-                nsdManager.resolveService(serviceInfo, object : NsdManager.ResolveListener {
+                nsdManager?.resolveService(serviceInfo, object : NsdManager.ResolveListener {
                     override fun onResolveFailed(info: NsdServiceInfo, errorCode: Int) {}
 
                     override fun onServiceResolved(resolvedInfo: NsdServiceInfo) {
@@ -154,8 +154,8 @@ class P2PCollaborationManager(
                     port = localPort
                 }
 
-                nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener)
-                nsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+                nsdManager?.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener)
+                nsdManager?.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
 
                 listenForIncomingConnections(scope)
             } catch (e: Exception) {
@@ -177,14 +177,63 @@ class P2PCollaborationManager(
         }
     }
 
+    companion object {
+        const val MAX_PAYLOAD_BYTES = 10 * 1024 * 1024 // 10 MB limit for incoming P2P payload line
+    }
+
+    private val authorizedPeerDeviceIds = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    fun authorizePeerDevice(peerDeviceId: String) {
+        authorizedPeerDeviceIds.add(peerDeviceId)
+    }
+
+    fun revokePeerDevice(peerDeviceId: String) {
+        authorizedPeerDeviceIds.remove(peerDeviceId)
+    }
+
+    fun isPeerAuthorized(peerDeviceId: String): Boolean {
+        return peerDeviceId == deviceId || authorizedPeerDeviceIds.contains(peerDeviceId)
+    }
+
+    private fun readBoundedLine(reader: BufferedReader, maxBytes: Int): String? {
+        val sb = StringBuilder()
+        var byteCount = 0
+        while (true) {
+            val ch = reader.read()
+            if (ch == -1) {
+                return if (sb.isEmpty()) null else sb.toString()
+            }
+            if (ch == '\n'.code) {
+                if (sb.isNotEmpty() && sb.last() == '\r') {
+                    sb.deleteCharAt(sb.length - 1)
+                }
+                return sb.toString()
+            }
+            sb.append(ch.toChar())
+            byteCount++
+            if (byteCount > maxBytes) {
+                throw IllegalStateException("Incoming P2P payload line exceeded maximum allowed size of $maxBytes bytes")
+            }
+        }
+    }
+
     private suspend fun handleIncomingSync(socket: SSLSocket) = withContext(Dispatchers.IO) {
         try {
-            val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+            val reader = BufferedReader(InputStreamReader(socket.getInputStream(), Charsets.UTF_8))
             val writer = PrintWriter(socket.getOutputStream(), true)
 
-            val line = reader.readLine()
+            val line = readBoundedLine(reader, MAX_PAYLOAD_BYTES)
             if (line != null) {
                 val payload = json.decodeFromString<P2PSyncPayload>(line)
+
+                if (!isPeerAuthorized(payload.senderDeviceId)) {
+                    writer.println("ERROR Unauthorized device: ${payload.senderDeviceId}")
+                    _uiState.update {
+                        it.copy(lastSyncMessage = "Rejected sync attempt from unauthorized peer ${payload.senderName} (${payload.senderDeviceId})")
+                    }
+                    return@withContext
+                }
+
                 var mergedCount = 0
 
                 payload.notes.forEach { remoteNote ->
@@ -242,10 +291,10 @@ class P2PCollaborationManager(
             sslParameters.setEndpointIdentificationAlgorithm("HTTPS")
             socket.setSSLParameters(sslParameters)
             val writer = PrintWriter(socket.getOutputStream(), true)
-            val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+            val reader = BufferedReader(InputStreamReader(socket.getInputStream(), Charsets.UTF_8))
 
             writer.println(json.encodeToString(payload))
-            val response = reader.readLine()
+            val response = readBoundedLine(reader, MAX_PAYLOAD_BYTES)
             socket.close()
 
             _uiState.update {
@@ -266,8 +315,8 @@ class P2PCollaborationManager(
 
     fun stop() {
         try {
-            nsdManager.unregisterService(registrationListener)
-            nsdManager.stopServiceDiscovery(discoveryListener)
+            nsdManager?.unregisterService(registrationListener)
+            nsdManager?.stopServiceDiscovery(discoveryListener)
             serverJob?.cancel()
             serverSocket?.close()
         } catch (e: Exception) {

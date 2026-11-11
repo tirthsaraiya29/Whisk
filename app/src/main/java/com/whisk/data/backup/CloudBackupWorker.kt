@@ -31,6 +31,15 @@ class CloudBackupWorker(
         val destinationUrl = inputData.getString(KEY_DESTINATION_URL)
         val encryptionKey = inputData.getString(KEY_ENCRYPTION_KEY)
 
+        if (!destinationUrl.isNullOrBlank()) {
+            if (!validateDestinationUrl(destinationUrl)) {
+                return@withContext Result.failure(workDataOf("error" to "Invalid or insecure destination URL: $destinationUrl"))
+            }
+            if (encryptionKey.isNullOrBlank()) {
+                return@withContext Result.failure(workDataOf("error" to "Passphrase or encryption key is strictly required for cloud backup uploads"))
+            }
+        }
+
         try {
             val database = WhiskDatabase.getDatabase(applicationContext)
             val notesRepository = NotesRepository(
@@ -52,7 +61,7 @@ class CloudBackupWorker(
 
             val rawBytes = backupFile.readBytes()
 
-            // Optional E2EE encryption if key provided
+            // E2EE encryption required for cloud sync backups
             val payloadBytes = if (!encryptionKey.isNullOrBlank()) {
                 val e2eeEngine = E2EESyncEngine()
                 e2eeEngine.encryptBytes(rawBytes, encryptionKey.toCharArray())
@@ -97,12 +106,39 @@ class CloudBackupWorker(
         const val KEY_DESTINATION_URL = "destination_url"
         const val KEY_ENCRYPTION_KEY = "encryption_key"
 
+        fun validateDestinationUrl(destinationUrl: String): Boolean {
+            val cleanUrl = destinationUrl.trim()
+            if (cleanUrl.isBlank()) return false
+            val uri = try {
+                java.net.URI(cleanUrl)
+            } catch (_: Exception) {
+                return false
+            }
+            val scheme = uri.scheme?.lowercase() ?: return false
+            if (scheme != "http" && scheme != "https") return false
+            val host = uri.host?.lowercase() ?: return false
+            if (scheme == "http") {
+                val isAllowedLocal = host == "localhost" || host == "127.0.0.1" || host == "10.0.2.2"
+                if (!isAllowedLocal) return false
+            }
+            return true
+        }
+
         fun schedulePeriodicBackup(
             context: Context,
             intervalHours: Long = 24,
             destinationUrl: String? = null,
             encryptionKey: String? = null
         ) {
+            if (!destinationUrl.isNullOrBlank()) {
+                require(validateDestinationUrl(destinationUrl)) {
+                    "Insecure or malformed destination URL for cloud backup: $destinationUrl"
+                }
+                require(!encryptionKey.isNullOrBlank()) {
+                    "Passphrase or encryption key is required for cloud backup"
+                }
+            }
+
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .setRequiresBatteryNotLow(true)

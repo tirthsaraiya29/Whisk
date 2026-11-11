@@ -42,6 +42,11 @@ enum class RestoreMode {
     REPLACE,
 }
 
+/**
+ * Backup manifest header stored in manifest.json inside vault export archives.
+ * Note: [dataChecksum] provides SHA-256 data integrity verification against accidental file corruption
+ * during export/import, not cryptographic tamper authenticity.
+ */
 @Serializable
 data class BackupManifest(
     val version: Int = 2,
@@ -538,7 +543,7 @@ class ExportImportRepository(
                 .joinToString("") { "%02x".format(it) }
 
             if (!computedSha256.equals(manifest.dataChecksum, ignoreCase = true)) {
-                throw SecurityException("Backup integrity check failed: SHA-256 checksum mismatch. Expected '${manifest.dataChecksum}', computed '$computedSha256'. Archive may be corrupted or tampered.")
+                throw SecurityException("Backup integrity check failed: SHA-256 checksum mismatch. Expected '${manifest.dataChecksum}', computed '$computedSha256'. Archive file may be corrupted.")
             }
 
             val backupData = try {

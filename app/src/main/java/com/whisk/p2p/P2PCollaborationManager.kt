@@ -50,7 +50,12 @@ data class P2PNoteTransfer(
     val updatedAt: Long,
     val isArchived: Boolean,
     val isFavorite: Boolean,
-    val tags: List<String>
+    val tags: List<String>,
+    val folder: String? = null,
+    val typeId: String = "note",
+    val aliases: List<String> = emptyList(),
+    val isPinned: Boolean = false,
+    val accentColor: String? = null,
 )
 
 data class P2PUiState(
@@ -248,7 +253,12 @@ class P2PCollaborationManager(
                                 createdAt = local?.createdAt ?: remoteNote.updatedAt,
                                 isArchived = remoteNote.isArchived,
                                 isFavorite = remoteNote.isFavorite,
-                                tags = remoteNote.tags
+                                tags = remoteNote.tags.ifEmpty { local?.tags ?: emptyList() },
+                                folder = remoteNote.folder ?: local?.folder,
+                                typeId = if (remoteNote.typeId != "note") remoteNote.typeId else (local?.typeId ?: "note"),
+                                aliases = remoteNote.aliases.ifEmpty { local?.aliases ?: emptyList() },
+                                isPinned = remoteNote.isPinned || (local?.isPinned == true),
+                                accentColor = remoteNote.accentColor ?: local?.accentColor,
                             )
                         )
                         mergedCount++
@@ -277,7 +287,12 @@ class P2PCollaborationManager(
                     updatedAt = it.updatedAt,
                     isArchived = it.isArchived,
                     isFavorite = it.isFavorite,
-                    tags = it.tags
+                    tags = it.tags,
+                    folder = it.folder,
+                    typeId = it.typeId,
+                    aliases = it.aliases,
+                    isPinned = it.isPinned,
+                    accentColor = it.accentColor,
                 )
             }
             val payload = P2PSyncPayload(

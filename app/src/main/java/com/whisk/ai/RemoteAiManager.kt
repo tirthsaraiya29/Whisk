@@ -65,22 +65,26 @@ open class RemoteAiManager {
                     if (config.apiKey.isNotBlank()) {
                         requestBuilder.header("Authorization", "Bearer ${config.apiKey}")
                     }
-                    val response = client.newCall(requestBuilder.build()).execute()
-                    if (response.isSuccessful) {
-                        Pair(true, "Connection successful.")
-                    } else {
-                        val errBody = response.body.string()
-                        Pair(false, formatHttpError(config.providerType.name, response.code, errBody))
+                    client.newCall(requestBuilder.build()).execute().use { response ->
+                        if (response.isSuccessful) {
+                            Pair(true, "Connection successful.")
+                        } else {
+                            val errBody = response.body.string()
+                            Pair(false, formatHttpError(config.providerType.name, response.code, errBody))
+                        }
                     }
                 }
                 AiProviderType.GEMINI -> {
-                    val url = "https://generativelanguage.googleapis.com/v1beta/models?key=${config.apiKey}"
-                    val response = client.newCall(Request.Builder().url(url).get().build()).execute()
-                    if (response.isSuccessful) {
-                        Pair(true, "Gemini API connected.")
-                    } else {
-                        val errBody = response.body.string()
-                        Pair(false, formatHttpError("Gemini", response.code, errBody))
+                    val url = "https://generativelanguage.googleapis.com/v1beta/models"
+                    val requestBuilder = Request.Builder().url(url).get()
+                        .header("x-goog-api-key", config.apiKey)
+                    client.newCall(requestBuilder.build()).execute().use { response ->
+                        if (response.isSuccessful) {
+                            Pair(true, "Gemini API connected.")
+                        } else {
+                            val errBody = response.body.string()
+                            Pair(false, formatHttpError("Gemini", response.code, errBody))
+                        }
                     }
                 }
                 AiProviderType.ANTHROPIC -> {
@@ -88,13 +92,14 @@ open class RemoteAiManager {
                     val requestBuilder = Request.Builder().url(url)
                         .header("x-api-key", config.apiKey)
                         .header("anthropic-version", "2023-06-01")
-                    val body = """{"model":"claude-3-haiku-20240307","max_tokens":1,"messages":[{"role":"user","content":"hi"}]}""".toRequestBody("application/json".toMediaType())
-                    val response = client.newCall(requestBuilder.post(body).build()).execute()
-                    if (response.isSuccessful || (response.code == 400)) {
-                        Pair(true, "Anthropic API connected.")
-                    } else {
-                        val errBody = response.body.string()
-                        Pair(false, formatHttpError("Anthropic", response.code, errBody))
+                    val body = """{"model":"claude-3-5-haiku-20241022","max_tokens":1,"messages":[{"role":"user","content":"hi"}]}""".toRequestBody("application/json".toMediaType())
+                    client.newCall(requestBuilder.post(body).build()).execute().use { response ->
+                        if (response.isSuccessful || (response.code == 400)) {
+                            Pair(true, "Anthropic API connected.")
+                        } else {
+                            val errBody = response.body.string()
+                            Pair(false, formatHttpError("Anthropic", response.code, errBody))
+                        }
                     }
                 }
                 else -> Pair(false, "Unsupported provider type.")
@@ -142,6 +147,7 @@ open class RemoteAiManager {
         val payload = JSONObject().apply {
             put("model", config.selectedModel.ifBlank { "gpt-4o-mini" })
             put("stream", true)
+            put("max_tokens", config.maxTokens)
             put("temperature", config.temperature)
             put(
                 "messages",
@@ -159,40 +165,41 @@ open class RemoteAiManager {
             requestBuilder.header("Authorization", "Bearer ${config.apiKey}")
         }
 
-        val response = client.newCall(requestBuilder.build()).execute()
-        if (!response.isSuccessful) {
-            val errBody = response.body.string()
-            emit(formatHttpError(config.providerType.name, response.code, errBody))
-            return@flow
-        }
+        client.newCall(requestBuilder.build()).execute().use { response ->
+            if (!response.isSuccessful) {
+                val errBody = response.body.string()
+                emit(formatHttpError(config.providerType.name, response.code, errBody))
+                return@flow
+            }
 
-        val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
-        var line: String?
-        while (reader.readLine().also { line = it } != null) {
-            val l = line?.trim() ?: continue
-            if (l.startsWith("data: ")) {
-                val data = l.substring(6).trim()
-                if (data == "[DONE]") break
-                try {
-                    val json = JSONObject(data)
-                    val choices = json.optJSONArray("choices")
-                    if ((choices != null) && (choices.length() > 0)) {
-                        val delta = choices.getJSONObject(0).optJSONObject("delta")
-                        val content = delta?.optString("content", "") ?: ""
-                        if (content.isNotEmpty()) {
-                            emit(content)
+            val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                val l = line?.trim() ?: continue
+                if (l.startsWith("data: ")) {
+                    val data = l.substring(6).trim()
+                    if (data == "[DONE]") break
+                    try {
+                        val json = JSONObject(data)
+                        val choices = json.optJSONArray("choices")
+                        if ((choices != null) && (choices.length() > 0)) {
+                            val delta = choices.getJSONObject(0).optJSONObject("delta")
+                            val content = delta?.optString("content", "") ?: ""
+                            if (content.isNotEmpty()) {
+                                emit(content)
+                            }
                         }
+                    } catch (_: Exception) {
+                        // Ignore line parse errors during SSE streaming
                     }
-                } catch (_: Exception) {
-                    // Ignore line parse errors during SSE streaming
                 }
             }
         }
     }.flowOn(Dispatchers.IO)
 
     private fun generateGeminiStream(prompt: String, systemPrompt: String, config: AiConfig): Flow<String> = flow {
-        val model = config.selectedModel.ifBlank { "gemini-1.5-flash" }
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:streamGenerateContent?alt=sse&key=${config.apiKey}"
+        val model = config.selectedModel.ifBlank { "gemini-2.0-flash" }
+        val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:streamGenerateContent?alt=sse"
 
         val fullPromptText = "$systemPrompt\n\nUser Question:\n$prompt"
 
@@ -224,38 +231,40 @@ open class RemoteAiManager {
 
         val request = Request.Builder()
             .url(url)
+            .header("x-goog-api-key", config.apiKey)
             .post(payload.toString().toRequestBody("application/json".toMediaType()))
             .build()
 
-        val response = client.newCall(request).execute()
-        if (!response.isSuccessful) {
-            val errBody = response.body.string()
-            emit(formatHttpError("Gemini", response.code, errBody))
-            return@flow
-        }
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                val errBody = response.body.string()
+                emit(formatHttpError("Gemini", response.code, errBody))
+                return@flow
+            }
 
-        val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
-        var line: String?
-        while (reader.readLine().also { line = it } != null) {
-            val l = line?.trim() ?: continue
-            if (l.startsWith("data: ")) {
-                val data = l.substring(6).trim()
-                try {
-                    val json = JSONObject(data)
-                    val candidates = json.optJSONArray("candidates")
-                    if ((candidates != null) && (candidates.length() > 0)) {
-                        val candidate = candidates.getJSONObject(0)
-                        val content = candidate.optJSONObject("content")
-                        val parts = content?.optJSONArray("parts")
-                        if ((parts != null) && (parts.length() > 0)) {
-                            val text = parts.getJSONObject(0).optString("text", "")
-                            if (text.isNotEmpty()) {
-                                emit(text)
+            val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                val l = line?.trim() ?: continue
+                if (l.startsWith("data: ")) {
+                    val data = l.substring(6).trim()
+                    try {
+                        val json = JSONObject(data)
+                        val candidates = json.optJSONArray("candidates")
+                        if ((candidates != null) && (candidates.length() > 0)) {
+                            val candidate = candidates.getJSONObject(0)
+                            val content = candidate.optJSONObject("content")
+                            val parts = content?.optJSONArray("parts")
+                            if ((parts != null) && (parts.length() > 0)) {
+                                val text = parts.getJSONObject(0).optString("text", "")
+                                if (text.isNotEmpty()) {
+                                    emit(text)
+                                }
                             }
                         }
+                    } catch (_: Exception) {
+                        // Ignore line parse errors during SSE streaming
                     }
-                } catch (_: Exception) {
-                    // Ignore line parse errors during SSE streaming
                 }
             }
         }
@@ -263,7 +272,7 @@ open class RemoteAiManager {
 
     private fun generateAnthropicStream(prompt: String, systemPrompt: String, config: AiConfig): Flow<String> = flow {
         val url = "https://api.anthropic.com/v1/messages"
-        val model = config.selectedModel.ifBlank { "claude-3-haiku-20240307" }
+        val model = config.selectedModel.ifBlank { "claude-3-5-haiku-20241022" }
 
         val payload = JSONObject().apply {
             put("model", model)
@@ -286,31 +295,32 @@ open class RemoteAiManager {
             .post(payload.toString().toRequestBody("application/json".toMediaType()))
             .build()
 
-        val response = client.newCall(request).execute()
-        if (!response.isSuccessful) {
-            val errBody = response.body.string()
-            emit(formatHttpError("Anthropic", response.code, errBody))
-            return@flow
-        }
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                val errBody = response.body.string()
+                emit(formatHttpError("Anthropic", response.code, errBody))
+                return@flow
+            }
 
-        val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
-        var line: String?
-        while (reader.readLine().also { line = it } != null) {
-            val l = line?.trim() ?: continue
-            if (l.startsWith("data: ")) {
-                val data = l.substring(6).trim()
-                try {
-                    val json = JSONObject(data)
-                    val type = json.optString("type")
-                    if (type == "content_block_delta") {
-                        val delta = json.optJSONObject("delta")
-                        val text = delta?.optString("text", "") ?: ""
-                        if (text.isNotEmpty()) {
-                            emit(text)
+            val reader = BufferedReader(InputStreamReader(response.body.byteStream()))
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                val l = line?.trim() ?: continue
+                if (l.startsWith("data: ")) {
+                    val data = l.substring(6).trim()
+                    try {
+                        val json = JSONObject(data)
+                        val type = json.optString("type")
+                        if (type == "content_block_delta") {
+                            val delta = json.optJSONObject("delta")
+                            val text = delta?.optString("text", "") ?: ""
+                            if (text.isNotEmpty()) {
+                                emit(text)
+                            }
                         }
+                    } catch (_: Exception) {
+                        // Ignore line parse errors during SSE streaming
                     }
-                } catch (_: Exception) {
-                    // Ignore line parse errors during SSE streaming
                 }
             }
         }

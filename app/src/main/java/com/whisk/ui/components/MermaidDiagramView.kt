@@ -59,7 +59,13 @@ fun MermaidDiagramView(
     }
 
     val htmlContent = remember(code, themeName, mermaidJs) {
-        val sanitizedCode = code.trim().replace("`", "\\`").replace("$", "\\$")
+        val htmlEncodedCode = code.trim()
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;")
+
         """
         <!DOCTYPE html>
         <html>
@@ -108,7 +114,7 @@ fun MermaidDiagramView(
         </head>
         <body>
             <div class="mermaid">
-            $sanitizedCode
+            $htmlEncodedCode
             </div>
         </body>
         </html>

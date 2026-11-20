@@ -31,6 +31,7 @@ class NotesRepository(
     private val taskDao: TaskDao,
     private val vectorRepository: VectorRepository? = null,
     private val indexingRepository: IndexingRepository? = null,
+    private val taskSchedulerManager: com.whisk.tasks.TaskSchedulerManager? = null,
 ) {
 
     val allNotes: Flow<List<Note>> = noteDao.getAllNotes().map { entities ->
@@ -145,14 +146,26 @@ class NotesRepository(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun searchNotesFts(query: String): Flow<List<Note>> {
-        val sanitized = query.trim().replace("\"", "").replace("'", "")
+        val sanitized = sanitizeFtsQuery(query)
         if (sanitized.isBlank()) return allNotes
-        return noteDao.searchNotesFts("$sanitized*").flatMapLatest { ftsResults ->
+        return noteDao.searchNotesFts(sanitized).flatMapLatest { ftsResults ->
             if (ftsResults.isNotEmpty()) {
                 flowOf(ftsResults.map { it.toDomain() })
             } else {
                 noteDao.searchNotes(query).map { entities -> entities.map { it.toDomain() } }
             }
+        }
+    }
+
+    companion object {
+        fun sanitizeFtsQuery(query: String): String {
+            val clean = query.replace(Regex("[\\^\"'*:\\-()~{}\\[\\]]"), " ")
+                .replace(Regex("\\b(OR|AND|NOT|NEAR)\\b", RegexOption.IGNORE_CASE), " ")
+                .trim()
+            if (clean.isBlank()) return ""
+            val tokens = clean.split(Regex("\\s+")).filter { it.isNotBlank() }
+            if (tokens.isEmpty()) return ""
+            return tokens.joinToString(" ") { "$it*" }
         }
     }
 
@@ -276,6 +289,9 @@ class NotesRepository(
         val task = taskDao.getTaskById(taskId) ?: return
         val newStatus = targetStatus ?: !task.isCompleted
         taskDao.updateTaskStatus(taskId, newStatus)
+        if (newStatus) {
+            taskSchedulerManager?.cancelTaskReminder(taskId)
+        }
 
         // Sync Markdown body of note
         val noteEntity = noteDao.getNoteById(task.noteId) ?: return
@@ -302,17 +318,22 @@ class NotesRepository(
                 val completed = match.groupValues[1].equals("x", ignoreCase = true)
                 val taskText = match.groupValues[2].trim()
                 if (taskText.isNotEmpty()) {
-                    taskEntities.add(
-                        TaskEntity(
-                            id = "${note.id}_task_$index",
-                            noteId = note.id,
-                            noteTitle = note.title,
-                            title = taskText,
-                            isCompleted = completed,
-                            lineNumber = index + 1,
-                            tag = note.tags.firstOrNull(),
-                        ),
+                    val taskId = "${note.id}_task_$index"
+                    val taskEntity = TaskEntity(
+                        id = taskId,
+                        noteId = note.id,
+                        noteTitle = note.title,
+                        title = taskText,
+                        isCompleted = completed,
+                        lineNumber = index + 1,
+                        tag = note.tags.firstOrNull(),
                     )
+                    taskEntities.add(taskEntity)
+
+                    val dueMillis = taskSchedulerManager?.extractDueDate(taskText)
+                    if (dueMillis != null && !completed) {
+                        taskSchedulerManager.scheduleTaskReminder(taskEntity.toDomain(), dueMillis)
+                    }
                 }
             }
         }

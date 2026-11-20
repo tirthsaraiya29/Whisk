@@ -189,21 +189,8 @@ fun CodeBlockView(
             }
         }
 
-        // Code Body
-        SelectionContainer {
-            Text(
-                text = code,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontFamily = VercelMonoFontFamily,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        }
+        // Code Body with Line Numbers & Syntax Highlighting
+        SyntaxHighlightedCodeText(code = code, language = cleanLang)
 
         // Interactive Code Playground Output Terminal
         if (executionOutput != null) {
@@ -617,4 +604,134 @@ private fun parseLatexToRenderable(latex: String): String {
     s = s.replace("{", "").replace("}", "")
 
     return s
+}
+
+@Composable
+fun SyntaxHighlightedCodeText(
+    code: String,
+    language: String,
+    modifier: Modifier = Modifier,
+) {
+    val lines = remember(code) { code.lines() }
+    val maxLineNoDigits = remember(lines) { lines.size.toString().length }
+    val highlightedText = remember(code, language) {
+        buildAnnotatedCodeString(code, language)
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+    ) {
+        // Line Numbers Column
+        Column(
+            modifier = Modifier.padding(end = 12.dp),
+            horizontalAlignment = Alignment.End,
+        ) {
+            lines.indices.forEach { index ->
+                Text(
+                    text = (index + 1).toString().padStart(maxLineNoDigits, ' '),
+                    fontFamily = VercelMonoFontFamily,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                )
+            }
+        }
+
+        // Code Body Column
+        SelectionContainer(modifier = Modifier.weight(1f)) {
+            Text(
+                text = highlightedText,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = VercelMonoFontFamily,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
+}
+
+private fun buildAnnotatedCodeString(code: String, language: String): androidx.compose.ui.text.AnnotatedString {
+    val keywordColor = Color(0xFFC792EA)
+    val stringColor = Color(0xFFECC48D)
+    val commentColor = Color(0xFF637777)
+    val numberColor = Color(0xFFF78C6C)
+
+    val keywords = setOf(
+        "fun", "val", "var", "class", "object", "interface", "import", "package", "return",
+        "if", "else", "for", "while", "do", "when", "try", "catch", "finally", "throw",
+        "def", "const", "let", "function", "async", "await", "public", "private", "protected",
+        "null", "true", "false", "this", "super", "select", "from", "where", "insert", "update",
+        "delete", "create", "table", "echo", "cd", "ls", "grep", "cat", "chmod", "export",
+    )
+
+    return androidx.compose.ui.text.buildAnnotatedString {
+        val lines = code.lines()
+        lines.forEachIndexed { lineIdx, line ->
+            var i = 0
+            val len = line.length
+            while (i < len) {
+                // Comments
+                if (line.startsWith("//", i) || line.startsWith("#", i)) {
+                    pushStyle(androidx.compose.ui.text.SpanStyle(color = commentColor, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic))
+                    append(line.substring(i))
+                    pop()
+                    i = len
+                    break
+                }
+                // Strings
+                if (line[i] == '"' || line[i] == '\'') {
+                    val quote = line[i]
+                    val start = i
+                    i++
+                    while (i < len && line[i] != quote) {
+                        if (line[i] == '\\' && i + 1 < len) i++
+                        i++
+                    }
+                    if (i < len) i++
+                    pushStyle(androidx.compose.ui.text.SpanStyle(color = stringColor))
+                    append(line.substring(start, i))
+                    pop()
+                    continue
+                }
+                // Identifiers & Keywords
+                if (line[i].isLetter() || line[i] == '_') {
+                    val start = i
+                    while (i < len && (line[i].isLetterOrDigit() || line[i] == '_')) {
+                        i++
+                    }
+                    val word = line.substring(start, i)
+                    if (word.lowercase() in keywords) {
+                        pushStyle(androidx.compose.ui.text.SpanStyle(color = keywordColor, fontWeight = FontWeight.Bold))
+                        append(word)
+                        pop()
+                    } else {
+                        append(word)
+                    }
+                    continue
+                }
+                // Numbers
+                if (line[i].isDigit()) {
+                    val start = i
+                    while (i < len && (line[i].isDigit() || line[i] == '.' || line[i] == 'x' || line[i] == 'X')) {
+                        i++
+                    }
+                    pushStyle(androidx.compose.ui.text.SpanStyle(color = numberColor))
+                    append(line.substring(start, i))
+                    pop()
+                    continue
+                }
+
+                // Default Character
+                append(line[i])
+                i++
+            }
+            if (lineIdx < lines.size - 1) {
+                append("\n")
+            }
+        }
+    }
 }

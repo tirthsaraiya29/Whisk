@@ -11,13 +11,22 @@ class SecureStorageManager(context: Context) {
     private val sharedPreferences: SharedPreferences by lazy {
         try {
             createEncryptedSharedPreferences(context)
-        } catch (_: Exception) {
-            // Attempt recovery from KeyStore corruption by clearing corrupted prefs file
-            try {
-                context.deleteSharedPreferences("whisk_secure_vault_prefs")
-                createEncryptedSharedPreferences(context)
-            } catch (e: Exception) {
-                throw SecurityException("Secure key storage initialization failed. Secrets cannot be stored unencrypted.", e)
+        } catch (e: Exception) {
+            // Only attempt destructive recovery if KeyStore or AEAD encryption keys are corrupted
+            val isKeyStoreCorruption = e is java.security.KeyStoreException ||
+                    e is javax.crypto.AEADBadTagException ||
+                    e is java.security.GeneralSecurityException ||
+                    e.cause is java.security.KeyStoreException
+
+            if (isKeyStoreCorruption) {
+                try {
+                    context.deleteSharedPreferences("whisk_secure_vault_prefs")
+                    createEncryptedSharedPreferences(context)
+                } catch (retryEx: Exception) {
+                    throw SecurityException("Secure key storage recovery failed. Secrets cannot be stored unencrypted.", retryEx)
+                }
+            } else {
+                throw SecurityException("Secure key storage initialization error: ${e.message}", e)
             }
         }
     }

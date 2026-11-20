@@ -29,17 +29,20 @@ class CloudBackupWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val destinationUrl = inputData.getString(KEY_DESTINATION_URL)
-        val encryptionKey = inputData.getString(KEY_ENCRYPTION_KEY)
+        val secureStorage = com.whisk.data.local.SecureStorageManager(applicationContext)
+        val encryptionKey = secureStorage.getSecret("backup_passphrase", inputData.getString(KEY_ENCRYPTION_KEY) ?: "")
+        val authHeaderToken = secureStorage.getSecret("backup_auth_token", "")
 
         if (!destinationUrl.isNullOrBlank()) {
             if (!validateDestinationUrl(destinationUrl)) {
                 return@withContext Result.failure(workDataOf("error" to "Invalid or insecure destination URL: $destinationUrl"))
             }
-            if (encryptionKey.isNullOrBlank()) {
+            if (encryptionKey.isBlank()) {
                 return@withContext Result.failure(workDataOf("error" to "Passphrase or encryption key is strictly required for cloud backup uploads"))
             }
         }
 
+        var backupFile: File? = null
         try {
             val database = WhiskDatabase.getDatabase(applicationContext)
             val notesRepository = NotesRepository(
@@ -54,15 +57,15 @@ class CloudBackupWorker(
             )
 
             // Generate zip export to cache
-            val backupFile = File(applicationContext.cacheDir, "vault_backup_${System.currentTimeMillis()}.zip")
-            val outputStream = backupFile.outputStream()
-            exportRepo.exportVaultToZip(outputStream)
-            outputStream.close()
+            backupFile = File(applicationContext.cacheDir, "vault_backup_${System.currentTimeMillis()}.zip")
+            backupFile.outputStream().use { outputStream ->
+                exportRepo.exportVaultToZip(outputStream)
+            }
 
             val rawBytes = backupFile.readBytes()
 
             // E2EE encryption required for cloud sync backups
-            val payloadBytes = if (!encryptionKey.isNullOrBlank()) {
+            val payloadBytes = if (encryptionKey.isNotBlank()) {
                 val e2eeEngine = E2EESyncEngine()
                 e2eeEngine.encryptBytes(rawBytes, encryptionKey.toCharArray())
             } else {
@@ -77,27 +80,34 @@ class CloudBackupWorker(
                     .build()
 
                 val requestBody = payloadBytes.toRequestBody("application/octet-stream".toMediaTypeOrNull())
-                val request = Request.Builder()
+                val requestBuilder = Request.Builder()
                     .url(destinationUrl)
                     .put(requestBody)
                     .addHeader("X-Whisk-Backup", "true")
                     .addHeader("X-Whisk-Timestamp", System.currentTimeMillis().toString())
-                    .build()
 
-                val response = client.newCall(request).execute()
-                if (!response.isSuccessful) {
-                    backupFile.delete()
-                    return@withContext Result.retry()
+                if (authHeaderToken.isNotBlank()) {
+                    requestBuilder.addHeader("Authorization", "Bearer $authHeaderToken")
                 }
-            }
 
-            // Cleanup temp file
-            backupFile.delete()
+                client.newCall(requestBuilder.build()).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.retry()
+                    }
+                }
+            } else {
+                // Save locally to internal filesDir/backups/
+                val backupFolder = File(applicationContext.filesDir, "backups").apply { mkdirs() }
+                val targetLocalFile = File(backupFolder, "vault_backup_${System.currentTimeMillis()}.zip")
+                targetLocalFile.writeBytes(payloadBytes)
+            }
 
             Result.success(workDataOf("bytesBackedUp" to payloadBytes.size))
         } catch (e: Exception) {
             e.printStackTrace()
             Result.retry()
+        } finally {
+            backupFile?.delete()
         }
     }
 

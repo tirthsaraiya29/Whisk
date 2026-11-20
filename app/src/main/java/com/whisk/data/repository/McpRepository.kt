@@ -72,6 +72,7 @@ sealed class EndpointValidationResult {
 
 class McpRepository(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+    private val mcpToolServerHub: com.whisk.data.mcp.McpToolServerHub? = null,
 ) {
 
     private val jsonParser = Json { ignoreUnknownKeys = true }
@@ -236,14 +237,31 @@ class McpRepository(
     }
 
     suspend fun connectAndDiscoverTools(endpointUrl: String): Boolean = withContext(Dispatchers.IO) {
+        val serverConfig = _serverConfigs.value.firstOrNull { it.endpointUrl == endpointUrl }
+            ?: McpServerConfig(displayName = "MCP Server", endpointUrl = endpointUrl)
+
+        if (mcpToolServerHub != null && (endpointUrl.contains("localhost:8080") || endpointUrl.contains("127.0.0.1"))) {
+            val localTools = mcpToolServerHub.getDeclaredTools().map {
+                McpTool(
+                    name = it.name,
+                    description = it.description,
+                    inputSchemaJson = it.inputSchemaJson,
+                    requiresApproval = requiresApproval(endpointUrl, it.name),
+                    serverId = serverConfig.id,
+                    serverEndpoint = endpointUrl,
+                )
+            }
+            _discoveredTools.value = localTools
+            _isConnected.value = true
+            updateServerState(serverConfig.id, McpConnectionState.CONNECTED, null)
+            return@withContext true
+        }
+
         val validation = validateEndpoint(endpointUrl)
         if (validation is EndpointValidationResult.Invalid) {
             _isConnected.value = false
             return@withContext false
         }
-
-        val serverConfig = _serverConfigs.value.firstOrNull { it.endpointUrl == endpointUrl }
-            ?: McpServerConfig(displayName = "MCP Server", endpointUrl = endpointUrl)
 
         try {
             val initRequestId = UUID.randomUUID().toString()
@@ -264,15 +282,18 @@ class McpRepository(
             }
 
             if (!initResponse.isSuccessful) {
+                val code = initResponse.code
+                initResponse.close()
                 _isConnected.value = false
-                updateServerState(serverConfig.id, McpConnectionState.ERROR, "HTTP ${initResponse.code}: Initialise failed")
+                updateServerState(serverConfig.id, McpConnectionState.ERROR, "HTTP $code: Initialise failed")
                 return@withContext false
             }
+            initResponse.close()
 
             val initializedPayload = """{"jsonrpc":"2.0","method":"notifications/initialized"}"""
             val initializedBody = initializedPayload.toRequestBody("application/json".toMediaType())
             val initializedRequest = Request.Builder().url(endpointUrl).post(initializedBody).build()
-            client.newCall(initializedRequest).execute()
+            client.newCall(initializedRequest).execute().close()
 
             val listRequestId = UUID.randomUUID().toString()
             val listPayload = """{"jsonrpc":"2.0","id":"$listRequestId","method":"tools/list","params":{}}"""
@@ -289,40 +310,42 @@ class McpRepository(
                 return@withContext false
             }
 
-            if (listResponse.isSuccessful) {
-                val respStr = listResponse.body.string()
-                val parsedJson = jsonParser.parseToJsonElement(respStr).jsonObject
-                val resultObj = parsedJson["result"]?.jsonObject
-                val toolsArray = resultObj?.get("tools")?.jsonArray ?: JsonArray(emptyList())
-                val toolsList = mutableListOf<McpTool>()
+            listResponse.use { response ->
+                if (response.isSuccessful) {
+                    val respStr = response.body.string()
+                    val parsedJson = jsonParser.parseToJsonElement(respStr).jsonObject
+                    val resultObj = parsedJson["result"]?.jsonObject
+                    val toolsArray = resultObj?.get("tools")?.jsonArray ?: JsonArray(emptyList())
+                    val toolsList = mutableListOf<McpTool>()
 
-                for (item in toolsArray) {
-                    val toolObj = item.jsonObject
-                    val name = toolObj["name"]?.jsonPrimitive?.content ?: ""
-                    val desc = toolObj["description"]?.jsonPrimitive?.content ?: ""
-                    val schema = toolObj["inputSchema"]?.toString() ?: "{}"
+                    for (item in toolsArray) {
+                        val toolObj = item.jsonObject
+                        val name = toolObj["name"]?.jsonPrimitive?.content ?: ""
+                        val desc = toolObj["description"]?.jsonPrimitive?.content ?: ""
+                        val schema = toolObj["inputSchema"]?.toString() ?: "{}"
 
-                    toolsList.add(
-                        McpTool(
-                            name = name,
-                            description = desc,
-                            inputSchemaJson = schema,
-                            requiresApproval = requiresApproval(endpointUrl, name),
-                            serverId = serverConfig.id,
-                            serverEndpoint = endpointUrl,
-                        ),
-                    )
+                        toolsList.add(
+                            McpTool(
+                                name = name,
+                                description = desc,
+                                inputSchemaJson = schema,
+                                requiresApproval = requiresApproval(endpointUrl, name),
+                                serverId = serverConfig.id,
+                                serverEndpoint = endpointUrl,
+                            ),
+                        )
+                    }
+
+                    _discoveredTools.value = toolsList
+                    _isConnected.value = true
+                    updateServerState(serverConfig.id, McpConnectionState.CONNECTED, null)
+                    true
+                } else {
+                    _discoveredTools.value = emptyList()
+                    _isConnected.value = false
+                    updateServerState(serverConfig.id, McpConnectionState.ERROR, "Tools list HTTP ${response.code}")
+                    false
                 }
-
-                _discoveredTools.value = toolsList
-                _isConnected.value = true
-                updateServerState(serverConfig.id, McpConnectionState.CONNECTED, null)
-                true
-            } else {
-                _discoveredTools.value = emptyList()
-                _isConnected.value = false
-                updateServerState(serverConfig.id, McpConnectionState.ERROR, "Tools list HTTP ${listResponse.code}")
-                false
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
@@ -406,6 +429,14 @@ class McpRepository(
                 }
             }
 
+            if (mcpToolServerHub != null && (endpointUrl.contains("localhost:8080") || endpointUrl.contains("127.0.0.1"))) {
+                val res = mcpToolServerHub.executeTool(toolName, argumentsJson)
+                val status = if (res.isError) "FAILED" else "SUCCESS"
+                val updatedLog = initialLog.copy(status = status, result = res.content)
+                _executionLogs.value = _executionLogs.value.map { if (it.id == requestId) updatedLog else it }
+                return@withContext res.content
+            }
+
             val jsonRpcId = UUID.randomUUID().toString()
             val cleanArgs = argumentsJson.ifBlank { "{}" }
             val payload = """{"jsonrpc":"2.0","id":"$jsonRpcId","method":"tools/call","params":{"name":"$toolName","arguments":$cleanArgs}}"""
@@ -427,24 +458,26 @@ class McpRepository(
                 return@withContext errorResult
             }
 
-            val respStr = response.body.string()
+            response.use { resp ->
+                val respStr = resp.body.string()
 
-            if (response.isSuccessful) {
-                val resultText = respStr.ifBlank { "Tool executed successfully." }
-                val updatedLog = initialLog.copy(
-                    status = "SUCCESS",
-                    result = resultText,
-                )
-                _executionLogs.value = _executionLogs.value.map { if (it.id == requestId) updatedLog else it }
-                resultText
-            } else {
-                val errorResult = "Tool call failed [HTTP ${response.code}]: $respStr"
-                val updatedLog = initialLog.copy(
-                    status = "FAILED",
-                    result = errorResult,
-                )
-                _executionLogs.value = _executionLogs.value.map { if (it.id == requestId) updatedLog else it }
-                errorResult
+                if (resp.isSuccessful) {
+                    val resultText = respStr.ifBlank { "Tool executed successfully." }
+                    val updatedLog = initialLog.copy(
+                        status = "SUCCESS",
+                        result = resultText,
+                    )
+                    _executionLogs.value = _executionLogs.value.map { if (it.id == requestId) updatedLog else it }
+                    resultText
+                } else {
+                    val errorResult = "Tool call failed [HTTP ${resp.code}]: $respStr"
+                    val updatedLog = initialLog.copy(
+                        status = "FAILED",
+                        result = errorResult,
+                    )
+                    _executionLogs.value = _executionLogs.value.map { if (it.id == requestId) updatedLog else it }
+                    errorResult
+                }
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e

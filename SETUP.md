@@ -12,13 +12,13 @@ This guide covers everything you need to compile, run, and start developing Whis
 ## Cloning the Repository
 
 ```bash
-git clone https://github.com/whisk/whisk.git
-cd whisk
+git clone https://github.com/tirthsaraiya29/Whisk.git
+cd Whisk
 ```
 
 ## Opening the Project
 1. Open Android Studio.
-2. Select **File > Open...** and navigate to the cloned `whisk` directory.
+2. Select **File > Open...** and navigate to the cloned `Whisk` directory.
 3. Allow Gradle to sync. This may take a few minutes as dependencies are downloaded.
 
 ## Building and Running
@@ -35,7 +35,7 @@ Alternatively, use the command line:
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 # Launch the app
-adb shell am start -n com.whisk/com.whisk.MainActivity
+adb shell am start -n com.whisk/.MainActivity
 ```
 
 ## Running Tests

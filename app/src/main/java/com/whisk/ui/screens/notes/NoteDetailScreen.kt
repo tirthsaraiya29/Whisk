@@ -306,15 +306,24 @@ fun NoteDetailScreen(
                             .border(1.dp, MaterialTheme.colorScheme.primary)
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onUnlockNote()
+                                val activity = context as? androidx.fragment.app.FragmentActivity
+                                if (activity != null && com.whisk.security.BiometricAuthHelper.isBiometricAvailable(context)) {
+                                    com.whisk.security.BiometricAuthHelper.promptBiometricAuth(
+                                        activity = activity,
+                                        onSuccess = { onUnlockNote() },
+                                        onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() },
+                                    )
+                                } else {
+                                    onUnlockNote()
+                                }
                             }
-                            .padding(horizontal = 24.dp, vertical = 12.dp)
+                            .padding(horizontal = 24.dp, vertical = 12.dp),
                     ) {
                         Text(
                             text = "[UNLOCK WITH BIOMETRICS]",
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = MaterialTheme.colorScheme.onPrimary,
                         )
                     }
                 }

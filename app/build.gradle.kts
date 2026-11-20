@@ -48,11 +48,7 @@ android {
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    compilerOptions {
-        freeCompilerArgs.add("-Xskip-metadata-version-check")
-    }
-}
+
 
 dependencies {
     implementation(libs.material)
@@ -87,6 +83,7 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.security.crypto)
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
     implementation(libs.mediapipe.tasks.genai)
     implementation(libs.litertlm.android) {
         exclude(group = "org.jetbrains.kotlin")

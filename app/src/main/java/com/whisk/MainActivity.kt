@@ -160,27 +160,45 @@ class MainActivity : ComponentActivity() {
         // Initialize Application Dependencies
         database = WhiskDatabase.getDatabase(this)
         preferencesManager = PreferencesManager(this)
-        notesRepository = NotesRepository(database.noteDao(), database.folderDao(), database.taskDao())
+
+        val taskSchedulerManager = com.whisk.tasks.TaskSchedulerManager(this)
+
+        vectorRepository = VectorRepository(database.documentChunkDao(), database.embeddingVectorDao(), database)
+        indexingRepository = IndexingRepository(database.indexingStateDao(), database.documentChunkDao())
+        embeddingModelManager = EmbeddingModelManager(this)
+
+        notesRepository = NotesRepository(
+            database.noteDao(),
+            database.folderDao(),
+            database.taskDao(),
+            vectorRepository,
+            indexingRepository,
+            taskSchedulerManager,
+        )
+
         propertyRepository = PropertyRepository(database.propertyDao(), database.noteDao())
         objectTypeRepository = ObjectTypeRepository(database.objectTypeDao(), database.noteDao(), database.propertyDao())
         relationshipRepository = RelationshipRepository(database.relationshipDao(), database.noteDao(), database.objectTypeDao())
         graphRepository = GraphRepository(database.noteDao(), database.relationshipDao())
         canvasRepository = CanvasRepository(database.canvasDao())
         gitHubRepository = GitHubRepository()
-        mcpRepository = McpRepository()
-        exportImportRepository = ExportImportRepository(this, database, notesRepository)
+
+        val mcpToolServerHub = com.whisk.data.mcp.McpToolServerHub(notesRepository)
+        mcpRepository = McpRepository(mcpToolServerHub = mcpToolServerHub)
+
+        exportImportRepository = ExportImportRepository(this, database, notesRepository, embeddingModelManager)
         chatRepository = ChatRepository(database.chatDao())
         databaseViewRepository = DatabaseViewRepository(database.databaseViewDao())
         dailyNotesRepository = DailyNotesRepository(database, database.dailyNoteDao(), database.activityEventDao(), database.noteDao(), database.taskDao())
         localGemmaManager = LocalGemmaManager(this)
         remoteAiManager = RemoteAiManager()
 
-        vectorRepository = VectorRepository(database.documentChunkDao(), database.embeddingVectorDao(), database)
-        indexingRepository = IndexingRepository(database.indexingStateDao(), database.documentChunkDao())
-        embeddingModelManager = EmbeddingModelManager(this)
         documentIndexer = DocumentIndexer(database.noteDao(), database.relationshipDao(), vectorRepository, indexingRepository, embeddingModelManager)
         hybridSearchEngine = HybridSearchEngine(database.noteDao(), vectorRepository, embeddingModelManager.getDelegatingProvider())
         relatedKnowledgeRepository = RelatedKnowledgeRepository(database.noteDao(), database.relationshipDao(), vectorRepository, embeddingModelManager.getDelegatingProvider())
+
+        // Enqueue background vault indexing
+        com.whisk.data.rag.indexer.VaultIndexingWorker.enqueueIndexing(this)
 
         // Eager native ONNX pre-warming on Dispatchers.Default to eliminate 120ms freeze on first query
         lifecycleScope.launch(Dispatchers.Default) {

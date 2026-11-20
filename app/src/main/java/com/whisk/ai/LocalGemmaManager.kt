@@ -144,7 +144,10 @@ open class LocalGemmaManager(private val context: Context) : AutoCloseable {
 
                 while (redirectCount < 5) {
                     val requestBuilder = Request.Builder().url(currentUrl).get()
-                    if (config.hfApiToken.isNotBlank() && currentUrl.contains("huggingface.co")) {
+                    val currentHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Exception) { null }
+                    val isHfHost = currentHost != null && (currentHost == "huggingface.co" || currentHost == "cdn-lfs.huggingface.co" || currentHost.endsWith(".huggingface.co"))
+
+                    if (config.hfApiToken.isNotBlank() && isHfHost) {
                         requestBuilder.header("Authorization", "Bearer ${config.hfApiToken}")
                     }
 
@@ -233,19 +236,27 @@ open class LocalGemmaManager(private val context: Context) : AutoCloseable {
 
                 if (tempFile.exists() && (tempFile.length() > 50_000_000L)) {
                     if (targetFile.exists()) targetFile.delete()
-                    tempFile.renameTo(targetFile)
+                    val renamed = tempFile.renameTo(targetFile)
+                    if (!renamed || !targetFile.exists()) {
+                        tempFile.copyTo(targetFile, overwrite = true)
+                        tempFile.delete()
+                    }
 
                     _modelStatus.value = LocalModelStatus(
                         isDownloaded = true,
                         downloadProgress = 1.0f,
-                        statusText = "Gemma 4 E2B downloaded & ready (${targetFile.length() / (1024 * 1024)} MB)",
+                        statusText = "Gemma 4 E2B downloaded (${targetFile.length() / (1024 * 1024)} MB). Initializing...",
                         modelSizeBytes = targetFile.length(),
                         downloadedBytes = targetFile.length(),
                         totalBytes = targetFile.length(),
                         isLoaded = false,
                     )
-                    initializeEngine(config)
-                    return@withContext true
+                    val initSuccess = initializeEngine(config)
+                    if (initSuccess) {
+                        return@withContext true
+                    } else {
+                        lastError = "Model download completed but LiteRT initialization failed."
+                    }
                 } else {
                     tempFile.delete()
                     lastError = "Downloaded file incomplete (received ${tempFile.length() / (1024 * 1024)} MB)"

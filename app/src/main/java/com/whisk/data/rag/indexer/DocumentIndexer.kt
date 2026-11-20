@@ -97,7 +97,11 @@ class DocumentIndexer(
     suspend fun reconcileOrphans(): ReconciliationResult = withContext(Dispatchers.IO) {
         // Automatically recover any states stuck in INDEXING from process termination
         indexingRepository.resetStuckIndexingStates()
-        val activeNotes = noteDao.getAllNotesDirect().filter { !it.isArchived }
+        val activeNotes = noteDao.getAllNotesDirect().filter { note ->
+            !note.isArchived && !note.tags.split(",").any { tag ->
+                tag.trim().equals("locked", ignoreCase = true) || tag.trim().equals("secret", ignoreCase = true)
+            }
+        }
         val activeNoteIds = activeNotes.map { it.id }.toSet()
 
         var removedNotesCount = 0
@@ -172,7 +176,11 @@ class DocumentIndexer(
                 return@withContext
             }
 
-            val allNotes = noteDao.getAllNotesDirect().filter { !it.isArchived }
+            val allNotes = noteDao.getAllNotesDirect().filter { note ->
+                !note.isArchived && !note.tags.split(",").any { tag ->
+                    tag.trim().equals("locked", ignoreCase = true) || tag.trim().equals("secret", ignoreCase = true)
+                }
+            }
             val total = allNotes.size
 
             _progress.value = _progress.value.copy(totalEligible = total)

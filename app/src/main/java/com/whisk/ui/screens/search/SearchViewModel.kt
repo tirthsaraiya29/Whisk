@@ -31,6 +31,7 @@ data class SearchUiState(
     val objectTypes: List<ObjectTypeDefinition> = emptyList(),
     val activePropertyFilter: PropertyFilter? = null,
     val availablePropertyDefinitions: List<PropertyDefinition> = emptyList(),
+    val knowledgeGaps: List<com.whisk.domain.rag.intelligence.KnowledgeGapSuggestion> = emptyList(),
 )
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -38,6 +39,7 @@ class SearchViewModel(
     private val notesRepository: NotesRepository,
     private val propertyRepository: PropertyRepository,
     objectTypeRepository: ObjectTypeRepository? = null,
+    private val knowledgeAnalysisEngine: com.whisk.domain.rag.intelligence.KnowledgeAnalysisEngine? = null,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
@@ -46,6 +48,7 @@ class SearchViewModel(
     private val _activePropertyFilter = MutableStateFlow<PropertyFilter?>(null)
     private val _propertyDefinitions = MutableStateFlow<List<PropertyDefinition>>(emptyList())
     private val _objectTypes = MutableStateFlow<List<ObjectTypeDefinition>>(emptyList())
+    private val _knowledgeGaps = MutableStateFlow<List<com.whisk.domain.rag.intelligence.KnowledgeGapSuggestion>>(emptyList())
 
     init {
         viewModelScope.launch {
@@ -58,6 +61,11 @@ class SearchViewModel(
                 repo.nonArchivedObjectTypeDefinitions.collect { types ->
                     _objectTypes.value = types
                 }
+            }
+        }
+        knowledgeAnalysisEngine?.let { engine ->
+            viewModelScope.launch {
+                _knowledgeGaps.value = engine.detectKnowledgeGaps()
             }
         }
     }
@@ -79,6 +87,7 @@ class SearchViewModel(
         _activePropertyFilter,
         _propertyDefinitions,
         _objectTypes,
+        _knowledgeGaps,
         searchResults,
     ) { flows: Array<Any?> ->
         val query = flows[0] as String
@@ -90,7 +99,9 @@ class SearchViewModel(
         @Suppress("UNCHECKED_CAST")
         val types = flows[5] as List<ObjectTypeDefinition>
         @Suppress("UNCHECKED_CAST")
-        val results = flows[6] as List<Note>
+        val gaps = flows[6] as List<com.whisk.domain.rag.intelligence.KnowledgeGapSuggestion>
+        @Suppress("UNCHECKED_CAST")
+        val results = flows[7] as List<Note>
 
         var filtered = results.filter { note ->
             ((tag == null) || note.tags.contains(tag)) &&
@@ -111,6 +122,7 @@ class SearchViewModel(
             objectTypes = types,
             activePropertyFilter = propFilter,
             availablePropertyDefinitions = propDefs,
+            knowledgeGaps = gaps,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SearchUiState())
 

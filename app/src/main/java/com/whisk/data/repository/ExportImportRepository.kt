@@ -134,6 +134,9 @@ data class NoteDto(
     val description: String? = null,
     val icon: String? = null,
     val coverImage: String? = null,
+    val isPinned: Boolean = false,
+    val deletedAt: Long? = null,
+    val accentColor: String? = null,
 )
 
 @Serializable
@@ -334,6 +337,9 @@ class ExportImportRepository(
                 description = it.description,
                 icon = it.icon,
                 coverImage = it.coverImage,
+                isPinned = it.isPinned,
+                deletedAt = it.deletedAt,
+                accentColor = it.accentColor,
             )
         }
         val folders = database.folderDao().getAllFolders().first().map {
@@ -611,6 +617,9 @@ class ExportImportRepository(
                             description = n.description,
                             icon = n.icon,
                             coverImage = n.coverImage,
+                            isPinned = n.isPinned,
+                            deletedAt = n.deletedAt,
+                            accentColor = n.accentColor,
                         ),
                     )
                     importedCount++

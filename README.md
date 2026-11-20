@@ -3,9 +3,10 @@
 # WHISK
 ### *The Ultimate Local-First Developer Knowledge Workspace & AI-Augmented IDE for Android*
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Jetpack Compose](https://img.shields.io/badge/Compose-BOM_2026.09-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Android SDK](https://img.shields.io/badge/Android-SDK_37-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
+[![AGP](https://img.shields.io/badge/AGP-9.5.1-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
 [![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-384d_MiniLM-005CED?style=flat-square)](https://onnxruntime.ai)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL_3.0-blue.svg?style=flat-square)](https://github.com/tirthsaraiya29/Whisk/blob/main/LICENSE)
 

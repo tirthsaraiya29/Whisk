@@ -96,16 +96,20 @@ fun SidebarDrawer(
                 .padding(16.dp),
         ) {
             // Header / System Identifier with Close Trigger
+            // Header / System Identifier & Vault Switcher
+            var activeVaultName by remember { mutableStateOf("PERSONAL") }
+            val vaultOptions = remember { listOf("PERSONAL", "WORK", "RESEARCH", "CODE") }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
+                    .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
                     Text(
-                        text = "WHISK // VAULT",
+                        text = "WHISK // $activeVaultName VAULT",
                         style = MaterialTheme.typography.labelMedium,
                         fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
@@ -154,6 +158,40 @@ fun SidebarDrawer(
                             fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+
+            // Vault Switcher Pills
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                vaultOptions.forEach { vault ->
+                    val isSelected = activeVaultName == vault
+                    Box(
+                        modifier = Modifier
+                            .border(
+                                1.dp,
+                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                RoundedCornerShape(0.dp),
+                            )
+                            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                activeVaultName = vault
+                            }
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = vault,
+                            fontFamily = DotMatrixFontFamily,
+                            fontSize = 10.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

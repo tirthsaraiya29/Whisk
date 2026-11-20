@@ -61,6 +61,7 @@ class NoteDetailViewModel(
     private val objectTypeRepository: ObjectTypeRepository? = null,
     private val relationshipRepository: RelationshipRepository? = null,
     private val relatedKnowledgeRepository: RelatedKnowledgeRepository? = null,
+    private val gitVaultManager: com.whisk.git.GitVaultManager? = null,
     private val noteId: String,
 ) : ViewModel() {
 
@@ -212,6 +213,7 @@ class NoteDetailViewModel(
     }
 
     fun updateContent(title: String, body: String) {
+        if (_uiState.value.isDeleted) return
         val currentNote = _uiState.value.note ?: return
         val updated = currentNote.copy(
             title = title,
@@ -226,9 +228,11 @@ class NoteDetailViewModel(
         autoSaveJob?.cancel()
         autoSaveJob = viewModelScope.launch {
             delay(500.milliseconds)
+            if (_uiState.value.isDeleted) return@launch
             try {
                 saveMutex.withLock {
                     notesRepository.saveNote(updated)
+                    gitVaultManager?.commitNoteChange(updated, "Autosave update")
                 }
                 val backlinks = notesRepository.getBacklinksForNote(updated.title, updated.id)
                 _uiState.update {
@@ -283,20 +287,35 @@ class NoteDetailViewModel(
     }
 
     fun deleteNote() {
+        autoSaveJob?.cancel()
+        _uiState.update { it.copy(isDeleted = true) }
         viewModelScope.launch {
             saveMutex.withLock {
                 notesRepository.deleteNote(noteId)
             }
-            _uiState.update { it.copy(isDeleted = true) }
         }
     }
 
     fun softDeleteNote() {
+        autoSaveJob?.cancel()
+        _uiState.update { it.copy(isDeleted = true) }
         viewModelScope.launch {
             saveMutex.withLock {
                 notesRepository.softDeleteNote(noteId)
             }
-            _uiState.update { it.copy(isDeleted = true) }
+        }
+    }
+
+    suspend fun getRevisionHistory(): List<com.whisk.git.NoteRevision> {
+        return gitVaultManager?.getRevisionHistory(noteId) ?: emptyList()
+    }
+
+    fun revertToRevision(commitId: String) {
+        viewModelScope.launch {
+            val reverted = gitVaultManager?.revertToCommit(noteId, commitId)
+            if (reverted != null) {
+                loadNote()
+            }
         }
     }
 
@@ -312,6 +331,7 @@ class NoteDetailViewModel(
     fun flushPendingSave() {
         autoSaveJob?.cancel()
         val note = _uiState.value.note ?: return
+        if (_uiState.value.isDeleted) return
         if (_uiState.value.saveState == SaveState.SAVING) {
             // Use independent IO scope + NonCancellable so back-navigation cannot abort the save
             CoroutineScope(Dispatchers.IO + NonCancellable).launch {

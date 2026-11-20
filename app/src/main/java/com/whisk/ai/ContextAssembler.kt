@@ -26,6 +26,9 @@ data class ContextPayload(
     val retrievedChunks: List<RetrievedChunk> = emptyList(),
     val maxTokenBudget: Int = 2500,
 ) {
+    private fun isNoteLocked(note: Note): Boolean {
+        return note.tags.any { it.equals("locked", ignoreCase = true) || it.equals("secret", ignoreCase = true) }
+    }
     fun formatContextWithCitations(): Pair<String, List<CitationReference>> {
         val builder = StringBuilder()
         val citationRefs = mutableListOf<CitationReference>()
@@ -63,7 +66,7 @@ data class ContextPayload(
         }
 
         // 2. Active note if present
-        if (activeNote != null) {
+        if (activeNote != null && !isNoteLocked(activeNote)) {
             builder.append("### Active Note: ").append(activeNote.title).append("\n")
             builder.append("Type: ").append(activeNote.typeId.uppercase()).append("\n")
             if (!activeNote.description.isNullOrBlank()) {
@@ -88,10 +91,11 @@ data class ContextPayload(
             builder.append("\n")
         }
 
-        // 4. Related objects
-        if (relatedObjects.isNotEmpty()) {
+        // 4. Related objects (excluding locked/secret notes)
+        val safeRelatedObjects = relatedObjects.filter { !isNoteLocked(it) }
+        if (safeRelatedObjects.isNotEmpty()) {
             builder.append("### Linked / Related Vault Objects:\n")
-            relatedObjects.forEach { obj ->
+            safeRelatedObjects.forEach { obj ->
                 builder.append("#### Object: ").append(obj.title).append(" [Type: ").append(obj.typeId.uppercase()).append("]\n")
                 if (!obj.description.isNullOrBlank()) {
                     builder.append("Summary: ").append(obj.description).append("\n")

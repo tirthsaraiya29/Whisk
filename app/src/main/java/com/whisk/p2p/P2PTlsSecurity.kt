@@ -62,7 +62,9 @@ object P2PTlsSecurity {
     }
 
     private fun initTlsContext(): SSLContext {
-        val password = "whisk_p2p_ephemeral_key".toCharArray()
+        val randomBytes = ByteArray(32)
+        SecureRandom().nextBytes(randomBytes)
+        val password = java.util.Base64.getEncoder().encodeToString(randomBytes).toCharArray()
         val kpg = KeyPairGenerator.getInstance("RSA")
         kpg.initialize(2048)
         val keyPair = kpg.generateKeyPair()

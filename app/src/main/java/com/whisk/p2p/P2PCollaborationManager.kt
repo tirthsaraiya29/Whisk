@@ -164,7 +164,7 @@ class P2PCollaborationManager(
 
                 listenForIncomingConnections(scope)
             } catch (e: Exception) {
-                e.printStackTrace()
+                _uiState.update { it.copy(lastSyncMessage = "P2P Server error: ${e.message}") }
             }
         }
     }
@@ -269,7 +269,7 @@ class P2PCollaborationManager(
                 _uiState.update { it.copy(lastSyncMessage = "Synced $mergedCount notes from ${payload.senderName}") }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            _uiState.update { it.copy(lastSyncMessage = "P2P incoming sync error: ${e.message}") }
         } finally {
             socket.close()
         }

@@ -103,8 +103,7 @@ class CloudBackupWorker(
             }
 
             Result.success(workDataOf("bytesBackedUp" to payloadBytes.size))
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
             Result.retry()
         } finally {
             backupFile?.delete()

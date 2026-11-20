@@ -84,4 +84,30 @@ class E2EESyncEngineTest {
         }
         assertTrue("Tampered ciphertext must fail authentication", failed)
     }
+
+    @Test
+    fun legacy65536IterationsPayload_decryptsSuccessfully() = runTest {
+        // Construct legacy format payload without WHISK_E2EE header (65536 iterations)
+        val plainText = "Legacy backup payload"
+        val salt = E2EESyncEngine.generateFreshSalt()
+        val iv = E2EESyncEngine.generateFreshIv()
+
+        val factory = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val spec = javax.crypto.spec.PBEKeySpec(passphrase, salt, 65536, 256)
+        val secretKey = javax.crypto.spec.SecretKeySpec(factory.generateSecret(spec).encoded, "AES")
+
+        val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, secretKey, javax.crypto.spec.GCMParameterSpec(128, iv))
+
+        val cipherText = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
+        val combined = ByteArray(salt.size + iv.size + cipherText.size)
+        System.arraycopy(salt, 0, combined, 0, salt.size)
+        System.arraycopy(iv, 0, combined, salt.size, iv.size)
+        System.arraycopy(cipherText, 0, combined, salt.size + iv.size, cipherText.size)
+
+        val legacyBase64 = Base64.getEncoder().encodeToString(combined)
+        val decrypted = engine.decryptPayload(legacyBase64, passphrase)
+
+        assertEquals("Legacy 65536-iteration payload must decrypt successfully", plainText, decrypted)
+    }
 }

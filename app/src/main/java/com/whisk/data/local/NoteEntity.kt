@@ -35,6 +35,7 @@ data class NoteEntity(
     @ColumnInfo(defaultValue = "0") val isPinned: Boolean = false,
     @ColumnInfo(defaultValue = "NULL") val deletedAt: Long? = null,
     @ColumnInfo(defaultValue = "NULL") val accentColor: String? = null,
+    @ColumnInfo(defaultValue = "0") val isLocked: Boolean = false,
 ) {
     fun toDomain(): Note {
         return Note(
@@ -58,6 +59,7 @@ data class NoteEntity(
             isPinned = isPinned,
             deletedAt = deletedAt,
             accentColor = accentColor,
+            isLocked = isLocked || tags.split(",").any { it.trim().equals("locked", true) || it.trim().equals("secret", true) },
         )
     }
 
@@ -84,6 +86,7 @@ data class NoteEntity(
                 isPinned = note.isPinned,
                 deletedAt = note.deletedAt,
                 accentColor = note.accentColor,
+                isLocked = note.isLocked || note.tags.any { it.equals("locked", true) || it.equals("secret", true) },
             )
         }
     }

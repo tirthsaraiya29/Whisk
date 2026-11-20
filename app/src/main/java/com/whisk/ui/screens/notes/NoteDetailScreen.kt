@@ -306,15 +306,14 @@ fun NoteDetailScreen(
                             .border(1.dp, MaterialTheme.colorScheme.primary)
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                val activity = context as? androidx.fragment.app.FragmentActivity
-                                if (activity != null && com.whisk.security.BiometricAuthHelper.isBiometricAvailable(context)) {
+                                if (com.whisk.security.BiometricAuthHelper.isBiometricAvailable(context)) {
                                     com.whisk.security.BiometricAuthHelper.promptBiometricAuth(
-                                        activity = activity,
+                                        context = context,
                                         onSuccess = { onUnlockNote() },
                                         onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() },
                                     )
                                 } else {
-                                    onUnlockNote()
+                                    Toast.makeText(context, "Biometric authentication is not configured on this device", Toast.LENGTH_SHORT).show()
                                 }
                             }
                             .padding(horizontal = 24.dp, vertical = 12.dp),

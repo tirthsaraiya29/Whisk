@@ -23,6 +23,7 @@ data class Note(
     val isPinned: Boolean = false,
     val deletedAt: Long? = null,
     val accentColor: String? = null,
+    val isLocked: Boolean = false,
 )
 
 data class NoteLink(

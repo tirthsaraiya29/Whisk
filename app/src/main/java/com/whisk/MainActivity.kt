@@ -3,7 +3,7 @@ package com.whisk
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -107,7 +107,7 @@ inline fun <reified T : ViewModel> viewModelFactory(crossinline creator: () -> T
         override fun <VM : ViewModel> create(modelClass: Class<VM>): VM = creator() as VM
     }
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private lateinit var database: WhiskDatabase
     private lateinit var preferencesManager: PreferencesManager
@@ -252,6 +252,7 @@ class MainActivity : ComponentActivity() {
         onShortcutNewNote = onNewNote
     }
 
+    @android.annotation.SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
         if (event.action == android.view.KeyEvent.ACTION_DOWN) {
             val isModifier = event.isCtrlPressed || (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q && event.isMetaPressed)

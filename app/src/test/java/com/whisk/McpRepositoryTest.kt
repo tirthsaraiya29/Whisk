@@ -39,7 +39,7 @@ class McpRepositoryTest {
     }
 
     @Test
-    fun testPendingApprovalObservableStateBeforeUiSubscription() = runBlocking {
+    fun testPendingApprovalObservableStateBeforeUiSubscription() = runBlocking(kotlinx.coroutines.Dispatchers.IO) {
         val repository = McpRepository()
         val endpoint = "http://localhost:8080/mcp"
         val toolName = "github_create_issue"
@@ -50,9 +50,15 @@ class McpRepositoryTest {
             repository.invokeTool(endpoint, toolName, argsJson, timeoutMs = 5000L)
         }
 
-        // Simulate delayed UI subscription: state flow MUST contain the pending request!
-        kotlinx.coroutines.delay(100)
-        val pendingRequests = repository.pendingApprovalRequests.value
+        // Wait until pending request is posted
+        var pendingRequests = repository.pendingApprovalRequests.value
+        var attempts = 0
+        while (pendingRequests.isEmpty() && attempts < 20) {
+            kotlinx.coroutines.delay(50)
+            pendingRequests = repository.pendingApprovalRequests.value
+            attempts++
+        }
+
         assertEquals(1, pendingRequests.size)
         assertEquals(toolName, pendingRequests.first().toolName)
 
@@ -65,7 +71,7 @@ class McpRepositoryTest {
     }
 
     @Test
-    fun testRejectionAndTimeoutHandling() = runBlocking {
+    fun testRejectionAndTimeoutHandling() = runBlocking(kotlinx.coroutines.Dispatchers.IO) {
         val repository = McpRepository()
         val endpoint = "http://localhost:8080/mcp"
         val toolName = "github_delete_branch"
@@ -75,8 +81,14 @@ class McpRepositoryTest {
             repository.invokeTool(endpoint, toolName, argsJson, timeoutMs = 1000L)
         }
 
-        kotlinx.coroutines.delay(100)
-        val pendingRequests = repository.pendingApprovalRequests.value
+        var pendingRequests = repository.pendingApprovalRequests.value
+        var attempts = 0
+        while (pendingRequests.isEmpty() && attempts < 20) {
+            kotlinx.coroutines.delay(50)
+            pendingRequests = repository.pendingApprovalRequests.value
+            attempts++
+        }
+
         assertEquals(1, pendingRequests.size)
 
         // User rejects execution
@@ -166,5 +178,22 @@ class McpRepositoryTest {
         assertFalse("Logged arguments must not contain secret password", logArguments.contains("supersecretpassword123"))
         assertFalse("Logged arguments must not contain bearer token", logArguments.contains("bearer-xyz-123"))
         assertTrue("Logged arguments must contain masked value", logArguments.contains("******"))
+    }
+
+    @Test
+    fun testBuiltinHubRoutingVersusExternalLocalhost() = runBlocking {
+        val hub = com.whisk.data.mcp.McpToolServerHub(notesRepository = null)
+        val repository = McpRepository(mcpToolServerHub = hub)
+
+        // 1. Builtin hub route works for whisk://builtin
+        val builtinSuccess = repository.connectAndDiscoverTools("whisk://builtin")
+        assertTrue("Builtin hub connection should succeed", builtinSuccess)
+        val builtinTools = repository.discoveredTools.value
+        assertTrue("Builtin tools must be discovered", builtinTools.any { it.name == "search_vault_notes" })
+
+        // 2. Real http://localhost:8080/mcp does NOT match builtin hub (reaches network path)
+        val fakeEvilUrl = "https://evil.example/?x=127.0.0.1"
+        val evilResult = repository.connectAndDiscoverTools(fakeEvilUrl)
+        assertFalse("Evil URL attempting query-param spoofing must not match builtin hub", evilResult)
     }
 }

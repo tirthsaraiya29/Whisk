@@ -20,7 +20,7 @@ data class McpToolExecutionResult(
 )
 
 class McpToolServerHub(
-    private val notesRepository: NotesRepository,
+    private val notesRepository: NotesRepository? = null,
 ) {
 
     fun getDeclaredTools(): List<McpToolDefinition> {
@@ -65,7 +65,7 @@ class McpToolServerHub(
                 "search_vault_notes" -> {
                     val query = args.optString("query", "")
                     val notesList = try {
-                        notesRepository.searchNotes(query).first()
+                        notesRepository?.searchNotes(query)?.first()?.filter { !it.isLocked } ?: emptyList()
                     } catch (_: Exception) {
                         emptyList()
                     }
@@ -85,18 +85,22 @@ class McpToolServerHub(
 
                 "get_note_content" -> {
                     val identifier = args.optString("identifier", "")
-                    val note = notesRepository.getNoteByTitle(identifier) ?: notesRepository.getNoteById(identifier)
+                    val note = notesRepository?.getNoteByTitle(identifier) ?: notesRepository?.getNoteById(identifier)
                     if (note != null) {
-                        val obj = JSONObject().apply {
-                            put("id", note.id)
-                            put("title", note.title)
-                            put("body", note.body)
-                            put("tags", JSONArray(note.tags))
-                            put("folder", note.folder ?: "VAULT")
-                            put("isFavorite", note.isFavorite)
-                            put("updatedAt", note.updatedAt)
+                        if (note.isLocked) {
+                            McpToolExecutionResult(isError = true, content = "Note '$identifier' is biometrically locked and cannot be accessed via MCP.")
+                        } else {
+                            val obj = JSONObject().apply {
+                                put("id", note.id)
+                                put("title", note.title)
+                                put("body", note.body)
+                                put("tags", JSONArray(note.tags))
+                                put("folder", note.folder ?: "VAULT")
+                                put("isFavorite", note.isFavorite)
+                                put("updatedAt", note.updatedAt)
+                            }
+                            McpToolExecutionResult(content = obj.toString())
                         }
-                        McpToolExecutionResult(content = obj.toString())
                     } else {
                         McpToolExecutionResult(isError = true, content = "Note '$identifier' not found in vault.")
                     }
@@ -115,25 +119,25 @@ class McpToolServerHub(
                         createdAt = System.currentTimeMillis(),
                         updatedAt = System.currentTimeMillis(),
                     )
-                    notesRepository.saveNote(newNote)
+                    notesRepository?.saveNote(newNote)
                     McpToolExecutionResult(content = "Note '${newNote.title}' created with ID: ${newNote.id}")
                 }
 
                 "create_vault_task" -> {
                     val taskTitle = args.optString("title", "")
                     val noteTitle = args.optString("noteTitle", "Daily Notes")
-                    var note = notesRepository.getNoteByTitle(noteTitle)
+                    var note = notesRepository?.getNoteByTitle(noteTitle)
                     if (note == null) {
                         note = Note(title = noteTitle, body = "- [ ] $taskTitle\n")
                     } else {
                         note = note.copy(body = note.body + "\n- [ ] $taskTitle\n", updatedAt = System.currentTimeMillis())
                     }
-                    notesRepository.saveNote(note)
+                    notesRepository?.saveNote(note)
                     McpToolExecutionResult(content = "Task created in '$noteTitle'")
                 }
 
                 "get_vault_summary" -> {
-                    val allNotes = notesRepository.getObjectsForPicker("", null, limit = 1000)
+                    val allNotes = notesRepository?.getObjectsForPicker("", null, limit = 1000)?.filter { !it.isLocked } ?: emptyList()
                     val result = JSONObject().apply {
                         put("totalNotes", allNotes.size)
                         put("totalWords", allNotes.sumOf { it.body.split(Regex("\\s+")).size })

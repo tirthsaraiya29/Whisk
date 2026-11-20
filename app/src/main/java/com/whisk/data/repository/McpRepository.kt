@@ -75,6 +75,11 @@ class McpRepository(
     private val mcpToolServerHub: com.whisk.data.mcp.McpToolServerHub? = null,
 ) {
 
+    companion object {
+        const val BUILTIN_HUB_ID = "builtin"
+        const val BUILTIN_HUB_URL = "whisk://builtin"
+    }
+
     private val jsonParser = Json { ignoreUnknownKeys = true }
 
     private val client = OkHttpClient.Builder()
@@ -85,9 +90,9 @@ class McpRepository(
     private val _serverConfigs = MutableStateFlow<List<McpServerConfig>>(
         listOf(
             McpServerConfig(
-                id = "default-local-mcp",
-                displayName = "Local MCP Server",
-                endpointUrl = "http://localhost:8080/mcp",
+                id = BUILTIN_HUB_ID,
+                displayName = "Built-in Local Vault Hub",
+                endpointUrl = BUILTIN_HUB_URL,
             ),
         ),
     )
@@ -118,6 +123,10 @@ class McpRepository(
         val cleanUrl = endpointUrl.trim()
         if (cleanUrl.isBlank()) {
             return EndpointValidationResult.Invalid("Endpoint URL cannot be empty")
+        }
+
+        if (cleanUrl == BUILTIN_HUB_URL) {
+            return EndpointValidationResult.Valid(URI(cleanUrl))
         }
 
         val uri = try {
@@ -240,7 +249,8 @@ class McpRepository(
         val serverConfig = _serverConfigs.value.firstOrNull { it.endpointUrl == endpointUrl }
             ?: McpServerConfig(displayName = "MCP Server", endpointUrl = endpointUrl)
 
-        if (mcpToolServerHub != null && (endpointUrl.contains("localhost:8080") || endpointUrl.contains("127.0.0.1"))) {
+        val isBuiltIn = endpointUrl == BUILTIN_HUB_URL || serverConfig.id == BUILTIN_HUB_ID
+        if (mcpToolServerHub != null && isBuiltIn) {
             val localTools = mcpToolServerHub.getDeclaredTools().map {
                 McpTool(
                     name = it.name,
@@ -429,7 +439,8 @@ class McpRepository(
                 }
             }
 
-            if (mcpToolServerHub != null && (endpointUrl.contains("localhost:8080") || endpointUrl.contains("127.0.0.1"))) {
+            val isBuiltIn = endpointUrl == BUILTIN_HUB_URL || serverConfig?.id == BUILTIN_HUB_ID
+            if (mcpToolServerHub != null && isBuiltIn) {
                 val res = mcpToolServerHub.executeTool(toolName, argumentsJson)
                 val status = if (res.isError) "FAILED" else "SUCCESS"
                 val updatedLog = initialLog.copy(status = status, result = res.content)

@@ -137,6 +137,7 @@ data class NoteDto(
     val isPinned: Boolean = false,
     val deletedAt: Long? = null,
     val accentColor: String? = null,
+    val isLocked: Boolean = false,
 )
 
 @Serializable
@@ -287,15 +288,19 @@ class ExportImportRepository(
         const val MAX_MANIFEST_BYTES = 1 * 1024 * 1024L // 1 MB
         const val MAX_JSON_BYTES = 50 * 1024 * 1024L // 50 MB
 
-        fun sanitizeZipEntryName(entryName: String): String {
+        fun sanitizeZipEntryName(entryName: String, baseDirectory: java.io.File = java.io.File(".")): String {
             val clean = entryName.trim()
-            if (clean.contains("..") || clean.startsWith("/") || clean.startsWith("\\") ||
-                clean.contains("\\..\\") || clean.contains("/../") || clean.contains("\\../") || clean.contains("/..\\")
+            if (clean.startsWith("/") || clean.startsWith("\\") ||
+                clean.contains(":") || clean.contains("*") || clean.contains("?") || clean.contains("<") || clean.contains(">") || clean.contains("|") ||
+                clean.contains("/../") || clean.contains("\\..\\") || clean.startsWith("../") || clean.startsWith("..\\")
             ) {
                 throw SecurityException("Security violation: Zip path traversal detected in entry '$entryName'")
             }
-            if (clean.contains(":") || clean.contains("*") || clean.contains("?") || clean.contains("<") || clean.contains(">") || clean.contains("|")) {
-                throw SecurityException("Security violation: Illegal characters in entry name '$entryName'")
+            val destinationFile = java.io.File(baseDirectory, clean)
+            val canonicalBase = baseDirectory.canonicalPath
+            val canonicalDest = destinationFile.canonicalPath
+            if (!canonicalDest.startsWith(canonicalBase)) {
+                throw SecurityException("Security violation: Zip path traversal detected in entry '$entryName'")
             }
             return clean
         }
@@ -318,7 +323,7 @@ class ExportImportRepository(
         val currentModelId = activeProvider?.modelId ?: "whisk-minilm-l6-v2-384d-v1"
         val currentDimensions = activeProvider?.dimensions ?: 384
 
-        val notes = database.noteDao().getAllNotesDirect().map {
+        val notes = database.noteDao().getAllNotesDirect().filter { !it.isLocked }.map {
             NoteDto(
                 id = it.id,
                 title = it.title,
@@ -340,6 +345,7 @@ class ExportImportRepository(
                 isPinned = it.isPinned,
                 deletedAt = it.deletedAt,
                 accentColor = it.accentColor,
+                isLocked = it.isLocked,
             )
         }
         val folders = database.folderDao().getAllFolders().first().map {
@@ -620,6 +626,7 @@ class ExportImportRepository(
                             isPinned = n.isPinned,
                             deletedAt = n.deletedAt,
                             accentColor = n.accentColor,
+                            isLocked = n.isLocked,
                         ),
                     )
                     importedCount++

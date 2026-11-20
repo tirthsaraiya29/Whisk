@@ -32,4 +32,11 @@ class ExportImportSanitizationTest {
     fun testZipLeadingSlashPathRejected() {
         ExportImportRepository.sanitizeZipEntryName("/etc/passwd")
     }
+
+    @Test
+    fun testHarmlessDotsInFilenameAllowed() {
+        val safeEntryName = "notes/feature..test.md"
+        val result = ExportImportRepository.sanitizeZipEntryName(safeEntryName)
+        assertEquals("notes/feature..test.md", result)
+    }
 }

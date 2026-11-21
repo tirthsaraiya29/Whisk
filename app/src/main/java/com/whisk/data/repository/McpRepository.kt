@@ -73,6 +73,7 @@ sealed class EndpointValidationResult {
 class McpRepository(
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
     private val mcpToolServerHub: com.whisk.data.mcp.McpToolServerHub? = null,
+    private val secureStorageManager: com.whisk.data.local.SecureStorageManager? = null,
 ) {
 
     companion object {
@@ -81,6 +82,7 @@ class McpRepository(
     }
 
     private val jsonParser = Json { ignoreUnknownKeys = true }
+    private val serverSessionIds = ConcurrentHashMap<String, String>()
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -280,8 +282,13 @@ class McpRepository(
             """.trimIndent()
 
             val initBody = initPayload.toRequestBody("application/json".toMediaType())
-            val initRequest = Request.Builder().url(endpointUrl).post(initBody).build()
-            val initCall = client.newCall(initRequest)
+            val initReqBuilder = Request.Builder().url(endpointUrl).post(initBody)
+            val authToken = secureStorageManager?.getSecret("mcp_auth_$endpointUrl", "")
+            if (!authToken.isNullOrBlank()) {
+                initReqBuilder.header("Authorization", "Bearer $authToken")
+            }
+
+            val initCall = client.newCall(initReqBuilder.build())
             val initResponse = try {
                 initCall.execute()
             } catch (e: Exception) {
@@ -298,65 +305,86 @@ class McpRepository(
                 updateServerState(serverConfig.id, McpConnectionState.ERROR, "HTTP $code: Initialise failed")
                 return@withContext false
             }
+
+            val sessionIdHeader = initResponse.header("Mcp-Session-Id")
+            if (!sessionIdHeader.isNullOrBlank()) {
+                serverSessionIds[endpointUrl] = sessionIdHeader
+            }
             initResponse.close()
 
             val initializedPayload = """{"jsonrpc":"2.0","method":"notifications/initialized"}"""
             val initializedBody = initializedPayload.toRequestBody("application/json".toMediaType())
-            val initializedRequest = Request.Builder().url(endpointUrl).post(initializedBody).build()
-            client.newCall(initializedRequest).execute().close()
-
-            val listRequestId = UUID.randomUUID().toString()
-            val listPayload = """{"jsonrpc":"2.0","id":"$listRequestId","method":"tools/list","params":{}}"""
-
-            val listBody = listPayload.toRequestBody("application/json".toMediaType())
-            val listRequest = Request.Builder().url(endpointUrl).post(listBody).build()
-            val listCall = client.newCall(listRequest)
-            val listResponse = try {
-                listCall.execute()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                _isConnected.value = false
-                updateServerState(serverConfig.id, McpConnectionState.ERROR, e.message)
-                return@withContext false
+            val initializedReqBuilder = Request.Builder().url(endpointUrl).post(initializedBody)
+            serverSessionIds[endpointUrl]?.let { initializedReqBuilder.header("Mcp-Session-Id", it) }
+            if (!authToken.isNullOrBlank()) {
+                initializedReqBuilder.header("Authorization", "Bearer $authToken")
             }
+            client.newCall(initializedReqBuilder.build()).execute().close()
 
-            listResponse.use { response ->
-                if (response.isSuccessful) {
-                    val respStr = response.body.string()
-                    val parsedJson = jsonParser.parseToJsonElement(respStr).jsonObject
-                    val resultObj = parsedJson["result"]?.jsonObject
-                    val toolsArray = resultObj?.get("tools")?.jsonArray ?: JsonArray(emptyList())
-                    val toolsList = mutableListOf<McpTool>()
+            val toolsList = mutableListOf<McpTool>()
+            var nextCursor: String? = null
 
-                    for (item in toolsArray) {
-                        val toolObj = item.jsonObject
-                        val name = toolObj["name"]?.jsonPrimitive?.content ?: ""
-                        val desc = toolObj["description"]?.jsonPrimitive?.content ?: ""
-                        val schema = toolObj["inputSchema"]?.toString() ?: "{}"
+            do {
+                val listRequestId = UUID.randomUUID().toString()
+                val paramsJson = if (nextCursor.isNullOrBlank()) "{}" else """{"cursor":"$nextCursor"}"""
+                val listPayload = """{"jsonrpc":"2.0","id":"$listRequestId","method":"tools/list","params":$paramsJson}"""
 
-                        toolsList.add(
-                            McpTool(
-                                name = name,
-                                description = desc,
-                                inputSchemaJson = schema,
-                                requiresApproval = requiresApproval(endpointUrl, name),
-                                serverId = serverConfig.id,
-                                serverEndpoint = endpointUrl,
-                            ),
-                        )
-                    }
-
-                    _discoveredTools.value = toolsList
-                    _isConnected.value = true
-                    updateServerState(serverConfig.id, McpConnectionState.CONNECTED, null)
-                    true
-                } else {
-                    _discoveredTools.value = emptyList()
-                    _isConnected.value = false
-                    updateServerState(serverConfig.id, McpConnectionState.ERROR, "Tools list HTTP ${response.code}")
-                    false
+                val listBody = listPayload.toRequestBody("application/json".toMediaType())
+                val listReqBuilder = Request.Builder().url(endpointUrl).post(listBody)
+                serverSessionIds[endpointUrl]?.let { listReqBuilder.header("Mcp-Session-Id", it) }
+                if (!authToken.isNullOrBlank()) {
+                    listReqBuilder.header("Authorization", "Bearer $authToken")
                 }
-            }
+
+                val listCall = client.newCall(listReqBuilder.build())
+                val listResponse = try {
+                    listCall.execute()
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    _isConnected.value = false
+                    updateServerState(serverConfig.id, McpConnectionState.ERROR, e.message)
+                    return@withContext false
+                }
+
+                listResponse.use { response ->
+                    if (response.isSuccessful) {
+                        val respStr = response.body.string()
+                        val parsedJson = jsonParser.parseToJsonElement(respStr).jsonObject
+                        val resultObj = parsedJson["result"]?.jsonObject
+                        val toolsArray = resultObj?.get("tools")?.jsonArray ?: JsonArray(emptyList())
+
+                        for (item in toolsArray) {
+                            val toolObj = item.jsonObject
+                            val name = toolObj["name"]?.jsonPrimitive?.content ?: ""
+                            val desc = toolObj["description"]?.jsonPrimitive?.content ?: ""
+                            val schema = toolObj["inputSchema"]?.toString() ?: "{}"
+
+                            toolsList.add(
+                                McpTool(
+                                    name = name,
+                                    description = desc,
+                                    inputSchemaJson = schema,
+                                    requiresApproval = requiresApproval(endpointUrl, name),
+                                    serverId = serverConfig.id,
+                                    serverEndpoint = endpointUrl,
+                                ),
+                            )
+                        }
+
+                        nextCursor = try { resultObj?.get("nextCursor")?.jsonPrimitive?.content } catch (_: Exception) { null }
+                    } else {
+                        _discoveredTools.value = emptyList()
+                        _isConnected.value = false
+                        updateServerState(serverConfig.id, McpConnectionState.ERROR, "Tools list HTTP ${response.code}")
+                        return@withContext false
+                    }
+                }
+            } while (!nextCursor.isNullOrBlank())
+
+            _discoveredTools.value = toolsList
+            _isConnected.value = true
+            updateServerState(serverConfig.id, McpConnectionState.CONNECTED, null)
+            true
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             _discoveredTools.value = emptyList()

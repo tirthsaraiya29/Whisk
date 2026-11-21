@@ -93,6 +93,34 @@ fun SearchScreen(
                 .imePadding()
                 .background(MaterialTheme.colorScheme.background),
         ) {
+            // Knowledge Gap Banner
+            if (state.knowledgeGaps.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .border(1.dp, Color(0xFFF59E0B), RoundedCornerShape(4.dp))
+                        .background(Color(0xFFF59E0B).copy(alpha = 0.1f))
+                        .padding(10.dp),
+                ) {
+                    Text(
+                        text = "KNOWLEDGE ENGINE // GAPS DETECTED (${state.knowledgeGaps.size})",
+                        fontFamily = DotMatrixFontFamily,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF59E0B),
+                    )
+                    Spacer(modifier = Modifier.size(4.dp))
+                    state.knowledgeGaps.take(2).forEach { gap ->
+                        Text(
+                            text = "• [${gap.gapType}] ${gap.objectTitle}: ${gap.suggestionText}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+
             // Terminal Input Field
             OutlinedTextField(
                 value = state.query,

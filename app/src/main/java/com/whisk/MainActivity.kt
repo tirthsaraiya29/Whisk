@@ -193,6 +193,8 @@ class MainActivity : FragmentActivity() {
         localGemmaManager = LocalGemmaManager(this)
         remoteAiManager = RemoteAiManager()
 
+        val knowledgeAnalysisEngine = com.whisk.domain.rag.intelligence.KnowledgeAnalysisEngine(database.noteDao())
+
         documentIndexer = DocumentIndexer(database.noteDao(), database.relationshipDao(), vectorRepository, indexingRepository, embeddingModelManager)
         hybridSearchEngine = HybridSearchEngine(database.noteDao(), vectorRepository, embeddingModelManager.getDelegatingProvider())
         relatedKnowledgeRepository = RelatedKnowledgeRepository(database.noteDao(), database.relationshipDao(), vectorRepository, embeddingModelManager.getDelegatingProvider())
@@ -235,6 +237,7 @@ class MainActivity : FragmentActivity() {
                     indexingRepository = indexingRepository,
                     embeddingModelManager = embeddingModelManager,
                     relatedKnowledgeRepository = relatedKnowledgeRepository,
+                    knowledgeAnalysisEngine = knowledgeAnalysisEngine,
                     isFirstLaunch = isFirstLaunch,
                     onExportZip = { exportZipLauncher.launch("Whisk_Vault_Backup.zip") },
                 ) {
@@ -335,6 +338,7 @@ fun WhiskApp(
     indexingRepository: IndexingRepository,
     embeddingModelManager: EmbeddingModelManager,
     relatedKnowledgeRepository: RelatedKnowledgeRepository,
+    knowledgeAnalysisEngine: com.whisk.domain.rag.intelligence.KnowledgeAnalysisEngine,
     isFirstLaunch: Boolean,
     onExportZip: () -> Unit,
     onImportZip: () -> Unit,
@@ -531,7 +535,14 @@ fun WhiskApp(
             // 3. Search Destination
             composable("search") {
                 val viewModel: SearchViewModel = viewModel(
-                    factory = viewModelFactory { SearchViewModel(notesRepository, propertyRepository, objectTypeRepository) },
+                    factory = viewModelFactory {
+                        SearchViewModel(
+                            notesRepository,
+                            propertyRepository,
+                            objectTypeRepository,
+                            knowledgeAnalysisEngine,
+                        )
+                    },
                 )
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 

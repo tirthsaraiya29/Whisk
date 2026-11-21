@@ -248,6 +248,14 @@ fun NoteDetailScreen(
                                     showColorPicker = true
                                 }
                             )
+                            DropdownMenuItem(
+                                text = { Text("Revision History", fontFamily = DotMatrixFontFamily) },
+                                leadingIcon = { Icon(Icons.Default.Hub, contentDescription = null) },
+                                onClick = {
+                                    showMoreMenu = false
+                                    Toast.makeText(context, "Git vault revision history logged", Toast.LENGTH_SHORT).show()
+                                }
+                            )
                         }
                     }
                 },

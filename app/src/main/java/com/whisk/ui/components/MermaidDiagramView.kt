@@ -70,6 +70,7 @@ fun MermaidDiagramView(
         <!DOCTYPE html>
         <html>
         <head>
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
             <style>
                 * { box-sizing: border-box; }
@@ -179,23 +180,32 @@ fun MermaidDiagramView(
                         val webView = WebView(ctx)
                         val webSettings = webView.settings
 
-                        // Strict Security Configuration
-                        try {
-                            val method = webSettings.javaClass.getMethod("setJavaScriptEnabled", Boolean::class.javaPrimitiveType)
-                            method.invoke(webSettings, true)
-                        } catch (_: Exception) {
-                        }
+                        @android.annotation.SuppressLint("SetJavaScriptEnabled")
+                        webSettings.javaScriptEnabled = true
                         webSettings.allowContentAccess = false
                         webSettings.allowFileAccess = false
                         webSettings.domStorageEnabled = true
                         webSettings.loadWithOverviewMode = true
                         webSettings.useWideViewPort = true
 
+                        webView.webViewClient = object : android.webkit.WebViewClient() {
+                            override fun shouldInterceptRequest(
+                                view: WebView?,
+                                request: android.webkit.WebResourceRequest?
+                            ): android.webkit.WebResourceResponse? {
+                                val url = request?.url?.toString() ?: ""
+                                if (url.startsWith("blob:") || url.startsWith("data:") || url == "about:blank") {
+                                    return super.shouldInterceptRequest(view, request)
+                                }
+                                return android.webkit.WebResourceResponse("text/plain", "UTF-8", null)
+                            }
+                        }
+
                         webView.setBackgroundColor(0)
                         webView
                     },
                     update = { webView ->
-                        webView.loadDataWithBaseURL("https://localhost", htmlContent, "text/html", "UTF-8", null)
+                        webView.loadDataWithBaseURL("about:blank", htmlContent, "text/html", "UTF-8", null)
                     },
                     modifier = Modifier.fillMaxSize(),
                 )

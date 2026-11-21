@@ -107,31 +107,31 @@ class VectorRepository(
         topK: Int = 20,
         typeIdFilter: String? = null,
         minScoreThreshold: Float = 0.1f,
+        batchSize: Int = 200,
     ): List<VectorSearchResult> = withContext(Dispatchers.Default) {
         val allVectors = vectorDao.getAllVectorsForModel(modelId)
         if (allVectors.isEmpty()) return@withContext emptyList()
 
-        val scoredResults = mutableListOf<VectorSearchResult>()
+        val priorityQueue = java.util.PriorityQueue<VectorSearchResult>(topK + 1) { a, b -> a.score.compareTo(b.score) }
 
-        // Load chunks map in batch
-        val chunkIdsToFetch = allVectors.map { it.chunkId }
-        val chunksMap = chunkDao.getChunksByIds(chunkIdsToFetch).associateBy { it.id }
+        allVectors.chunked(batchSize).forEach { batch ->
+            val chunkIdsToFetch = batch.map { it.chunkId }
+            val chunksMap = chunkDao.getChunksByIds(chunkIdsToFetch).associateBy { it.id }
 
-        for (vEntity in allVectors) {
-            val chunk = chunksMap[vEntity.chunkId] ?: continue
+            for (vEntity in batch) {
+                val chunk = chunksMap[vEntity.chunkId] ?: continue
+                if (typeIdFilter != null && chunk.sourceObjectType != typeIdFilter) continue
 
-            if (typeIdFilter != null && chunk.sourceObjectType != typeIdFilter) {
-                continue
-            }
-
-            val chunkVector = vEntity.toFloatArray()
-            val score = LocalEmbeddingProvider.cosineSimilarity(queryVector, chunkVector)
-
-            if (score >= minScoreThreshold) {
-                scoredResults.add(VectorSearchResult(chunk = chunk, score = score))
+                val score = LocalEmbeddingProvider.cosineSimilarity(queryVector, vEntity.toFloatArray())
+                if (score >= minScoreThreshold) {
+                    priorityQueue.add(VectorSearchResult(chunk = chunk, score = score))
+                    if (priorityQueue.size > topK) {
+                        priorityQueue.poll()
+                    }
+                }
             }
         }
 
-        scoredResults.sortedByDescending { it.score }.take(topK)
+        priorityQueue.sortedByDescending { it.score }
     }
 }

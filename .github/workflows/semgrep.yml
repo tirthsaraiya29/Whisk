@@ -41,7 +41,7 @@ jobs:
             --config=p/owasp-top-ten
 
       - name: Upload SARIF to GitHub Security Tab
-        uses: github/codeql-action/upload-sarif@b56c4d3f192a7f586326e4099be2dfde0130df66 # v3.28.10
+        uses: github/codeql-action/upload-sarif@d2aacf54c2fbc910db8d7ec338fdb54ea48c692d # v3.39.4
         if: always()
         with:
           sarif_file: semgrep-results.sarif

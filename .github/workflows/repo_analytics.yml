@@ -23,7 +23,7 @@ jobs:
         run: git fetch --all --tags --prune
 
       - name: Set up Python
-        uses: actions/setup-python@42374261723dbe46f17388b32e0c9504988bdb08 # v5.4.0
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: "3.12"
 
@@ -318,7 +318,7 @@ jobs:
           PY
 
       - name: Upload analytics reports
-        uses: actions/upload-artifact@4beb437bd9807152295ce06573c6565074ff3666 # v4.6.1
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: whisk-git-analytics
           path: reports/

@@ -1,6 +1,8 @@
 package com.whisk.ui.screens.canvas
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -45,19 +47,22 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.whisk.canvas.CanvasTool
-import com.whisk.canvas.DrawingElement
-import com.whisk.canvas.ExcalidrawOverlay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.whisk.canvas.CanvasTool
+import com.whisk.canvas.DrawingElement
+import com.whisk.canvas.ExcalidrawOverlay
 import com.whisk.domain.model.CanvasCard
 import com.whisk.domain.model.Note
 import com.whisk.ui.components.WhiskTopBar
@@ -139,6 +144,7 @@ fun SpatialCanvasScreen(
                     onClick = { showNotePickerSheet = true },
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(12.dp),
                 ) {
                     Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = "Add Note to Canvas")
                 }
@@ -147,6 +153,7 @@ fun SpatialCanvasScreen(
                     onClick = onAddTextCard,
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(12.dp),
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Text Card")
                 }
@@ -183,7 +190,7 @@ fun SpatialCanvasScreen(
                                 color = MaterialTheme.colorScheme.error,
                                 textAlign = TextAlign.Center,
                             )
-                            Button(onClick = onRetryLoad) {
+                            Button(onClick = onRetryLoad, shape = RoundedCornerShape(8.dp)) {
                                 Text("Retry")
                             }
                         }
@@ -205,7 +212,7 @@ fun SpatialCanvasScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
                             )
-                            Button(onClick = onCreateCanvas) {
+                            Button(onClick = onCreateCanvas, shape = RoundedCornerShape(8.dp)) {
                                 Text("Create Canvas")
                             }
                         }
@@ -239,7 +246,6 @@ fun SpatialCanvasScreen(
                         ) {
                             val strokeColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
 
-                            // Background Canvas for Inter-card Connection Lines
                             Canvas(modifier = Modifier.fillMaxSize()) {
                                 currentCanvas.connections.forEach { conn ->
                                     val fromCard = currentCanvas.cards.find { it.id == conn.fromCardId }
@@ -269,7 +275,6 @@ fun SpatialCanvasScreen(
                                     )
                                 }
                             } else {
-                                // Render Spatial Cards
                                 currentCanvas.cards.forEach { card ->
                                     CanvasCardItem(
                                         card = card,
@@ -288,7 +293,6 @@ fun SpatialCanvasScreen(
                             }
                         }
 
-                        // Native Vector Drawing Overlay (Feature 01: Excalidraw Engine)
                         ExcalidrawOverlay(
                             modifier = Modifier.fillMaxSize(),
                             activeTool = activeTool,
@@ -304,17 +308,21 @@ fun SpatialCanvasScreen(
         }
     }
 
-    // Vault Note Selection Sheet
     if (showNotePickerSheet) {
-        ModalBottomSheet(onDismissRequest = { showNotePickerSheet = false }) {
+        ModalBottomSheet(
+            onDismissRequest = { showNotePickerSheet = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(20.dp),
             ) {
                 Text(
-                    text = "Add Vault Note to Spatial Canvas",
-                    style = MaterialTheme.typography.headlineMedium,
+                    text = "Add Vault Note to Canvas",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
 
@@ -332,24 +340,26 @@ fun SpatialCanvasScreen(
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
                                     .clickable {
                                         onAddNoteCard(note)
                                         showNotePickerSheet = false
                                     },
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
                                         text = note.title.ifBlank { "Untitled" },
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     val excerpt = note.body.take(80).replace("\n", " ")
                                     if (excerpt.isNotBlank()) {
                                         Text(
                                             text = excerpt,
-                                            style = MaterialTheme.typography.bodyMedium,
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.padding(top = 2.dp),
                                         )
@@ -371,6 +381,8 @@ fun CanvasCardItem(
     onDelete: () -> Unit,
     onOpenNote: () -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
+
     Box(
         modifier = Modifier
             .offset { IntOffset(card.x.toInt(), card.y.toInt()) }
@@ -385,16 +397,24 @@ fun CanvasCardItem(
         Card(
             modifier = Modifier
                 .fillMaxSize()
-                .clickable { onOpenNote() },
-            shape = RoundedCornerShape(10.dp),
+                .clip(RoundedCornerShape(12.dp))
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                .clickable {
+                    if (card.noteId != null) {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onOpenNote()
+                    }
+                },
+            shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -402,28 +422,33 @@ fun CanvasCardItem(
                 ) {
                     Text(
                         text = card.title,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         modifier = Modifier.weight(1f),
                     )
-                    IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(24.dp),
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete card",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            contentDescription = "Delete Card",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp),
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = card.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
-                )
+                if (card.content.isNotBlank()) {
+                    Text(
+                        text = card.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 4,
+                    )
+                }
             }
         }
     }

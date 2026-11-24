@@ -6,10 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,9 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
@@ -46,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -58,7 +59,6 @@ import com.whisk.domain.model.PropertyOperator
 import com.whisk.domain.model.PropertyType
 import com.whisk.ui.components.WhiskTopBar
 import com.whisk.ui.screens.notes.NoteRowCard
-import com.whisk.ui.theme.DotMatrixFontFamily
 
 @Composable
 fun SearchScreen(
@@ -76,11 +76,11 @@ fun SearchScreen(
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "TERMINAL // SEARCH",
+                title = "Vault Search",
                 subtitle = if (state.query.isNotBlank() || state.activePropertyFilter != null) {
-                    "$resultCount ${if (resultCount == 1) "MATCH" else "MATCHES"} FOUND"
+                    "$resultCount ${if (resultCount == 1) "match" else "matches"} found"
                 } else {
-                    "OFFLINE FULL-TEXT & PROPERTY SEARCH ENGINE"
+                    "Search notes, tags & metadata"
                 },
                 onMenuClick = onMenuClick,
             )
@@ -98,19 +98,19 @@ fun SearchScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .border(1.dp, Color(0xFFF59E0B), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFF59E0B).copy(alpha = 0.1f))
-                        .padding(10.dp),
+                        .border(1.dp, Color(0xFFF59E0B), RoundedCornerShape(12.dp))
+                        .padding(12.dp),
                 ) {
                     Text(
-                        text = "KNOWLEDGE ENGINE // GAPS DETECTED (${state.knowledgeGaps.size})",
-                        fontFamily = DotMatrixFontFamily,
-                        fontSize = 10.sp,
+                        text = "Knowledge Gaps Detected (${state.knowledgeGaps.size})",
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFF59E0B),
                     )
-                    Spacer(modifier = Modifier.size(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     state.knowledgeGaps.take(2).forEach { gap ->
                         Text(
                             text = "• [${gap.gapType}] ${gap.objectTitle}: ${gap.suggestionText}",
@@ -121,19 +121,18 @@ fun SearchScreen(
                 }
             }
 
-            // Terminal Input Field
+            // Search Input Field
             OutlinedTextField(
                 value = state.query,
                 onValueChange = onQueryChange,
                 placeholder = {
                     Text(
-                        "> TYPE QUERY OR TAG...",
-                        fontFamily = DotMatrixFontFamily,
-                        fontSize = 12.sp,
+                        "Search notes, tags, or properties...",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 },
-                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
+                textStyle = MaterialTheme.typography.bodyMedium,
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
@@ -153,14 +152,14 @@ fun SearchScreen(
                 },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                 ),
-                shape = RoundedCornerShape(0.dp),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 singleLine = true,
             )
 
@@ -169,26 +168,27 @@ fun SearchScreen(
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     item {
                         val isAll = state.selectedTypeId == null
                         Box(
                             modifier = Modifier
-                                .background(if (isAll) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isAll) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                .border(1.dp, if (isAll) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onSelectType?.invoke(null)
                                 }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
                         ) {
                             Text(
-                                text = "ALL OBJECTS",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
-                                color = if (isAll) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                                text = "All Types",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isAll) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isAll) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -197,19 +197,20 @@ fun SearchScreen(
                         val isSelected = state.selectedTypeId == typeDef.id
                         Box(
                             modifier = Modifier
-                                .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onSelectType?.invoke(if (isSelected) null else typeDef.id)
                                 }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
                         ) {
                             Text(
-                                text = typeDef.name.uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                                text = typeDef.name,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -220,32 +221,31 @@ fun SearchScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Property Filter Button / Active Chip
                 if (state.activePropertyFilter == null) {
                     Box(
                         modifier = Modifier
-                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 showFilterModal = true
                             }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.FilterList,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(14.dp),
+                                modifier = Modifier.size(16.dp),
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "+ FILTER BY PROPERTY",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
+                                text = "Filter by Property",
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -253,30 +253,29 @@ fun SearchScreen(
                     }
                 } else {
                     val filterProp = state.availablePropertyDefinitions.find { it.id == state.activePropertyFilter.propertyDefinitionId }
-                    val filterName = filterProp?.name?.uppercase() ?: "PROPERTY"
+                    val filterName = filterProp?.name ?: "Property"
                     val filterText = "$filterName ${state.activePropertyFilter.operator.name} '${state.activePropertyFilter.value ?: ""}'"
 
                     Row(
                         modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer)
-                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = filterText,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Icon(
                             imageVector = Icons.Default.Clear,
                             contentDescription = "Clear Property Filter",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
-                                .size(14.dp)
+                                .size(16.dp)
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onSetPropertyFilter(null)
@@ -290,11 +289,12 @@ fun SearchScreen(
                 // Suggestion chips
                 if (state.query.isBlank() && state.activePropertyFilter == null) {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("WELCOME", "ARCHITECTURE", "MERMAID", "KOTLIN", "TODO").forEach { keyword ->
+                        listOf("Welcome", "Architecture", "Mermaid", "Kotlin", "Todo").forEach { keyword ->
                             item {
                                 Box(
                                     modifier = Modifier
-                                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                                         .clickable {
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                             onQueryChange(keyword)
@@ -302,10 +302,9 @@ fun SearchScreen(
                                         .padding(horizontal = 10.dp, vertical = 6.dp),
                                 ) {
                                     Text(
-                                        text = "> $keyword",
+                                        text = keyword,
                                         style = MaterialTheme.typography.labelSmall,
-                                        fontFamily = DotMatrixFontFamily,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
@@ -314,9 +313,9 @@ fun SearchScreen(
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            Spacer(modifier = Modifier.height(4.dp))
 
-            // Results Edge-to-Edge List
+            // Results List
             if (state.results.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -329,305 +328,178 @@ fun SearchScreen(
                             imageVector = Icons.Default.Search,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 12.dp),
+                            modifier = Modifier.size(48.dp),
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = if (state.query.isBlank() && state.activePropertyFilter == null) "SEARCH VAULT" else "ZERO MATCHES",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontFamily = DotMatrixFontFamily,
+                            text = if (state.query.isBlank() && state.activePropertyFilter == null) "Type to search your vault" else "No matching notes found",
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = if (state.query.isBlank() && state.activePropertyFilter == null) {
-                                "ENTER KEYWORDS, TAGS, OR PROPERTY FILTERS ABOVE"
-                            } else {
-                                "MODIFY QUERY PARAMETERS OR PROPERTY FILTER CRITERIA"
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 4.dp),
                         )
                     }
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(state.results, key = { it.id }) { note ->
-                        NoteRowCard(note = note, onClick = { onNoteClick(note.id) })
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+                        NoteRowCard(
+                            note = note,
+                            onClick = { onNoteClick(note.id) },
+                        )
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(80.dp))
                     }
                 }
             }
         }
     }
 
-    // Property Filter Builder Modal Dialog
+    // Property Filter Dialog
     if (showFilterModal) {
-        PropertyFilterBuilderDialog(
+        PropertyFilterDialog(
             definitions = state.availablePropertyDefinitions,
             onDismiss = { showFilterModal = false },
-            onApplyFilter = { filter ->
-                showFilterModal = false
+            onApply = { filter ->
                 onSetPropertyFilter(filter)
+                showFilterModal = false
             },
         )
     }
 }
 
 @Composable
-private fun PropertyFilterBuilderDialog(
+private fun PropertyFilterDialog(
     definitions: List<PropertyDefinition>,
     onDismiss: () -> Unit,
-    onApplyFilter: (PropertyFilter) -> Unit,
+    onApply: (PropertyFilter) -> Unit,
 ) {
-    val haptic = LocalHapticFeedback.current
-
-    var selectedProp by remember { mutableStateOf(definitions.firstOrNull()) }
+    var selectedDef by remember { mutableStateOf(definitions.firstOrNull()) }
     var selectedOp by remember { mutableStateOf(PropertyOperator.EQUALS) }
-    var filterValueText by remember { mutableStateOf("") }
-
-    var expandedPropMenu by remember { mutableStateOf(false) }
-    var expandedOpMenu by remember { mutableStateOf(false) }
-
-    // Allowed operators based on property type
-    val allowedOperators = remember(selectedProp) {
-        when (selectedProp?.type) {
-            PropertyType.TEXT -> listOf(PropertyOperator.EQUALS, PropertyOperator.NOT_EQUALS, PropertyOperator.CONTAINS, PropertyOperator.IS_EMPTY, PropertyOperator.IS_NOT_EMPTY)
-            PropertyType.NUMBER -> listOf(PropertyOperator.EQUALS, PropertyOperator.NOT_EQUALS, PropertyOperator.GREATER_THAN, PropertyOperator.LESS_THAN, PropertyOperator.IS_EMPTY, PropertyOperator.IS_NOT_EMPTY)
-            PropertyType.DATE -> listOf(PropertyOperator.EQUALS, PropertyOperator.BEFORE, PropertyOperator.AFTER, PropertyOperator.IS_EMPTY, PropertyOperator.IS_NOT_EMPTY)
-            PropertyType.CHECKBOX -> listOf(PropertyOperator.EQUALS, PropertyOperator.IS_EMPTY, PropertyOperator.IS_NOT_EMPTY)
-            PropertyType.SELECT -> listOf(PropertyOperator.EQUALS, PropertyOperator.NOT_EQUALS, PropertyOperator.IS_EMPTY, PropertyOperator.IS_NOT_EMPTY)
-            PropertyType.MULTI_SELECT -> listOf(PropertyOperator.CONTAINS, PropertyOperator.IS_EMPTY, PropertyOperator.IS_NOT_EMPTY)
-            PropertyType.RELATION -> listOf(PropertyOperator.EQUALS, PropertyOperator.IS_EMPTY, PropertyOperator.IS_NOT_EMPTY)
-            null -> listOf(PropertyOperator.EQUALS)
-        }
-    }
+    var filterValue by remember { mutableStateOf("") }
+    var showDefDropdown by remember { mutableStateOf(false) }
+    var showOpDropdown by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "FILTER BY PROPERTY",
-                fontFamily = DotMatrixFontFamily,
+                text = "Filter by Property",
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
             )
         },
         text = {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                if (definitions.isEmpty()) {
-                    Text(
-                        text = "No property definitions available. Create properties in Property Management first.",
-                        fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                } else {
-                    // Property Picker Dropdown
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = selectedProp?.name ?: "Select Property",
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Property", fontFamily = DotMatrixFontFamily) },
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { expandedPropMenu = true },
-                        )
-                        DropdownMenu(
-                            expanded = expandedPropMenu,
-                            onDismissRequest = { expandedPropMenu = false },
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                // Property Definition Dropdown
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { showDefDropdown = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            definitions.forEach { def ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(def.name, fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text("[${def.type.name}]", fontFamily = DotMatrixFontFamily, fontSize = 10.sp, color = MaterialTheme.colorScheme.primary)
-                                        }
-                                    },
-                                    onClick = {
-                                        selectedProp = def
-                                        selectedOp = when (def.type) {
-                                            PropertyType.MULTI_SELECT -> PropertyOperator.CONTAINS
-                                            else -> PropertyOperator.EQUALS
-                                        }
-                                        filterValueText = ""
-                                        expandedPropMenu = false
-                                    },
-                                )
-                            }
+                            Text(selectedDef?.name ?: "Select Property", style = MaterialTheme.typography.bodyMedium)
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                         }
                     }
 
-                    // Operator Picker Dropdown
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = selectedOp.name,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Operator", fontFamily = DotMatrixFontFamily) },
-                            trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { expandedOpMenu = true },
-                        )
-                        DropdownMenu(
-                            expanded = expandedOpMenu,
-                            onDismissRequest = { expandedOpMenu = false },
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                        ) {
-                            allowedOperators.forEach { op ->
-                                DropdownMenuItem(
-                                    text = { Text(op.name, fontFamily = DotMatrixFontFamily) },
-                                    onClick = {
-                                        selectedOp = op
-                                        expandedOpMenu = false
-                                    },
-                                )
-                            }
-                        }
-                    }
-
-                    // Value Input
-                    if (selectedOp != PropertyOperator.IS_EMPTY && selectedOp != PropertyOperator.IS_NOT_EMPTY) {
-                        when (selectedProp?.type) {
-                            PropertyType.SELECT, PropertyType.MULTI_SELECT -> {
-                                var expandedValMenu by remember { mutableStateOf(false) }
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    OutlinedTextField(
-                                        value = filterValueText.ifBlank { "Select Value..." },
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        label = { Text("Target Value", fontFamily = DotMatrixFontFamily) },
-                                        trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                                        ),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { expandedValMenu = true },
-                                    )
-                                    DropdownMenu(
-                                        expanded = expandedValMenu,
-                                        onDismissRequest = { expandedValMenu = false },
-                                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                                    ) {
-                                        selectedProp?.options?.forEach { opt ->
-                                            DropdownMenuItem(
-                                                text = { Text(opt, fontFamily = DotMatrixFontFamily) },
-                                                onClick = {
-                                                    filterValueText = opt
-                                                    expandedValMenu = false
-                                                },
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            PropertyType.CHECKBOX -> {
-                                var expandedValMenu by remember { mutableStateOf(false) }
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    OutlinedTextField(
-                                        value = filterValueText.ifBlank { "true" },
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        label = { Text("Target Value", fontFamily = DotMatrixFontFamily) },
-                                        trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                                        ),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { expandedValMenu = true },
-                                    )
-                                    DropdownMenu(
-                                        expanded = expandedValMenu,
-                                        onDismissRequest = { expandedValMenu = false },
-                                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                                    ) {
-                                        listOf("true", "false").forEach { opt ->
-                                            DropdownMenuItem(
-                                                text = { Text(opt, fontFamily = DotMatrixFontFamily) },
-                                                onClick = {
-                                                    filterValueText = opt
-                                                    expandedValMenu = false
-                                                },
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            else -> {
-                                OutlinedTextField(
-                                    value = filterValueText,
-                                    onValueChange = { filterValueText = it },
-                                    label = { Text("Filter Value", fontFamily = DotMatrixFontFamily) },
-                                    singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                                    ),
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
+                    DropdownMenu(
+                        expanded = showDefDropdown,
+                        onDismissRequest = { showDefDropdown = false },
+                    ) {
+                        definitions.forEach { def ->
+                            DropdownMenuItem(
+                                text = { Text(def.name, style = MaterialTheme.typography.bodyMedium) },
+                                onClick = {
+                                    selectedDef = def
+                                    showDefDropdown = false
+                                },
+                            )
                         }
                     }
                 }
+
+                // Operator Dropdown
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { showOpDropdown = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(selectedOp.name, style = MaterialTheme.typography.bodyMedium)
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = showOpDropdown,
+                        onDismissRequest = { showOpDropdown = false },
+                    ) {
+                        PropertyOperator.values().forEach { op ->
+                            DropdownMenuItem(
+                                text = { Text(op.name, style = MaterialTheme.typography.bodyMedium) },
+                                onClick = {
+                                    selectedOp = op
+                                    showOpDropdown = false
+                                },
+                            )
+                        }
+                    }
+                }
+
+                // Value Text Field
+                OutlinedTextField(
+                    value = filterValue,
+                    onValueChange = { filterValue = it },
+                    label = { Text("Filter Value") },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    val prop = selectedProp
-                    if (prop != null) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onApplyFilter(
-                            PropertyFilter(
-                                propertyDefinitionId = prop.id,
-                                operator = selectedOp,
-                                value = filterValueText.ifBlank { null },
-                            ),
-                        )
-                    }
+                    val def = selectedDef ?: return@Button
+                    onApply(
+                        PropertyFilter(
+                            propertyDefinitionId = def.id,
+                            operator = selectedOp,
+                            value = filterValue.ifBlank { null },
+                        ),
+                    )
                 },
-                enabled = selectedProp != null,
-                shape = RoundedCornerShape(0.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(8.dp),
             ) {
-                Text("APPLY FILTER", fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
+                Text("Apply Filter")
             }
         },
         dismissButton = {
             OutlinedButton(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(0.dp),
+                shape = RoundedCornerShape(8.dp),
             ) {
-                Text("CANCEL", fontFamily = DotMatrixFontFamily)
+                Text("Cancel")
             }
         },
-        containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(0.dp),
+        shape = RoundedCornerShape(16.dp),
     )
 }

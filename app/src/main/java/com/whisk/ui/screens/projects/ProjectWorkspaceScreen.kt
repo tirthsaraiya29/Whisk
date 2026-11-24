@@ -2,11 +2,11 @@ package com.whisk.ui.screens.projects
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,17 +26,17 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -51,18 +51,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.whisk.data.local.ChatSessionEntity
 import com.whisk.domain.model.Note
+import com.whisk.domain.model.RelationshipDetail
 import com.whisk.domain.model.RelationshipType
 import com.whisk.domain.model.TaskItem
 import com.whisk.ui.components.MarkdownEditor
 import com.whisk.ui.components.RelationshipSection
 import com.whisk.ui.components.WhiskTopBar
-import com.whisk.ui.theme.DotMatrixFontFamily
 
 @Composable
 fun ProjectWorkspaceScreen(
@@ -83,7 +84,7 @@ fun ProjectWorkspaceScreen(
     val project = state.project ?: return
     val haptic = LocalHapticFeedback.current
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf("OVERVIEW", "TASKS", "RESOURCES", "REPOSITORY", "AI COPILOT", "RELATIONSHIPS")
+    val tabs = listOf("Overview", "Tasks", "Resources", "Repository", "AI Copilot", "Relations")
 
     var statusMenuExpanded by remember { mutableStateOf(false) }
 
@@ -91,20 +92,20 @@ fun ProjectWorkspaceScreen(
         topBar = {
             Column {
                 WhiskTopBar(
-                    title = "PROJECT // ${project.title.uppercase().ifBlank { "UNTITLED PROJECT" }}",
-                    subtitle = "STATUS: ${project.status?.uppercase() ?: "DRAFT"} | PROGRESS: ${(state.progress * 100).toInt()}%",
+                    title = "Project • ${project.title.ifBlank { "Untitled Project" }}",
+                    subtitle = "Status: ${project.status ?: "Draft"} | Progress: ${(state.progress * 100).toInt()}%",
                     onBackClick = onBackClick,
                     actions = {
                         Box {
                             OutlinedButton(
                                 onClick = { statusMenuExpanded = true },
-                                shape = RoundedCornerShape(0.dp),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                             ) {
                                 Text(
-                                    text = project.status?.uppercase() ?: "DRAFT",
-                                    fontFamily = DotMatrixFontFamily,
-                                    fontSize = 11.sp,
+                                    text = project.status ?: "Draft",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
                                 )
                                 Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
                             }
@@ -112,11 +113,10 @@ fun ProjectWorkspaceScreen(
                             DropdownMenu(
                                 expanded = statusMenuExpanded,
                                 onDismissRequest = { statusMenuExpanded = false },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                             ) {
                                 listOf("PLANNING", "IN_PROGRESS", "PAUSED", "COMPLETED", "CANCELLED").forEach { statusOption ->
                                     DropdownMenuItem(
-                                        text = { Text(statusOption, fontFamily = DotMatrixFontFamily) },
+                                        text = { Text(statusOption, style = MaterialTheme.typography.bodyMedium) },
                                         onClick = {
                                             statusMenuExpanded = false
                                             onUpdateStatus(statusOption)
@@ -134,11 +134,10 @@ fun ProjectWorkspaceScreen(
                         .fillMaxWidth()
                         .height(3.dp),
                     color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.outlineVariant,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
 
                 // Tab Header Bar
-                @Suppress("DEPRECATION")
                 TabRow(
                     selectedTabIndex = selectedTabIndex,
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -148,12 +147,11 @@ fun ProjectWorkspaceScreen(
                             TabRowDefaults.SecondaryIndicator(
                                 modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
                                 color = MaterialTheme.colorScheme.primary,
-                                height = 3.dp,
                             )
                         }
                     },
                 ) {
-                    tabs.forEachIndexed { index, tabTitle ->
+                    tabs.forEachIndexed { index, title ->
                         Tab(
                             selected = selectedTabIndex == index,
                             onClick = {
@@ -162,16 +160,14 @@ fun ProjectWorkspaceScreen(
                             },
                             text = {
                                 Text(
-                                    text = tabTitle,
-                                    fontFamily = DotMatrixFontFamily,
-                                    fontSize = 10.sp,
-                                    fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
+                                    text = title,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Medium,
                                 )
                             },
                         )
                     }
                 }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
             }
         },
     ) { paddingValues ->
@@ -181,18 +177,39 @@ fun ProjectWorkspaceScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            Crossfade(targetState = selectedTabIndex, label = "ProjectTabFade") { tabIndex ->
-                when (tabIndex) {
-                    0 -> OverviewTab(project, onUpdateContent)
-                    1 -> TasksTab(state.tasks, onCreateTask, onToggleTask)
-                    2 -> ResourcesTab(state.relationships, onOpenObject)
-                    3 -> RepositoryTab(project, state, onUpdateRepoRef)
-                    4 -> AiCopilotTab(state, onStartAiSession, onOpenAiSession)
-                    5 -> RelationshipsTab(
-                        state = state,
+            Crossfade(targetState = selectedTabIndex, label = "ProjectTabAnimation") { tab ->
+                when (tab) {
+                    0 -> ProjectOverviewTab(
+                        title = project.title,
+                        description = project.description ?: "",
+                        body = project.body,
+                        onUpdateContent = onUpdateContent,
+                        onOpenObject = onOpenObject,
+                    )
+                    1 -> ProjectTasksTab(
+                        tasks = state.tasks,
+                        onCreateTask = onCreateTask,
+                        onToggleTask = onToggleTask,
+                    )
+                    2 -> ProjectResourcesTab(
+                        linkedRelationships = state.relationships,
+                        onOpenObject = onOpenObject,
+                    )
+                    3 -> ProjectRepoTab(
+                        repoRef = state.linkedRepo?.fullName ?: "",
+                        onUpdateRepoRef = onUpdateRepoRef,
+                    )
+                    4 -> ProjectAiCopilotTab(
+                        aiSessions = state.aiSessions,
+                        onStartAiSession = { onStartAiSession { sessionId -> onOpenAiSession(sessionId) } },
+                        onOpenAiSession = onOpenAiSession,
+                    )
+                    5 -> RelationshipSection(
+                        relationships = state.relationships,
+                        objectTypes = state.objectTypes,
+                        onQueryObjects = onQueryObjects,
                         onAddRelationship = onAddRelationship,
                         onRemoveRelationship = onRemoveRelationship,
-                        onQueryObjects = onQueryObjects,
                         onOpenObject = onOpenObject,
                     )
                 }
@@ -202,74 +219,67 @@ fun ProjectWorkspaceScreen(
 }
 
 @Composable
-private fun OverviewTab(
-    project: Note,
-    onUpdateContent: (title: String, description: String, body: String) -> Unit,
+private fun ProjectOverviewTab(
+    title: String,
+    description: String,
+    body: String,
+    onUpdateContent: (String, String, String) -> Unit,
+    onOpenObject: (String) -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
-            value = project.description ?: "",
-            onValueChange = { newDesc -> onUpdateContent(project.title, newDesc, project.body) },
-            label = { Text("PROJECT DESCRIPTION / OBJECTIVE", fontFamily = DotMatrixFontFamily) },
-            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = DotMatrixFontFamily),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-            ),
+            value = description,
+            onValueChange = { newDesc -> onUpdateContent(title, newDesc, body) },
+            placeholder = { Text("Project Summary & Objective...", style = MaterialTheme.typography.bodyMedium) },
+            textStyle = MaterialTheme.typography.bodyMedium,
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            singleLine = true,
         )
 
         MarkdownEditor(
-            title = project.title,
-            onTitleChange = { newTitle -> onUpdateContent(newTitle, project.description ?: "", project.body) },
-            body = project.body,
-            onBodyChange = { newBody -> onUpdateContent(project.title, project.description ?: "", newBody) },
-            onLinkClick = { /* noop */ },
+            title = title,
+            onTitleChange = { newTitle -> onUpdateContent(newTitle, description, body) },
+            body = body,
+            onBodyChange = { newBody -> onUpdateContent(title, description, newBody) },
+            onLinkClick = onOpenObject,
             modifier = Modifier.fillMaxSize(),
         )
     }
 }
 
 @Composable
-private fun TasksTab(
+private fun ProjectTasksTab(
     tasks: List<TaskItem>,
     onCreateTask: (String) -> Unit,
-    onToggleTask: (taskId: String, status: Boolean) -> Unit,
+    onToggleTask: (String, Boolean) -> Unit,
 ) {
-    val haptic = LocalHapticFeedback.current
     var newTaskText by remember { mutableStateOf("") }
+    val haptic = LocalHapticFeedback.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
     ) {
-        // Add Task Row
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             OutlinedTextField(
                 value = newTaskText,
                 onValueChange = { newTaskText = it },
-                placeholder = { Text("NEW ACTION ITEM / TASK...", fontFamily = DotMatrixFontFamily, fontSize = 12.sp) },
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = DotMatrixFontFamily),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                ),
+                placeholder = { Text("Add new project task...", style = MaterialTheme.typography.bodyMedium) },
+                textStyle = MaterialTheme.typography.bodyMedium,
+                shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.weight(1f),
+                singleLine = true,
             )
+
             Spacer(modifier = Modifier.width(8.dp))
+
             Button(
                 onClick = {
                     if (newTaskText.isNotBlank()) {
@@ -278,47 +288,41 @@ private fun TasksTab(
                         newTaskText = ""
                     }
                 },
-                shape = RoundedCornerShape(0.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Task")
             }
         }
 
-        if (tasks.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "NO ACTION ITEMS FOR THIS PROJECT. TYPE ABOVE TO ADD A TASK.",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(tasks, key = { it.id }) { task ->
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(tasks, key = { it.id }) { task ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Checkbox(
                             checked = task.isCompleted,
-                            onCheckedChange = { checked -> onToggleTask(task.id, checked) },
+                            onCheckedChange = { chk -> onToggleTask(task.id, chk) },
+                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary),
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = task.title,
                             style = MaterialTheme.typography.bodyMedium,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = if (task.isCompleted) FontWeight.Normal else FontWeight.Bold,
-                            color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
@@ -328,68 +332,63 @@ private fun TasksTab(
 }
 
 @Composable
-private fun ResourcesTab(
-    relationships: List<com.whisk.domain.model.RelationshipDetail>,
+private fun ProjectResourcesTab(
+    linkedRelationships: List<RelationshipDetail>,
     onOpenObject: (String) -> Unit,
 ) {
-    val haptic = LocalHapticFeedback.current
-    val resourceTypes = setOf("note", "concept", "course", "book", "meeting")
-    val resources = relationships.filter { it.otherObjectType in resourceTypes }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "Linked Notes & Relations (${linkedRelationships.size})",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
 
-    if (resources.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "NO ATTACHED RESOURCES OR ARCHITECTURE NOTES. LINK OBJECTS IN RELATIONSHIPS TAB.",
-                style = MaterialTheme.typography.labelSmall,
-                fontFamily = DotMatrixFontFamily,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    } else {
+        Spacer(modifier = Modifier.height(12.dp))
+
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(resources, key = { it.relationshipId }) { res ->
-                Row(
+            items(linkedRelationships, key = { it.relationshipId }) { rel ->
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                        .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onOpenObject(res.otherObjectId)
-                        }
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onOpenObject(rel.otherObjectId) },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Description,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = res.otherObjectTitle,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = FontWeight.Bold,
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
                         )
-                        Text(
-                            text = "TYPE: ${res.otherObjectType.uppercase()} | ${res.displayLabel.uppercase()}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = rel.otherObjectTitle,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                text = "Relation: ${rel.displayLabel}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -398,207 +397,100 @@ private fun ResourcesTab(
 }
 
 @Composable
-private fun RepositoryTab(
-    project: Note,
-    state: ProjectWorkspaceUiState,
+private fun ProjectRepoTab(
+    repoRef: String,
     onUpdateRepoRef: (String) -> Unit,
 ) {
-    var repoInput by remember(project.repoRef) { mutableStateOf(project.repoRef ?: "") }
+    var textVal by remember(repoRef) { mutableStateOf(repoRef) }
 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "Connected GitHub Repository",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = textVal,
+            onValueChange = {
+                textVal = it
+                onUpdateRepoRef(it)
+            },
+            label = { Text("Repository (e.g. owner/repo)") },
+            leadingIcon = { Icon(Icons.Default.Code, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+        )
+    }
+}
+
+@Composable
+private fun ProjectAiCopilotTab(
+    aiSessions: List<ChatSessionEntity>,
+    onStartAiSession: () -> Unit,
+    onOpenAiSession: (String) -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            OutlinedTextField(
-                value = repoInput,
-                onValueChange = { repoInput = it },
-                label = { Text("GITHUB REPOSITORY (owner/repository)", fontFamily = DotMatrixFontFamily) },
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = DotMatrixFontFamily),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                ),
-                modifier = Modifier.weight(1f),
+            Text(
+                text = "Project AI Copilot Sessions",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(modifier = Modifier.width(8.dp))
+
             Button(
-                onClick = { onUpdateRepoRef(repoInput.trim()) },
-                shape = RoundedCornerShape(0.dp),
+                onClick = onStartAiSession,
+                shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
-                Text("LINK", fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
+                Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Start AI Session", style = MaterialTheme.typography.labelSmall)
             }
         }
 
-        if (state.isLoadingRepo) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("FETCHING REPOSITORY DATA...", fontFamily = DotMatrixFontFamily)
-            }
-        } else if (state.linkedRepo != null) {
-            val repo = state.linkedRepo
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
-                    .padding(16.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Code, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = repo.fullName.uppercase(),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontFamily = DotMatrixFontFamily,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                val desc = repo.description.orEmpty()
-                if (desc.isNotBlank()) {
-                    Text(
-                        text = desc,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                }
-                Text(
-                    text = "STARS: ${repo.stars} | DEFAULT BRANCH: ${repo.defaultBranch.uppercase()}",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-            }
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "OPEN ISSUES (${state.repoIssues.size}) & PULL REQUESTS (${state.repoPullRequests.size})",
-                style = MaterialTheme.typography.labelMedium,
-                fontFamily = DotMatrixFontFamily,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(state.repoIssues) { issue ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .padding(10.dp),
-                    ) {
-                        Text(
-                            text = "#${issue.number} ${issue.title}",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-        } else {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = "NO GITHUB REPOSITORY LINKED. ENTER 'owner/repo' ABOVE TO CONNECT.",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AiCopilotTab(
-    state: ProjectWorkspaceUiState,
-    onStartAiSession: ((String) -> Unit) -> Unit,
-    onOpenAiSession: (String) -> Unit,
-) {
-    val haptic = LocalHapticFeedback.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-    ) {
-        Button(
-            onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onStartAiSession { sessionId -> onOpenAiSession(sessionId) }
-            },
-            shape = RoundedCornerShape(0.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(Icons.Default.AutoAwesome, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("START AI SESSION IN PROJECT CONTEXT", fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
-        }
-
-        if (state.aiSessions.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = "NO AI CONVERSATIONS ASSOCIATED WITH THIS PROJECT YET.",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(state.aiSessions, key = { it.id }) { session ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .clickable { onOpenAiSession(session.id) }
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(10.dp))
+            items(aiSessions, key = { it.id }) { session ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onOpenAiSession(session.id) },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         Text(
                             text = session.title,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontFamily = DotMatrixFontFamily,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun RelationshipsTab(
-    state: ProjectWorkspaceUiState,
-    onAddRelationship: (targetObjectId: String, type: RelationshipType) -> Unit,
-    onRemoveRelationship: (relationshipId: String) -> Unit,
-    onQueryObjects: suspend (String, String?) -> List<Note>,
-    onOpenObject: (String) -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        RelationshipSection(
-            relationships = state.relationships,
-            objectTypes = state.objectTypes,
-            onQueryObjects = onQueryObjects,
-            onAddRelationship = onAddRelationship,
-            onRemoveRelationship = onRemoveRelationship,
-            onOpenObject = onOpenObject,
-        )
     }
 }

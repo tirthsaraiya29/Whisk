@@ -19,13 +19,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.TableChart
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -38,15 +42,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.whisk.ui.theme.DotMatrixFontFamily
 import com.whisk.ui.theme.VercelMonoFontFamily
 
 data class OnboardingStep(
@@ -78,32 +79,32 @@ fun OnboardingScreen(
         listOf(
             OnboardingStep(
                 stepIndex = 1,
-                title = "LOCAL-FIRST VAULT",
-                subtitle = "WHISK // ARCHITECTURE",
+                title = "Local-First Vault",
+                subtitle = "Architecture & Privacy",
                 description = "Your personal knowledge graph stays on your device. Zero tracking, offline-first SQLite database, and full control over your notes.",
                 icon = Icons.Default.Description,
-                codeSnippet = "VAULT_STATUS: ENCRYPTED & LOCAL\nNOTES_LOADED: READY\nSTORAGE: ON-DEVICE ROOM DB",
+                codeSnippet = "VAULT_STATUS: Encrypted & Local\nNOTES_LOADED: Ready\nSTORAGE: On-Device Room Database",
             ),
             OnboardingStep(
                 stepIndex = 2,
-                title = "BI-DIRECTIONAL LINKS",
-                subtitle = "WHISK // KNOWLEDGE GRAPH",
+                title = "Bi-Directional Links",
+                subtitle = "Knowledge Network",
                 description = "Connect your thoughts automatically. Type [[Note Title]] anywhere to create instant wikilinks and build your interactive knowledge network.",
                 icon = Icons.Default.Hub,
                 codeSnippet = "# Architecture Note\nReferencing [[Database Schema]] and\nlinking to [[RAG Embeddings]]...",
             ),
             OnboardingStep(
                 stepIndex = 3,
-                title = "STRUCTURED VIEWS",
-                subtitle = "WHISK // OBJECT DATABASE",
+                title = "Structured Views",
+                subtitle = "Object Database",
                 description = "Transform notes into structured database objects with custom properties. Switch seamlessly between Table, Board, Gallery, and Calendar views.",
                 icon = Icons.Default.TableChart,
                 codeSnippet = "OBJECT_TYPE: ProjectTask\nPROPERTIES: Priority, Status, DueDate\nVIEWS: Kanban Board, Grid, Table",
             ),
             OnboardingStep(
                 stepIndex = 4,
-                title = "VAULT INTELLIGENCE",
-                subtitle = "WHISK // RAG & AI ASSISTANT",
+                title = "Vault Intelligence",
+                subtitle = "RAG & AI Assistant",
                 description = "Ask questions directly to your vault. On-device local Gemma 2B or remote AI uses vector embeddings to answer from your notes.",
                 icon = Icons.Default.AutoAwesome,
                 codeSnippet = "> Ask Vault: \"Summarize my notes on RAG\"\n[RAG: Searching 12 chunks...]\nAnswer: Your local vector index holds...",
@@ -126,208 +127,146 @@ fun OnboardingScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            // Header / System Status Bar
+            // Header
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "WHISK // INITIALIZATION",
-                    fontFamily = DotMatrixFontFamily,
-                    fontSize = 12.sp,
+                    text = "Welcome to Whisk",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                 )
 
                 Box(
                     modifier = Modifier
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                        .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            triggerComplete()
-                        }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { triggerComplete() }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) {
                     Text(
-                        text = "SKIP [X]",
-                        fontFamily = DotMatrixFontFamily,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        text = "Skip",
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
-            // Central Interactive Carousel Card
+            // Step Content
             AnimatedContent(
                 targetState = step,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "OnboardingStepTransition",
-            ) { activeStep ->
+                label = "OnboardingStepAnimation",
+            ) { currentStepData ->
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Step Counter & Badge
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = activeStep.subtitle,
-                            fontFamily = DotMatrixFontFamily,
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            text = "[0${activeStep.stepIndex} / 04]",
-                            fontFamily = DotMatrixFontFamily,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        Icon(
+                            imageVector = currentStepData.icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(36.dp),
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
-                                .background(MaterialTheme.colorScheme.primary),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = activeStep.icon,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Text(
-                            text = activeStep.title,
-                            fontFamily = DotMatrixFontFamily,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
-                        text = activeStep.description,
-                        fontFamily = VercelMonoFontFamily,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp,
+                        text = currentStepData.subtitle,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
                     )
 
-                    if (activeStep.codeSnippet != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = currentStepData.title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = currentStepData.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                    )
+
+                    if (currentStepData.codeSnippet != null) {
                         Spacer(modifier = Modifier.height(20.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .padding(12.dp),
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         ) {
                             Text(
-                                text = activeStep.codeSnippet,
+                                text = currentStepData.codeSnippet,
                                 fontFamily = VercelMonoFontFamily,
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
-                                lineHeight = 16.sp,
+                                modifier = Modifier.padding(14.dp),
                             )
                         }
                     }
                 }
             }
 
-            // Bottom Navigation & Progress Indicator
+            // Bottom Navigation & Progress Dots
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Step Progress Dots / Bars
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     steps.forEachIndexed { idx, _ ->
-                        val isCurrent = idx == currentStep
+                        val isSelected = idx == currentStep
                         Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .height(4.dp)
-                                .background(
-                                    if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                                ),
+                                .padding(horizontal = 4.dp)
+                                .size(if (isSelected) 10.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
                         )
                     }
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (currentStep > 0) {
-                        Box(
-                            modifier = Modifier
-                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    currentStep--
-                                }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                        ) {
-                            Text(
-                                text = "<- BACK",
-                                fontFamily = DotMatrixFontFamily,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+                Button(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (currentStep < steps.size - 1) {
+                            currentStep++
+                        } else {
+                            triggerComplete()
                         }
-                    } else {
-                        Spacer(modifier = Modifier.width(1.dp))
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.primary)
-                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                if (currentStep < steps.size - 1) {
-                                    currentStep++
-                                } else {
-                                    triggerComplete()
-                                }
-                            }
-                            .padding(horizontal = 24.dp, vertical = 12.dp),
-                    ) {
-                        Text(
-                            text = if (currentStep == steps.size - 1) "LAUNCH VAULT ->" else "NEXT ->",
-                            fontFamily = DotMatrixFontFamily,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                ) {
+                    Text(
+                        text = if (currentStep == steps.size - 1) "Get Started" else "Continue",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
                 }
             }
         }

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -53,6 +54,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -66,28 +68,27 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.whisk.ui.theme.DotMatrixFontFamily
 import kotlinx.coroutines.launch
 
 sealed class NavDestination(val route: String, val label: String, val icon: ImageVector) {
-    data object Notes : NavDestination("notes", "VAULT", Icons.Default.Description)
-    data object Views : NavDestination("database_views", "VIEWS", Icons.Default.TableChart)
-    data object Graph : NavDestination("graph", "GRAPH", Icons.Default.Hub)
-    data object AI : NavDestination("ai", "AI", Icons.Default.AutoAwesome)
-    data object More : NavDestination("more", "MORE", Icons.Default.MoreHoriz)
+    data object Notes : NavDestination("notes", "Vault", Icons.Default.Description)
+    data object Views : NavDestination("database_views", "Views", Icons.Default.TableChart)
+    data object Graph : NavDestination("graph", "Graph", Icons.Default.Hub)
+    data object AI : NavDestination("ai", "AI Assistant", Icons.Default.AutoAwesome)
+    data object More : NavDestination("more", "More", Icons.Default.MoreHoriz)
 
     // Secondary items accessible via More Tool Sheet
-    data object Daily : NavDestination("daily_notes", "DAILY", Icons.Default.CalendarToday)
-    data object Search : NavDestination("search", "SEARCH", Icons.Default.Search)
-    data object Canvas : NavDestination("canvas", "CANVAS", Icons.Default.Description)
-    data object Tasks : NavDestination("tasks", "TASKS", Icons.Default.TaskAlt)
-    data object GitHub : NavDestination("github", "GITHUB", Icons.Default.Code)
-    data object Settings : NavDestination("settings", "SETTINGS", Icons.Default.Settings)
+    data object Daily : NavDestination("daily_notes", "Daily Log", Icons.Default.CalendarToday)
+    data object Search : NavDestination("search", "Search", Icons.Default.Search)
+    data object Canvas : NavDestination("canvas", "Canvas", Icons.Default.Description)
+    data object Tasks : NavDestination("tasks", "Tasks", Icons.Default.TaskAlt)
+    data object GitHub : NavDestination("github", "GitHub", Icons.Default.Code)
+    data object Settings : NavDestination("settings", "Settings", Icons.Default.Settings)
 }
 
 /**
- * Streamlined Brutalist Navigation Bar (Vercel / Nothing Style).
- * Ergonomic 4-tab core + [MORE] tool sheet launcher + high-impact Quick Add square.
+ * Premium Ergonomic Navigation Bar.
+ * Core navigation tabs + Quick Add Floating Action Button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,13 +138,13 @@ fun WhiskBottomBar(
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .background(MaterialTheme.colorScheme.surface)
-                .border(1.dp, MaterialTheme.colorScheme.outline)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(54.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
@@ -158,13 +159,9 @@ fun WhiskBottomBar(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
+                            .clip(RoundedCornerShape(12.dp))
                             .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            )
-                            .border(
-                                1.dp,
-                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                                RoundedCornerShape(0.dp),
+                                if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                             )
                             .semantics {
                                 role = Role.Tab
@@ -188,15 +185,14 @@ fun WhiskBottomBar(
                             Icon(
                                 imageVector = dest.icon,
                                 contentDescription = null,
-                                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(18.dp),
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp),
                             )
                             Text(
                                 text = dest.label,
-                                fontFamily = DotMatrixFontFamily,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 10.sp,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 modifier = Modifier.padding(top = 2.dp),
                             )
@@ -204,12 +200,12 @@ fun WhiskBottomBar(
                     }
                 }
 
-                // Quick Add Action Square
+                // Quick Add Action Pill
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(48.dp)
+                        .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary)
-                        .border(1.dp, MaterialTheme.colorScheme.outline)
                         .clickable {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onQuickAdd()
@@ -224,7 +220,7 @@ fun WhiskBottomBar(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }
@@ -237,8 +233,8 @@ fun WhiskBottomBar(
             onDismissRequest = { showMoreSheet = false },
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surface,
-            scrimColor = Color.Black.copy(alpha = 0.8f),
-            shape = RoundedCornerShape(0.dp),
+            scrimColor = Color.Black.copy(alpha = 0.6f),
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -253,34 +249,33 @@ fun WhiskBottomBar(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "WHISK // TOOLKIT",
-                        fontFamily = DotMatrixFontFamily,
-                        fontSize = 14.sp,
+                        text = "Vault Toolkit",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Box(
                         modifier = Modifier
-                            .border(1.dp, MaterialTheme.colorScheme.outline)
+                            .clip(RoundedCornerShape(8.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
                             .clickable {
                                 scope.launch {
                                     try { sheetState.hide() } catch (_: Exception) {}
                                     showMoreSheet = false
                                 }
                             }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
                         Text(
-                            text = "[X] CLOSE",
-                            fontFamily = DotMatrixFontFamily,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            text = "Close",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), thickness = 1.dp)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 LazyVerticalGrid(
@@ -294,11 +289,13 @@ fun WhiskBottomBar(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
                                 .border(
                                     1.dp,
-                                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                    RoundedCornerShape(12.dp),
                                 )
-                                .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     scope.launch {
@@ -313,21 +310,20 @@ fun WhiskBottomBar(
                             Icon(
                                 imageVector = tool.icon,
                                 contentDescription = null,
-                                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.size(10.dp))
                             Text(
                                 text = tool.label,
-                                fontFamily = DotMatrixFontFamily,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }

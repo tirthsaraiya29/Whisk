@@ -2,27 +2,29 @@ package com.whisk.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Pure Brutalist Monochrome Palette
+// Pure Monochrome Standard Colors
 val TrueBlack = Color(0xFF000000)
 val TrueWhite = Color(0xFFFFFFFF)
 
-// Dark Theme Delineations (OLED High Contrast)
-val DarkSurface = Color(0xFF000000)
-val DarkSurfaceVariant = Color(0xFF0A0A0A)
-val DarkHairline = Color(0xFF262626)
-val DarkBorder = Color(0xFF404040)
-val DarkTextPrimary = Color(0xFFFFFFFF)
-val DarkTextSecondary = Color(0xFFA3A3A3)
-val DarkTextMuted = Color(0xFF737373)
+// Charcoal Dark Theme (Obsidian & Linear Inspired OLED/Slate)
+val DarkSurface = Color(0xFF0B0F17)
+val DarkSurfaceVariant = Color(0xFF131A26)
+val DarkSurfaceElevated = Color(0xFF1E293B)
+val DarkHairline = Color(0xFF1E293B)
+val DarkBorder = Color(0xFF334155)
+val DarkTextPrimary = Color(0xFFF8FAFC)
+val DarkTextSecondary = Color(0xFF94A3B8)
+val DarkTextMuted = Color(0xFF64748B)
 
-// Light Theme Delineations (Enhanced Sunlight High Contrast)
-val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceVariant = Color(0xFFF0F0F0)
-val LightHairline = Color(0xFF737373)
-val LightBorder = Color(0xFF171717)
-val LightTextPrimary = Color(0xFF000000)
-val LightTextSecondary = Color(0xFF404040)
-val LightTextMuted = Color(0xFF737373)
+// Warm Light Theme (Craft & Notion Inspired Paper Light)
+val LightSurface = Color(0xFFFAFAF8)
+val LightSurfaceVariant = Color(0xFFF1F5F9)
+val LightSurfaceElevated = Color(0xFFFFFFFF)
+val LightHairline = Color(0xFFE2E8F0)
+val LightBorder = Color(0xFFCBD5E1)
+val LightTextPrimary = Color(0xFF0F172A)
+val LightTextSecondary = Color(0xFF475569)
+val LightTextMuted = Color(0xFF94A3B8)
 
 // Cyberpunk Neon Palette
 val CyberpunkNeonSurface = Color(0xFF05050A)
@@ -42,17 +44,18 @@ val MonokaiSurfaceVariant = Color(0xFF221F22)
 val MonokaiBorder = Color(0xFF49464E)
 val MonokaiAccent = Color(0xFFFFD866)
 
-// Theme Accents
-val NothingRed = Color(0xFFD71921)
-val VercelCyan = Color(0xFF00F0FF)
+// Brand & Semantic Accent Colors
+val WhiskBlue = Color(0xFF3B82F6)
+val WhiskIndigo = Color(0xFF6366F1)
+val NothingRed = Color(0xFFEF4444)
 val StatusGreen = Color(0xFF10B981)
-val AmberTerminal = Color(0xFFFFB000)
-val NeonPurple = Color(0xFFA855F7)
-val ElectricBlue = Color(0xFF3B82F6)
+val StatusAmber = Color(0xFFF59E0B)
+val StatusPurple = Color(0xFF8B5CF6)
 
 data class ThemeColorTokens(
     val surface: Color,
     val surfaceVariant: Color,
+    val surfaceElevated: Color,
     val border: Color,
     val hairline: Color,
     val textPrimary: Color,

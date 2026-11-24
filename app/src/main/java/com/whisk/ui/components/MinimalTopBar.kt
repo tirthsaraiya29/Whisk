@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
@@ -42,13 +44,14 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.whisk.ui.theme.DotMatrixFontFamily
+import androidx.compose.ui.unit.sp
 import com.whisk.ui.theme.StatusGreen
+import com.whisk.ui.theme.VercelMonoFontFamily
 
 /**
- * Ultra-minimalist Brutalist Top Bar (Vercel / Nothing Aesthetic).
- * Renders sharp 1px bottom hairline, monospaced breadcrumb, pulsing status dot,
- * and high-contrast action triggers.
+ * Premium Modern Top Bar.
+ * Renders subtle surface elevation, proportional typography, status indicator dot,
+ * and high-contrast accessible action triggers.
  */
 @Composable
 fun MinimalTopBar(
@@ -63,7 +66,6 @@ fun MinimalTopBar(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    // Pulsing dot animation for live status
     val infiniteTransition = rememberInfiniteTransition(label = "StatusDotPulse")
     val dotAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -80,11 +82,13 @@ fun MinimalTopBar(
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.statusBars)
             .background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outline)
+            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f))
             .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -99,6 +103,7 @@ fun MinimalTopBar(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onBackClick()
                         },
+                        modifier = Modifier.size(44.dp),
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -112,6 +117,7 @@ fun MinimalTopBar(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onMenuClick()
                         },
+                        modifier = Modifier.size(44.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Menu,
@@ -121,13 +127,14 @@ fun MinimalTopBar(
                     }
                 }
 
-                Column(modifier = Modifier.padding(start = 4.dp)) {
+                Column(
+                    modifier = Modifier.padding(start = if (onBackClick != null || onMenuClick != null) 4.dp else 8.dp),
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Pulsing Save Indicator Dot
                         if (!saveStateText.isNullOrBlank()) {
                             Box(
                                 modifier = Modifier
-                                    .size(6.dp)
+                                    .size(7.dp)
                                     .alpha(if (saveStateText.contains("Saved", ignoreCase = true)) 1f else dotAlpha)
                                     .clip(CircleShape)
                                     .background(
@@ -138,10 +145,9 @@ fun MinimalTopBar(
                         }
 
                         Text(
-                            text = title.uppercase(),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = FontWeight.Bold,
+                            text = title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -152,7 +158,6 @@ fun MinimalTopBar(
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -169,17 +174,19 @@ fun MinimalTopBar(
                 if (onCommandPaletteClick != null) {
                     Box(
                         modifier = Modifier
-                            .border(1.dp, MaterialTheme.colorScheme.outline)
+                            .clip(RoundedCornerShape(8.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onCommandPaletteClick()
                             }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                     ) {
                         Text(
-                            text = "[⌘K]",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
+                            text = "⌘K",
+                            fontFamily = VercelMonoFontFamily,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                         )

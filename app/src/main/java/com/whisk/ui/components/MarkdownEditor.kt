@@ -1,6 +1,5 @@
 package com.whisk.ui.components
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,32 +20,31 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Functions
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material.icons.filled.Functions
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.Title
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -60,22 +58,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import com.whisk.domain.model.Note
-import com.whisk.ui.theme.DotMatrixFontFamily
 import com.whisk.ui.theme.VercelMonoFontFamily
 
 enum class EditorMode {
@@ -151,7 +148,7 @@ class MarkdownVisualTransformation(
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarkdownEditor(
     title: String,
@@ -200,7 +197,7 @@ fun MarkdownEditor(
         onBodyChange(newText)
     }
 
-    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val haptic = LocalHapticFeedback.current
 
     val wordCount = remember(body) {
         if (body.isBlank()) 0 else body.trim().split(Regex("\\s+")).size
@@ -211,7 +208,7 @@ fun MarkdownEditor(
     var showTocSheet by remember { mutableStateOf(false) }
 
     fun applyFormattingWithHaptic(prefix: String, suffix: String = "") {
-        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         applyFormatting(prefix, suffix)
     }
 
@@ -225,129 +222,129 @@ fun MarkdownEditor(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "${wordCount}W // ${charCount}C // ${readingTimeMinutes}M READ",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    text = "${wordCount} words • ${charCount} chars • ${readingTimeMinutes}m read",
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
                         .clickable {
-                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             showTocSheet = true
                         }
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = "≡ TOC",
-                        fontFamily = DotMatrixFontFamily,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        text = "Table of Contents",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
 
-            // Brutalist Mode Toggle Switcher
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Mode Toggle Switcher Pills
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(2.dp),
+            ) {
                 listOf(
-                    EditorMode.EDIT to "EDIT",
-                    EditorMode.SPLIT to "SPLIT",
-                    EditorMode.PREVIEW to "PREVIEW",
+                    EditorMode.EDIT to "Edit",
+                    EditorMode.SPLIT to "Split",
+                    EditorMode.PREVIEW to "Preview",
                 ).forEach { (targetMode, label) ->
                     val isSelected = mode == targetMode
                     Box(
                         modifier = Modifier
-                            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent)
                             .clickable {
-                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 mode = targetMode
                             }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
         }
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
 
-        // Formatting Scrollable Toolbar
+        // Formatting Toolbar
         if ((mode == EditorMode.EDIT) || (mode == EditorMode.SPLIT)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                IconButton(onClick = { applyFormattingWithHaptic("# ") }) {
-                    Text("H1", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { applyFormattingWithHaptic("# ") }, modifier = Modifier.size(40.dp)) {
+                    Text("H1", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("## ") }) {
-                    Text("H2", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { applyFormattingWithHaptic("## ") }, modifier = Modifier.size(40.dp)) {
+                    Text("H2", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("**", "**") }) {
-                    Icon(Icons.Default.FormatBold, contentDescription = "Bold")
+                IconButton(onClick = { applyFormattingWithHaptic("**", "**") }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.FormatBold, contentDescription = "Bold", tint = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("*", "*") }) {
-                    Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
+                IconButton(onClick = { applyFormattingWithHaptic("*", "*") }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.FormatItalic, contentDescription = "Italic", tint = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("- ") }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "List", modifier = Modifier.size(16.dp))
+                IconButton(onClick = { applyFormattingWithHaptic("- ") }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.FormatListBulleted, contentDescription = "Bullet List", tint = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("- [ ] ") }) {
-                    Text("[ ]", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { applyFormattingWithHaptic("- [ ] ") }, modifier = Modifier.size(40.dp)) {
+                    Text("[ ]", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("$$", "$$") }) {
-                    Icon(Icons.Default.Functions, contentDescription = "Math LaTeX", modifier = Modifier.size(16.dp))
+                IconButton(onClick = { applyFormattingWithHaptic("$$", "$$") }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Functions, contentDescription = "Math LaTeX", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("> [!NOTE] ") }) {
-                    Icon(Icons.Default.FormatQuote, contentDescription = "Callout Note")
+                IconButton(onClick = { applyFormattingWithHaptic("> ") }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.FormatQuote, contentDescription = "Quote Block", tint = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("```kotlin\n", "\n```") }) {
-                    Icon(Icons.Default.Code, contentDescription = "Code block")
+                IconButton(onClick = { applyFormattingWithHaptic("```kotlin\n", "\n```") }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Code, contentDescription = "Code block", tint = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }) {
-                    Icon(Icons.Default.Hub, contentDescription = "Mermaid diagram")
+                IconButton(onClick = { applyFormattingWithHaptic("```mermaid\ngraph TD\n    A[Start] --> B[Process]\n```") }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Hub, contentDescription = "Mermaid diagram", tint = MaterialTheme.colorScheme.onSurface)
                 }
-                IconButton(onClick = { applyFormattingWithHaptic("[[", "]]") }) {
-                    Icon(Icons.Default.Link, contentDescription = "Internal link")
-                }
-                IconButton(onClick = { applyFormattingWithHaptic("  ") }) {
-                    Text("->", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { applyFormattingWithHaptic("[[", "]]") }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Link, contentDescription = "Internal link", tint = MaterialTheme.colorScheme.primary)
                 }
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
         }
 
         // Title Field
         OutlinedTextField(
             value = title,
             onValueChange = onTitleChange,
-            placeholder = { Text("NOTE TITLE...", style = MaterialTheme.typography.headlineMedium, fontFamily = DotMatrixFontFamily) },
-            textStyle = MaterialTheme.typography.headlineMedium.copy(fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold),
+            placeholder = { Text("Untitled Note", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            textStyle = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = 16.dp, vertical = 4.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
                 unfocusedBorderColor = Color.Transparent,
@@ -355,7 +352,7 @@ fun MarkdownEditor(
             singleLine = true,
         )
 
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), thickness = 1.dp)
 
         // Body Content Rendering according to EditorMode
         when (mode) {
@@ -390,15 +387,14 @@ fun MarkdownEditor(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp)),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         ) {
-                            Column(modifier = Modifier.padding(8.dp)) {
+                            Column(modifier = Modifier.padding(10.dp)) {
                                 Text(
-                                    text = "LINK OBJECT // MATCHES (${matchingNotes.size})",
+                                    text = "Link object (${matchingNotes.size} matches)",
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = DotMatrixFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(bottom = 4.dp),
@@ -407,6 +403,7 @@ fun MarkdownEditor(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
                                             .clickable {
                                                 val before = textUpToCursor.substring(0, lastOpenBracket)
                                                 val after = if (cursor < textFieldValue.text.length) textFieldValue.text.substring(cursor) else ""
@@ -417,7 +414,7 @@ fun MarkdownEditor(
                                                 textFieldValue = updatedTfv
                                                 onBodyChange(newFullText)
                                             }
-                                            .padding(vertical = 4.dp, horizontal = 4.dp),
+                                            .padding(vertical = 6.dp, horizontal = 6.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Icon(
@@ -430,15 +427,13 @@ fun MarkdownEditor(
                                         Text(
                                             text = targetNote.title,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            fontFamily = VercelMonoFontFamily,
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onSurface,
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = "[${targetNote.typeId.uppercase()}]",
+                                            text = "[${targetNote.typeId}]",
                                             style = MaterialTheme.typography.labelSmall,
-                                            fontFamily = DotMatrixFontFamily,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
@@ -451,9 +446,9 @@ fun MarkdownEditor(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 4.dp)
-                                .border(1.dp, Color(0xFFD97706), RoundedCornerShape(4.dp)),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         ) {
                             Row(
                                 modifier = Modifier
@@ -465,7 +460,8 @@ fun MarkdownEditor(
                                 matchingTags.forEach { tag ->
                                     Box(
                                         modifier = Modifier
-                                            .border(1.dp, Color(0xFFD97706), RoundedCornerShape(0.dp))
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .border(1.dp, Color(0xFFD97706), RoundedCornerShape(8.dp))
                                             .clickable {
                                                 val before = textUpToCursor.substring(0, lastHash)
                                                 val after = if (cursor < textFieldValue.text.length) textFieldValue.text.substring(cursor) else ""
@@ -475,12 +471,11 @@ fun MarkdownEditor(
                                                 textFieldValue = TextFieldValue(text = newFullText, selection = TextRange(newCursor))
                                                 onBodyChange(newFullText)
                                             }
-                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                            .padding(horizontal = 10.dp, vertical = 4.dp),
                                     ) {
                                         Text(
                                             text = "#$tag",
-                                            fontFamily = DotMatrixFontFamily,
-                                            fontSize = 11.sp,
+                                            style = MaterialTheme.typography.labelMedium,
                                             color = Color(0xFFD97706),
                                         )
                                     }
@@ -499,7 +494,7 @@ fun MarkdownEditor(
                             modifier = Modifier
                                 .fillMaxHeight()
                                 .width(36.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
                                 .padding(top = 16.dp, end = 6.dp),
                             horizontalAlignment = Alignment.End,
                         ) {
@@ -508,8 +503,8 @@ fun MarkdownEditor(
                                     text = lineNum.toString(),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 11.sp,
-                                        fontFamily = DotMatrixFontFamily,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        fontFamily = VercelMonoFontFamily,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                                     ),
                                     maxLines = 1,
                                 )
@@ -574,8 +569,8 @@ fun MarkdownEditor(
                                     onBodyChange(nextVal.text)
                                 }
                             },
-                            placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge, fontFamily = VercelMonoFontFamily) },
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = VercelMonoFontFamily, lineHeight = 24.sp),
+                            placeholder = { Text("Write notes in Markdown, code, or Mermaid diagrams...", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
                             visualTransformation = visualTransformation,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = if (inCodeFence) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
@@ -609,7 +604,7 @@ fun MarkdownEditor(
                             }
                         },
                         placeholder = { Text("Write notes...", style = MaterialTheme.typography.bodyMedium) },
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
+                        textStyle = MaterialTheme.typography.bodyMedium,
                         visualTransformation = visualTransformation,
                         modifier = Modifier
                             .weight(1f)
@@ -669,7 +664,7 @@ fun MarkdownEditor(
             ModalBottomSheet(
                 onDismissRequest = { showTocSheet = false },
                 containerColor = MaterialTheme.colorScheme.surface,
-                shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp),
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
             ) {
                 Column(
                     modifier = Modifier
@@ -677,52 +672,47 @@ fun MarkdownEditor(
                         .padding(20.dp),
                 ) {
                     Text(
-                        text = "TABLE OF CONTENTS (${headings.size})",
+                        text = "Table of Contents (${headings.size})",
                         style = MaterialTheme.typography.titleMedium,
-                        fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     if (headings.isEmpty()) {
                         Text(
                             text = "No headers (# H1, ## H2, ### H3) found in note.",
-                            fontFamily = VercelMonoFontFamily,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp,
                         )
                     } else {
-                        headings.forEach { (level, title, lineIdx) ->
+                        headings.forEach { (level, title, _) ->
                             val indentDp = ((level - 1) * 16).dp
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
                                     .clickable {
                                         showTocSheet = false
-                                        val targetOffset = body.lines().take(lineIdx).sumOf { it.length + 1 }
-                                        textFieldValue = TextFieldValue(body, selection = TextRange(targetOffset.coerceIn(0, body.length)))
                                     }
-                                    .padding(vertical = 6.dp),
+                                    .padding(vertical = 8.dp, horizontal = 8.dp + indentDp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Spacer(modifier = Modifier.width(indentDp))
-                                Text(
-                                    text = "H$level",
-                                    fontFamily = DotMatrixFontFamily,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
+                                Icon(
+                                    imageVector = Icons.Default.Title,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp),
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = title,
-                                    fontFamily = VercelMonoFontFamily,
-                                    fontSize = 13.sp,
+                                    style = if (level == 1) MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
@@ -733,307 +723,183 @@ fun MarkdownEditor(
 fun RenderMarkdownPreview(
     body: String,
     onLinkClick: (String) -> Unit,
-    onBodyChange: (String) -> Unit,
-) {
-    val lines = body.lines()
-    var inCodeBlock = false
-    var codeLang = ""
-    val codeBuilder = StringBuilder()
-
-    var i = 0
-    while (i < lines.size) {
-        val line = lines[i]
-
-        when {
-            line.startsWith("```") -> {
-                if (inCodeBlock) {
-                    CodeBlockView(code = codeBuilder.toString().trimEnd(), language = codeLang)
-                    codeBuilder.clear()
-                    inCodeBlock = false
-                } else {
-                    inCodeBlock = true
-                    codeLang = line.removePrefix("```").trim().ifBlank { "code" }
-                }
-                i++
-            }
-            inCodeBlock -> {
-                codeBuilder.append(line).append("\n")
-                i++
-            }
-            line.startsWith("$$") -> {
-                if (line.endsWith("$$") && line.length > 2) {
-                    KatexBlockView(code = line.removePrefix("$$").removeSuffix("$$"))
-                    i++
-                } else {
-                    val mathBuilder = StringBuilder()
-                    i++
-                    while (i < lines.size && !lines[i].startsWith("$$")) {
-                        mathBuilder.append(lines[i]).append("\n")
-                        i++
-                    }
-                    if (i < lines.size && lines[i].startsWith("$$")) i++
-                    KatexBlockView(code = mathBuilder.toString().trim())
-                }
-            }
-            line.startsWith("> [!WARNING]") || line.startsWith("> [!IMPORTANT]") -> {
-                val calloutText = line.substringAfter("]").trim()
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0x22D97706)),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = Color(0xFFD97706),
-                            modifier = Modifier.padding(end = 8.dp),
-                        )
-                        RenderFormattedMarkdownLine(text = calloutText, onLinkClick = onLinkClick)
-                    }
-                }
-                i++
-            }
-            line.startsWith("> [!NOTE]") || line.startsWith("> [!TIP]") -> {
-                val calloutText = line.substringAfter("]").trim()
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(end = 8.dp),
-                        )
-                        RenderFormattedMarkdownLine(text = calloutText, onLinkClick = onLinkClick)
-                    }
-                }
-                i++
-            }
-            line.startsWith("# ") -> {
-                RenderFormattedMarkdownLine(
-                    text = line.removePrefix("# "),
-                    onLinkClick = onLinkClick,
-                    textStyle = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.padding(vertical = 6.dp),
-                    isHeader = true,
-                )
-                i++
-            }
-            line.startsWith("## ") -> {
-                RenderFormattedMarkdownLine(
-                    text = line.removePrefix("## "),
-                    onLinkClick = onLinkClick,
-                    textStyle = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    isHeader = true,
-                )
-                i++
-            }
-            line.startsWith("### ") -> {
-                RenderFormattedMarkdownLine(
-                    text = line.removePrefix("### "),
-                    onLinkClick = onLinkClick,
-                    textStyle = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    isHeader = true,
-                )
-                i++
-            }
-            line.startsWith("> ") -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(4.dp)
-                            .height(24.dp)
-                            .background(MaterialTheme.colorScheme.primary),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    RenderFormattedMarkdownLine(
-                        text = line.removePrefix("> "),
-                        onLinkClick = onLinkClick,
-                        textStyle = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                i++
-            }
-            (line.trim() == "---") || (line.trim() == "***") -> {
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-                )
-                i++
-            }
-            line.startsWith("- [ ]") || line.startsWith("- [x]") || line.startsWith("- [X]") -> {
-                val lineIndex = i
-                val isChecked = line.contains("[x]", ignoreCase = true)
-                val taskText = line.substringAfter("]").trim()
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 2.dp),
-                ) {
-                    Checkbox(
-                        checked = isChecked,
-                        onCheckedChange = { checked ->
-                            val newCheckStr = if (checked) "- [x]" else "- [ ]"
-                            val updatedLines = lines.toMutableList()
-                            updatedLines[lineIndex] = "$newCheckStr $taskText"
-                            onBodyChange(updatedLines.joinToString("\n"))
-                        },
-                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary),
-                    )
-                    RenderFormattedMarkdownLine(text = taskText, onLinkClick = onLinkClick)
-                }
-                i++
-            }
-            line.startsWith("- ") || line.startsWith("* ") -> {
-                Row(modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)) {
-                    Text("• ", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
-                    Box(modifier = Modifier.weight(1f)) {
-                        RenderFormattedMarkdownLine(text = line.substring(2), onLinkClick = onLinkClick)
-                    }
-                }
-                i++
-            }
-            line.trim().startsWith("|") && line.trim().endsWith("|") -> {
-                val tableBlock = mutableListOf<String>()
-                while ((i < lines.size) && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
-                    tableBlock.add(lines[i])
-                    i++
-                }
-                RenderMarkdownTable(tableLines = tableBlock, onLinkClick = onLinkClick)
-            }
-            line.isBlank() -> {
-                Spacer(modifier = Modifier.height(8.dp))
-                i++
-            }
-            else -> {
-                RenderFormattedMarkdownLine(text = line, onLinkClick = onLinkClick)
-                i++
-            }
-        }
-    }
-
-    if (inCodeBlock && codeBuilder.isNotEmpty()) {
-        CodeBlockView(code = codeBuilder.toString().trimEnd(), language = codeLang)
-    }
-}
-
-@Composable
-fun RenderFormattedMarkdownLine(
-    text: String,
-    onLinkClick: (String) -> Unit,
+    onBodyChange: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier,
-    textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
-    isHeader: Boolean = false,
 ) {
-    val context = LocalContext.current
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val onBackgroundColor = MaterialTheme.colorScheme.onBackground
-    val codeBgColor = MaterialTheme.colorScheme.surfaceVariant
-
-    val annotatedString = remember(text, primaryColor, onBackgroundColor, codeBgColor) {
-        MarkdownParser.parseInlineMarkdown(text, primaryColor, onBackgroundColor, codeBgColor)
+    if (body.isBlank()) {
+        Text(
+            text = "No content to display",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = modifier.padding(vertical = 12.dp),
+        )
+        return
     }
 
-    val style = if (isHeader) textStyle.copy(fontWeight = FontWeight.Bold) else textStyle
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val codeBgColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
 
-    @Suppress("DEPRECATION")
-    ClickableText(
-        text = annotatedString,
-        style = style.copy(color = onBackgroundColor),
-        onClick = { offset ->
-            annotatedString.getStringAnnotations(tag = "NOTE_LINK", start = offset, end = offset)
-                .firstOrNull()?.let { (item) ->
-                    onLinkClick(item)
+    val lines = body.lines()
+    var i = 0
+    val totalLines = lines.size
+
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        while (i < totalLines) {
+            val line = lines[i]
+            val trimmed = line.trim()
+
+            // Code Fence block parsing
+            if (trimmed.startsWith("```")) {
+                val lang = trimmed.removePrefix("```").trim()
+                val codeBuilder = StringBuilder()
+                i++
+                while (i < totalLines && !lines[i].trim().startsWith("```")) {
+                    codeBuilder.append(lines[i]).append("\n")
+                    i++
                 }
-            annotatedString.getStringAnnotations(tag = "URL_LINK", start = offset, end = offset)
-                .firstOrNull()?.let { (item) ->
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW, item.toUri())
-                        context.startActivity(intent)
-                    } catch (_: Exception) {}
-                }
-        },
-        modifier = modifier,
-    )
-}
+                val codeContent = codeBuilder.toString().trimEnd()
 
-@Composable
-fun RenderMarkdownTable(
-    tableLines: List<String>,
-    onLinkClick: (String) -> Unit,
-) {
-    val rows = tableLines.asSequence().map { line ->
-        line.trim().trim('|').split('|').map { it.trim() }
-    }.filter { row ->
-        !row.all { cell -> cell.all { char -> (char == '-') || (char == ':') || (char == ' ') } }
-    }.toList()
-
-    if (rows.isEmpty()) return
-
-    val headerRow = rows.firstOrNull()
-    val dataRows = if (rows.size > 1) rows.subList(1, rows.size) else emptyList()
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
-    ) {
-        if (headerRow != null) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                headerRow.forEach { cell ->
-                    Box(modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                        RenderFormattedMarkdownLine(cell, onLinkClick, isHeader = true)
+                if (lang.equals("mermaid", ignoreCase = true)) {
+                    MermaidDiagramView(code = codeContent, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp))
+                } else {
+                    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        CodeBlockView(code = codeContent, language = lang.ifBlank { "text" })
                     }
                 }
+                i++
+                continue
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
-        }
 
-        dataRows.forEachIndexed { rowIndex, row ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                row.forEach { cell ->
-                    Box(modifier = Modifier.weight(1f).padding(horizontal = 4.dp)) {
-                        RenderFormattedMarkdownLine(cell, onLinkClick)
+            // Callout note parsing
+            if (trimmed.startsWith("> [!")) {
+                val type = trimmed.substringAfter("> [!").substringBefore("]").uppercase()
+                val calloutTitle = trimmed.substringAfter("]", "").trim()
+                val calloutBody = StringBuilder()
+                if (calloutTitle.isNotBlank()) calloutBody.append(calloutTitle).append("\n")
+                i++
+                while (i < totalLines && lines[i].trim().startsWith(">")) {
+                    calloutBody.append(lines[i].trim().removePrefix(">").trim()).append("\n")
+                    i++
+                }
+                val (calloutColor, iconVector) = when (type) {
+                    "WARNING" -> Color(0xFFEF4444) to Icons.Default.Warning
+                    "IMPORTANT" -> Color(0xFF8B5CF6) to Icons.Default.Info
+                    "TIP" -> Color(0xFF10B981) to Icons.Default.AutoAwesome
+                    else -> primaryColor to Icons.Default.Info
+                }
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = calloutColor.copy(alpha = 0.1f)),
+                ) {
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                        Icon(imageVector = iconVector, contentDescription = null, tint = calloutColor, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(text = type, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = calloutColor)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = calloutBody.toString().trim(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 }
+                continue
             }
-            if ((rowIndex < (dataRows.size - 1))) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+            // Headings
+            when {
+                trimmed.startsWith("# ") -> {
+                    Text(
+                        text = trimmed.removePrefix("# ").trim(),
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+                    )
+                }
+                trimmed.startsWith("## ") -> {
+                    Text(
+                        text = trimmed.removePrefix("## ").trim(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = 10.dp, bottom = 4.dp),
+                    )
+                }
+                trimmed.startsWith("### ") -> {
+                    Text(
+                        text = trimmed.removePrefix("### ").trim(),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
+                    )
+                }
+                trimmed == "---" || trimmed == "***" -> {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
+                }
+                trimmed.startsWith("- [ ] ") || trimmed.startsWith("- [x] ") -> {
+                    val isChecked = trimmed.startsWith("- [x] ")
+                    val taskText = trimmed.removePrefix(if (isChecked) "- [x] " else "- [ ] ").trim()
+                    val lineIdx = i
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(
+                            checked = isChecked,
+                            onCheckedChange = { checked ->
+                                if (onBodyChange != null) {
+                                    val newLines = lines.toMutableList()
+                                    val prefix = if (checked) "- [x] " else "- [ ] "
+                                    newLines[lineIdx] = prefix + taskText
+                                    onBodyChange(newLines.joinToString("\n"))
+                                }
+                            },
+                            colors = CheckboxDefaults.colors(checkedColor = primaryColor),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = taskText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (isChecked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+                trimmed.startsWith("- ") || trimmed.startsWith("* ") -> {
+                    val bulletText = trimmed.removePrefix("- ").removePrefix("* ").trim()
+                    Row(modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp), verticalAlignment = Alignment.Top) {
+                        Text(text = "•", style = MaterialTheme.typography.bodyLarge, color = primaryColor)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        val annotatedText = MarkdownParser.parseInlineMarkdown(bulletText, primaryColor, onSurfaceColor, codeBgColor)
+                        ClickableText(
+                            text = annotatedText,
+                            style = MaterialTheme.typography.bodyLarge.copy(color = onSurfaceColor),
+                            onClick = { offset ->
+                                annotatedText.getStringAnnotations(tag = "NOTE_LINK", start = offset, end = offset)
+                                    .firstOrNull()?.let { annotation -> onLinkClick(annotation.item) }
+                            },
+                        )
+                    }
+                }
+                trimmed.isNotBlank() -> {
+                    val annotatedText = MarkdownParser.parseInlineMarkdown(trimmed, primaryColor, onSurfaceColor, codeBgColor)
+                    ClickableText(
+                        text = annotatedText,
+                        style = MaterialTheme.typography.bodyLarge.copy(color = onSurfaceColor),
+                        onClick = { offset ->
+                            annotatedText.getStringAnnotations(tag = "NOTE_LINK", start = offset, end = offset)
+                                .firstOrNull()?.let { annotation -> onLinkClick(annotation.item) }
+                        },
+                        modifier = Modifier.padding(vertical = 2.dp),
+                    )
+                }
             }
+            i++
         }
     }
 }

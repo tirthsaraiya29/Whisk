@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -42,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -81,11 +84,17 @@ fun GitHubBrowserScreen(
             OutlinedTextField(
                 value = state.searchQuery,
                 onValueChange = onSearchQueryChange,
-                placeholder = { Text("Search GitHub repositories...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                placeholder = { Text("Search GitHub repositories...", style = MaterialTheme.typography.bodyMedium) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                textStyle = MaterialTheme.typography.bodyMedium,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                ),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 singleLine = true,
             )
 
@@ -96,7 +105,7 @@ fun GitHubBrowserScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(10.dp),
                 ) {
                     Text(
                         text = "GitHub Error: ${error.message}",
@@ -107,59 +116,45 @@ fun GitHubBrowserScreen(
                 }
             }
 
-            // Display Details Error Banner if present
-            state.detailsError?.let { error ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                    shape = RoundedCornerShape(8.dp),
-                ) {
-                    Text(
-                        text = "Details Error: ${error.message}",
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(12.dp),
-                    )
-                }
-            }
-
             // Category Navigation Tabs
-            @Suppress("DEPRECATION")
-            TabRow(selectedTabIndex = selectedTabIndex) {
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary,
+            ) {
                 Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }) {
-                    Text("Repos (${state.repos.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)
+                    Text("Repos (${state.repos.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
                 Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }) {
-                    Text("Issues (${state.issues.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)
+                    Text("Issues (${state.issues.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
                 Tab(selected = selectedTabIndex == 2, onClick = { selectedTabIndex = 2 }) {
-                    Text("PRs (${state.pullRequests.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)
+                    Text("PRs (${state.pullRequests.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
                 Tab(selected = selectedTabIndex == 3, onClick = { selectedTabIndex = 3 }) {
-                    Text("MCP Tools (${state.mcpTools.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall)
+                    Text("MCP Tools (${state.mcpTools.size})", modifier = Modifier.padding(12.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
             }
 
             // Tab Content
             when (selectedTabIndex) {
                 0 -> {
-                    // Repositories List
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
+                        contentPadding = PaddingValues(bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         items(state.repos, key = { it.fullName }) { repo ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
                                     .clickable { onSelectRepo(repo) },
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Row(
@@ -169,7 +164,8 @@ fun GitHubBrowserScreen(
                                     ) {
                                         Text(
                                             text = repo.fullName,
-                                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface,
                                         )
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -198,10 +194,12 @@ fun GitHubBrowserScreen(
                                                 val intent = Intent(Intent.ACTION_VIEW, gitDiagramUrl.toUri())
                                                 context.startActivity(intent)
                                             },
+                                            shape = RoundedCornerShape(8.dp),
                                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                         ) {
-                                            Icon(Icons.Default.AccountTree, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                                            Text("GitDiagram")
+                                            Icon(Icons.Default.AccountTree, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.size(4.dp))
+                                            Text("GitDiagram", style = MaterialTheme.typography.labelSmall)
                                         }
                                     }
                                 }
@@ -210,24 +208,24 @@ fun GitHubBrowserScreen(
                     }
                 }
                 1 -> {
-                    // Issues List
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
+                        contentPadding = PaddingValues(bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(state.issues, key = { it.number }) { issue ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column(modifier = Modifier.padding(14.dp)) {
                                     Text(
                                         text = "#${issue.number} ${issue.title}",
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
@@ -241,24 +239,24 @@ fun GitHubBrowserScreen(
                     }
                 }
                 2 -> {
-                    // Pull Requests List
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
+                        contentPadding = PaddingValues(bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(state.pullRequests, key = { it.number }) { pr ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column(modifier = Modifier.padding(14.dp)) {
                                     Text(
                                         text = "PR #${pr.number} ${pr.title}",
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
@@ -272,20 +270,20 @@ fun GitHubBrowserScreen(
                     }
                 }
                 3 -> {
-                    // MCP Tools List
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
+                        contentPadding = PaddingValues(bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         items(state.mcpTools, key = { it.name }) { tool ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
                                     .clickable { selectedTool = tool },
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
                                 Row(
@@ -298,19 +296,21 @@ fun GitHubBrowserScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = tool.name,
-                                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface,
                                         )
                                         Text(
                                             text = tool.description,
-                                            style = MaterialTheme.typography.bodyMedium,
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(top = 2.dp),
                                         )
                                     }
-                                    IconButton(onClick = { selectedTool = tool }) {
-                                        Icon(Icons.Default.PlayArrow, contentDescription = "Run MCP Tool", tint = MaterialTheme.colorScheme.primary)
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = "Run MCP Tool",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
                                 }
                             }
                         }
@@ -320,9 +320,13 @@ fun GitHubBrowserScreen(
         }
     }
 
-    // MCP Tool Invocation Dialog / Bottom Sheet
+    // MCP Tool Modal Runner
     selectedTool?.let { tool ->
-        ModalBottomSheet(onDismissRequest = { selectedTool = null }) {
+        ModalBottomSheet(
+            onDismissRequest = { selectedTool = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -330,22 +334,24 @@ fun GitHubBrowserScreen(
             ) {
                 Text(
                     text = "Invoke MCP Tool: ${tool.name}",
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = tool.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
                 )
+                Spacer(modifier = Modifier.height(14.dp))
 
                 OutlinedTextField(
                     value = toolArgsJson,
                     onValueChange = { toolArgsJson = it },
-                    label = { Text("Tool Arguments (JSON)") },
+                    label = { Text("Tool Parameters (JSON)") },
+                    shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -355,12 +361,13 @@ fun GitHubBrowserScreen(
                         onInvokeMcpTool(tool.name, toolArgsJson)
                         selectedTool = null
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.padding(end = 6.dp))
-                    Text("Execute Tool via MCP")
+                    Text("Execute MCP Tool", style = MaterialTheme.typography.labelMedium)
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

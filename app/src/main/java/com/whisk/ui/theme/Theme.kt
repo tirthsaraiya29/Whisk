@@ -11,29 +11,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Pure Brutalist Monochrome Dark Scheme (Vercel / Nothing Aesthetic)
-private val BrutalistDarkColorScheme = darkColorScheme(
-    primary = DarkTextPrimary,
-    onPrimary = DarkSurface,
+// Refined Charcoal Dark Scheme (Obsidian & Linear Inspired)
+private val DarkColorScheme = darkColorScheme(
+    primary = WhiskBlue,
+    onPrimary = TrueWhite,
+    primaryContainer = DarkSurfaceElevated,
+    onPrimaryContainer = DarkTextPrimary,
     background = DarkSurface,
     onBackground = DarkTextPrimary,
-    surface = DarkSurface,
+    surface = DarkSurfaceVariant,
     onSurface = DarkTextPrimary,
-    surfaceVariant = DarkSurfaceVariant,
+    surfaceVariant = DarkSurfaceElevated,
     onSurfaceVariant = DarkTextSecondary,
     outline = DarkHairline,
     outlineVariant = DarkBorder,
     error = NothingRed,
-    onError = DarkTextPrimary,
+    onError = TrueWhite,
 )
 
-// High-Contrast Brutalist Light Scheme (Optimized for Outdoor Sunlight Legibility)
-private val BrutalistLightColorScheme = lightColorScheme(
+// Refined Warm Light Scheme (Craft & Notion Inspired Paper Light)
+private val LightColorScheme = lightColorScheme(
     primary = LightTextPrimary,
     onPrimary = LightSurface,
+    primaryContainer = LightSurfaceVariant,
+    onPrimaryContainer = LightTextPrimary,
     background = LightSurface,
     onBackground = LightTextPrimary,
-    surface = LightSurface,
+    surface = LightSurfaceElevated,
     onSurface = LightTextPrimary,
     surfaceVariant = LightSurfaceVariant,
     onSurfaceVariant = LightTextSecondary,
@@ -52,7 +56,7 @@ private val CyberpunkNeonColorScheme = darkColorScheme(
     surface = CyberpunkNeonSurface,
     onSurface = TrueWhite,
     surfaceVariant = CyberpunkNeonSurfaceVariant,
-    onSurfaceVariant = CyberpunkNeonBorder.copy(alpha = 0.7f),
+    onSurfaceVariant = CyberpunkNeonBorder.copy(alpha = 0.8f),
     outline = CyberpunkNeonBorder.copy(alpha = 0.5f),
     outlineVariant = CyberpunkNeonBorder,
     error = CyberpunkNeonAccent,
@@ -68,7 +72,7 @@ private val AmberTerminalColorScheme = darkColorScheme(
     surface = AmberTerminalSurface,
     onSurface = AmberTerminalAccent,
     surfaceVariant = AmberTerminalSurfaceVariant,
-    onSurfaceVariant = AmberTerminalAccent.copy(alpha = 0.7f),
+    onSurfaceVariant = AmberTerminalAccent.copy(alpha = 0.8f),
     outline = AmberTerminalBorder.copy(alpha = 0.4f),
     outlineVariant = AmberTerminalBorder,
     error = NothingRed,
@@ -84,7 +88,7 @@ private val MonokaiColorScheme = darkColorScheme(
     surface = MonokaiSurface,
     onSurface = TrueWhite,
     surfaceVariant = MonokaiSurfaceVariant,
-    onSurfaceVariant = TrueWhite.copy(alpha = 0.7f),
+    onSurfaceVariant = TrueWhite.copy(alpha = 0.8f),
     outline = MonokaiBorder,
     outlineVariant = MonokaiAccent,
     error = NothingRed,
@@ -105,15 +109,14 @@ fun WhiskTheme(
     }
 
     val baseColorScheme = when (themeMode) {
-        "LIGHT" -> BrutalistLightColorScheme
+        "LIGHT" -> LightColorScheme
         "CYBERPUNK" -> CyberpunkNeonColorScheme
         "AMBER_TERMINAL" -> AmberTerminalColorScheme
         "MONOKAI" -> MonokaiColorScheme
-        "DARK" -> BrutalistDarkColorScheme
-        else -> if (systemDark) BrutalistDarkColorScheme else BrutalistLightColorScheme
+        "DARK" -> DarkColorScheme
+        else -> if (systemDark) DarkColorScheme else LightColorScheme
     }
 
-    // Apply custom accent color if chosen
     val colorScheme = if (!accentColor.isNullOrBlank()) {
         val accent = try {
             Color(android.graphics.Color.parseColor(accentColor))

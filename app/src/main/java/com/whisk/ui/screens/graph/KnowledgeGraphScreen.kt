@@ -18,9 +18,9 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -58,8 +59,6 @@ import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.GraphNode
 import com.whisk.domain.model.NodeType
 import com.whisk.ui.components.WhiskTopBar
-import com.whisk.ui.theme.DotMatrixFontFamily
-import com.whisk.ui.theme.VercelMonoFontFamily
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -79,20 +78,18 @@ fun KnowledgeGraphScreen(
     var nodeSearchQuery by remember { mutableStateOf("") }
     var showPhysicsSheet by remember { mutableStateOf(false) }
 
-    // Physics configuration sliders
     var kRepulsion by remember { mutableFloatStateOf(14000f) }
     var kAttraction by remember { mutableFloatStateOf(0.06f) }
     var maxNodesLimit by remember { mutableIntStateOf(80) }
 
     val nodeColorNote = MaterialTheme.colorScheme.primary
     val nodeColorTag = Color(0xFFD97706)
-    val nodeColorProject = Color(0xFF00F0FF)
-    val edgeColor = MaterialTheme.colorScheme.outline
+    val nodeColorProject = Color(0xFF8B5CF6)
+    val edgeColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
     val textColor = MaterialTheme.colorScheme.onBackground
 
     val textMeasurer = rememberTextMeasurer()
 
-    // Calculate node degree (number of connected edges)
     val nodeDegrees = remember(state.graph) {
         val degrees = mutableMapOf<String, Int>()
         state.graph.edges.forEach { edge ->
@@ -102,7 +99,6 @@ fun KnowledgeGraphScreen(
         degrees
     }
 
-    // Filter nodes by orphans, search query, and max limit
     val nodes = remember(state.graph.nodes, state.showOrphans, nodeSearchQuery, maxNodesLimit) {
         state.graph.nodes
             .filter { node ->
@@ -113,7 +109,6 @@ fun KnowledgeGraphScreen(
             .take(maxNodesLimit)
     }
 
-    // Force-directed graph layout calculation (Fruchterman-Reingold algorithm with custom sliders)
     val nodePositions = remember(nodes, state.graph.edges, kRepulsion, kAttraction) {
         val posMap = mutableMapOf<String, Offset>()
         val count = nodes.size
@@ -148,52 +143,43 @@ fun KnowledgeGraphScreen(
             }
 
             edgeList.forEach { (sourceId, targetId) ->
-                val pSrc = posMap[sourceId] ?: return@forEach
-                val pTgt = posMap[targetId] ?: return@forEach
-                val delta = pSrc - pTgt
-                val dist = delta.getDistance().coerceAtLeast(1f)
-                val force = (delta / dist) * (kAttraction * dist)
-                disp[sourceId] = (disp[sourceId] ?: Offset.Zero) - force
-                disp[targetId] = (disp[targetId] ?: Offset.Zero) + force
+                val p1 = posMap[sourceId]
+                val p2 = posMap[targetId]
+                if (p1 != null && p2 != null) {
+                    val delta = p1 - p2
+                    val dist = delta.getDistance().coerceAtLeast(10f)
+                    val force = (delta / dist) * (dist * kAttraction)
+                    disp[sourceId] = (disp[sourceId] ?: Offset.Zero) - force
+                    disp[targetId] = (disp[targetId] ?: Offset.Zero) + force
+                }
             }
 
-            nodes.forEach { (id) ->
-                val curr = posMap[id] ?: Offset.Zero
-                val d = disp[id] ?: Offset.Zero
-                val limitedD = Offset(d.x.coerceIn(-25f, 25f), d.y.coerceIn(-25f, 25f))
-                posMap[id] = curr + limitedD
+            nodes.forEach { node ->
+                val p = posMap[node.id] ?: Offset.Zero
+                val d = disp[node.id] ?: Offset.Zero
+                val limitedD = Offset(
+                    d.x.coerceIn(-30f, 30f),
+                    d.y.coerceIn(-30f, 30f),
+                )
+                posMap[node.id] = p + limitedD
             }
         }
+
         posMap
     }
 
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "KNOWLEDGE GRAPH",
-                subtitle = "${nodes.size} NODES • ${state.graph.edges.size} RELATIONS",
+                title = "Knowledge Graph",
+                subtitle = "${nodes.size} nodes • ${state.graph.edges.size} connections",
                 onMenuClick = onMenuClick,
                 actions = {
                     IconButton(onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         showPhysicsSheet = true
                     }) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Graph Physics Tuning",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-
-                    IconButton(onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onToggleOrphans()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Toggle Orphans",
-                            tint = if (state.showOrphans) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                        )
+                        Icon(Icons.Default.Tune, contentDescription = "Graph Physics Settings")
                     }
 
                     IconButton(onClick = {
@@ -202,7 +188,7 @@ fun KnowledgeGraphScreen(
                         offset = Offset.Zero
                         onResetGraph()
                     }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Reset Canvas Layout")
+                        Icon(Icons.Default.Refresh, contentDescription = "Reset Layout")
                     }
                 },
             )
@@ -215,29 +201,26 @@ fun KnowledgeGraphScreen(
                 .imePadding()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            // Monospace Filter Search Input
+            // Search Input
             OutlinedTextField(
                 value = nodeSearchQuery,
                 onValueChange = { nodeSearchQuery = it },
                 placeholder = {
                     Text(
-                        "> FILTER GRAPH NODES...",
-                        fontFamily = DotMatrixFontFamily,
-                        fontSize = 12.sp,
+                        "Filter nodes...",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 },
-                textStyle = MaterialTheme.typography.labelMedium.copy(fontFamily = DotMatrixFontFamily),
+                textStyle = MaterialTheme.typography.bodyMedium,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 ),
-                shape = RoundedCornerShape(0.dp),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
                 singleLine = true,
             )
 
@@ -245,45 +228,30 @@ fun KnowledgeGraphScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(8.dp).background(nodeColorNote))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "NOTE",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(nodeColorNote))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = "Note", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(8.dp).background(nodeColorTag))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "TAG",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(nodeColorTag))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = "Tag", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(8.dp).background(nodeColorProject))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "PROJECT",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(nodeColorProject))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = "Project", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
 
-            // Interactive Canvas Viewport with Damped Zoom & Generous Touch Targets
+            // Interactive Canvas Viewport
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -294,7 +262,6 @@ fun KnowledgeGraphScreen(
                         .fillMaxSize()
                         .pointerInput(Unit) {
                             detectTransformGestures { _, pan, zoom, _ ->
-                                // Damped smooth zoom factor for high refresh rate screens
                                 val dampedZoom = 1f + (zoom - 1f) * 0.65f
                                 scale = (scale * dampedZoom).coerceIn(0.35f, 3.5f)
                                 offset += pan
@@ -310,7 +277,6 @@ fun KnowledgeGraphScreen(
                                     val dist = (canvasPos - tapOffset).getDistance()
                                     val degree = nodeDegrees[node.id] ?: 1
                                     val radius = (12f + (degree * 3f)).coerceIn(10f, 26f) * scale
-                                    // Generous touch target box (at least 60px) for high PPI screens
                                     val touchThreshold = maxOf(60f, radius + 25f)
                                     if (dist < touchThreshold && dist < closestDist) {
                                         closestDist = dist
@@ -358,9 +324,8 @@ fun KnowledgeGraphScreen(
                         val textLayout = textMeasurer.measure(
                             text = node.label,
                             style = androidx.compose.ui.text.TextStyle(
-                                fontSize = (11.sp.value * scale.coerceIn(0.8f, 1.4f)).sp,
+                                fontSize = (12.sp.value * scale.coerceIn(0.8f, 1.4f)).sp,
                                 color = textColor,
-                                fontFamily = VercelMonoFontFamily,
                                 fontWeight = FontWeight.Bold,
                             ),
                         )
@@ -382,7 +347,7 @@ fun KnowledgeGraphScreen(
         ModalBottomSheet(
             onDismissRequest = { onNodeSelect(null) },
             containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp),
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -390,17 +355,15 @@ fun KnowledgeGraphScreen(
                     .padding(20.dp),
             ) {
                 Text(
-                    text = "NODE // ${node.label.uppercase()}",
+                    text = node.label,
                     style = MaterialTheme.typography.titleMedium,
-                    fontFamily = DotMatrixFontFamily,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "TYPE: ${node.type.name} • CONNECTIONS: ${nodeDegrees[node.id] ?: 0}",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = VercelMonoFontFamily,
+                    text = "Type: ${node.type.name} • Connections: ${nodeDegrees[node.id] ?: 0}",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -408,20 +371,20 @@ fun KnowledgeGraphScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.primary)
                             .clickable {
                                 onNodeSelect(null)
                                 onOpenNote(node.id)
                             }
-                            .padding(12.dp),
+                            .padding(14.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "> OPEN NOTE IN VAULT",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontFamily = DotMatrixFontFamily,
+                            text = "Open Note in Vault",
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.onPrimary,
                         )
                     }
                 }
@@ -434,7 +397,7 @@ fun KnowledgeGraphScreen(
         ModalBottomSheet(
             onDismissRequest = { showPhysicsSheet = false },
             containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp),
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -442,90 +405,39 @@ fun KnowledgeGraphScreen(
                     .padding(20.dp),
             ) {
                 Text(
-                    text = "GRAPH PHYSICS & SCALE TUNING",
+                    text = "Graph Physics & Layout Tuning",
                     style = MaterialTheme.typography.titleMedium,
-                    fontFamily = DotMatrixFontFamily,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Max Node Limit
                 Text(
-                    text = "MAX VISIBLE NODES: $maxNodesLimit",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = "Repulsion Force: ${kRepulsion.toInt()}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Slider(
+                    value = kRepulsion,
+                    onValueChange = { kRepulsion = it },
+                    valueRange = 5000f..35000f,
+                    colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Node Limit: $maxNodesLimit",
+                    style = MaterialTheme.typography.bodyMedium,
                 )
                 Slider(
                     value = maxNodesLimit.toFloat(),
                     onValueChange = { maxNodesLimit = it.toInt() },
                     valueRange = 20f..200f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                    ),
+                    colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Repulsion / Charge
-                Text(
-                    text = "CHARGE REPULSION: ${kRepulsion.toInt()}",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Slider(
-                    value = kRepulsion,
-                    onValueChange = { kRepulsion = it },
-                    valueRange = 5000f..30000f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                    ),
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Attraction / Link Tension
-                Text(
-                    text = "LINK TENSION: ${(kAttraction * 100).toInt()}%",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Slider(
-                    value = kAttraction,
-                    onValueChange = { kAttraction = it },
-                    valueRange = 0.01f..0.15f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                    ),
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                        .clickable {
-                            kRepulsion = 14000f
-                            kAttraction = 0.06f
-                            maxNodesLimit = 80
-                            showPhysicsSheet = false
-                        }
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "RESET TO DEFAULTS",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }

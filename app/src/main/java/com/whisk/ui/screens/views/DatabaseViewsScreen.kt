@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,7 +32,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +54,6 @@ import com.whisk.ui.components.views.CalendarView
 import com.whisk.ui.components.views.GalleryView
 import com.whisk.ui.components.views.ListView
 import com.whisk.ui.components.views.TableView
-import com.whisk.ui.theme.DotMatrixFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,8 +79,8 @@ fun DatabaseViewsScreen(
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "DATABASE VIEWS",
-                subtitle = "${state.filteredNotes.size} OBJECTS • VIEW: ${activeView.name.uppercase()}",
+                title = "Database Views",
+                subtitle = "${state.filteredNotes.size} objects • View: ${activeView.name}",
                 onMenuClick = onMenuClick,
                 actions = {
                     IconButton(
@@ -125,9 +123,9 @@ fun DatabaseViewsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -136,14 +134,14 @@ fun DatabaseViewsScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .clickable { showViewDropdown = true }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
                         Text(
-                            text = "VIEW: ${activeView.name.uppercase()} [${activeView.viewType.name}]",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
+                            text = "${activeView.name} (${activeView.viewType.name})",
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -159,14 +157,13 @@ fun DatabaseViewsScreen(
                     DropdownMenu(
                         expanded = showViewDropdown,
                         onDismissRequest = { showViewDropdown = false },
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                     ) {
                         state.availableViews.forEach { view ->
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "${view.name.uppercase()} [${view.viewType.name}]",
-                                        fontFamily = DotMatrixFontFamily,
+                                        text = "${view.name} [${view.viewType.name}]",
+                                        style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = if (view.id == activeView.id) FontWeight.Bold else FontWeight.Normal,
                                     )
                                 },
@@ -179,158 +176,185 @@ fun DatabaseViewsScreen(
                     }
                 }
 
-                // Add New View Button
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        showCreateDialog = true
-                    },
-                    modifier = Modifier.size(32.dp),
+                // Quick View Type Pills
+                state.availableViews.forEach { view ->
+                    val isSelected = view.id == activeView.id
+                    if (!isSelected) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onSelectView(view)
+                                }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                        ) {
+                            Text(
+                                text = view.name,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+
+                // New View Button
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                        .clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            showCreateDialog = true
+                        }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Create View",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "New View",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
 
-            // Render active view representation
-            Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+            // Render Selected Database View Component
+            Box(modifier = Modifier.fillMaxSize()) {
                 when (activeView.viewType) {
-                    ViewType.TABLE -> {
-                        TableView(
-                            notes = state.filteredNotes,
-                            propertyDefinitions = state.propertyDefinitions,
-                            notePropertyValues = state.notePropertyValues,
-                            visiblePropertyIds = activeView.visiblePropertyIds,
-                            onOpenNote = onOpenNote,
-                            onUpdatePropertyValue = onUpdatePropertyValue,
-                        )
-                    }
-                    ViewType.LIST -> {
-                        ListView(
-                            notes = state.filteredNotes,
-                            onOpenNote = onOpenNote,
-                        )
-                    }
-                    ViewType.GALLERY -> {
-                        GalleryView(
-                            notes = state.filteredNotes,
-                            onOpenNote = onOpenNote,
-                        )
-                    }
-                    ViewType.BOARD -> {
-                        BoardView(
-                            notes = state.filteredNotes,
-                            onOpenNote = onOpenNote,
-                            onMoveNoteToGroup = onMoveNoteToGroup,
-                            onCreateInGroup = onCreateInGroup,
-                        )
-                    }
-                    ViewType.CALENDAR -> {
-                        CalendarView(
-                            notes = state.filteredNotes,
-                            datePropertyId = activeView.datePropertyId,
-                            notePropertyValues = state.notePropertyValues,
-                            onOpenNote = onOpenNote,
-                            onCreateOnDate = onCreateOnDate,
-                        )
-                    }
+                    ViewType.TABLE -> TableView(
+                        notes = state.filteredNotes,
+                        propertyDefinitions = state.propertyDefinitions,
+                        notePropertyValues = state.notePropertyValues,
+                        visiblePropertyIds = emptyList(),
+                        onOpenNote = onOpenNote,
+                        onUpdatePropertyValue = onUpdatePropertyValue,
+                    )
+                    ViewType.BOARD -> BoardView(
+                        notes = state.filteredNotes,
+                        onOpenNote = onOpenNote,
+                        onMoveNoteToGroup = onMoveNoteToGroup,
+                        onCreateInGroup = onCreateInGroup,
+                    )
+                    ViewType.CALENDAR -> CalendarView(
+                        notes = state.filteredNotes,
+                        datePropertyId = null,
+                        notePropertyValues = state.notePropertyValues,
+                        onOpenNote = onOpenNote,
+                        onCreateOnDate = onCreateOnDate,
+                    )
+                    ViewType.GALLERY -> GalleryView(
+                        notes = state.filteredNotes,
+                        onOpenNote = onOpenNote,
+                    )
+                    ViewType.LIST -> ListView(
+                        notes = state.filteredNotes,
+                        onOpenNote = onOpenNote,
+                    )
                 }
             }
         }
     }
 
-    // Create View Dialog
     if (showCreateDialog) {
-        var viewName by remember { mutableStateOf("") }
-        var selectedType by remember { mutableStateOf(ViewType.TABLE) }
-
-        AlertDialog(
-            onDismissRequest = { showCreateDialog = false },
-            title = {
-                Text(
-                    text = "CREATE SAVED VIEW",
-                    fontFamily = DotMatrixFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+        CreateViewDialog(
+            onDismiss = { showCreateDialog = false },
+            onCreate = { name, type ->
+                onCreateView(name, type)
+                showCreateDialog = false
             },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = viewName,
-                        onValueChange = { viewName = it },
-                        placeholder = { Text("View Name...", fontFamily = DotMatrixFontFamily) },
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = DotMatrixFontFamily),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        ),
-                        singleLine = true,
+        )
+    }
+}
+
+@Composable
+private fun CreateViewDialog(
+    onDismiss: () -> Unit,
+    onCreate: (name: String, viewType: ViewType) -> Unit,
+) {
+    var viewName by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf(ViewType.TABLE) }
+    var showTypeDropdown by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Create Database View", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                OutlinedTextField(
+                    value = viewName,
+                    onValueChange = { viewName = it },
+                    label = { Text("View Name") },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { showTypeDropdown = true },
                         modifier = Modifier.fillMaxWidth(),
-                    )
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Type: ${selectedType.name}", style = MaterialTheme.typography.bodyMedium)
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                        }
+                    }
 
-                    Text(
-                        text = "VIEW REPRESENTATION TYPE:",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    DropdownMenu(
+                        expanded = showTypeDropdown,
+                        onDismissRequest = { showTypeDropdown = false },
                     ) {
                         ViewType.entries.forEach { type ->
-                            val isSelected = selectedType == type
-                            Box(
-                                modifier = Modifier
-                                    .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                                    .clickable { selectedType = type }
-                                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                            ) {
-                                Text(
-                                    text = type.name,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = DotMatrixFontFamily,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
+                            DropdownMenuItem(
+                                text = { Text(type.name, style = MaterialTheme.typography.bodyMedium) },
+                                onClick = {
+                                    selectedType = type
+                                    showTypeDropdown = false
+                                },
+                            )
                         }
                     }
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (viewName.isNotBlank()) {
-                            onCreateView(viewName.trim(), selectedType)
-                            showCreateDialog = false
-                        }
-                    },
-                    shape = RoundedCornerShape(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                ) {
-                    Text("CREATE VIEW", fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = { showCreateDialog = false },
-                    shape = RoundedCornerShape(0.dp),
-                ) {
-                    Text("CANCEL", fontFamily = DotMatrixFontFamily)
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(0.dp),
-        )
-    }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (viewName.isNotBlank()) {
+                        onCreate(viewName.trim(), selectedType)
+                    }
+                },
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text("Create View")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(8.dp)) {
+                Text("Cancel")
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+    )
 }

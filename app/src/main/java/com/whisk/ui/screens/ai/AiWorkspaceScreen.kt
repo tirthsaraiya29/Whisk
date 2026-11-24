@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -61,6 +62,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
@@ -73,10 +75,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.AiProviderType
 import com.whisk.domain.model.AiRole
-import com.whisk.ui.components.CodeBlockView
 import com.whisk.ui.components.RenderMarkdownPreview
 import com.whisk.ui.components.WhiskTopBar
-import com.whisk.ui.theme.DotMatrixFontFamily
 import com.whisk.ui.theme.VercelMonoFontFamily
 import kotlinx.coroutines.launch
 
@@ -112,7 +112,6 @@ fun AiWorkspaceScreen(
     val listState = rememberLazyListState()
     val isUserDragging by listState.interactionSource.collectIsDraggedAsState()
 
-    // Detect if scroll position is at the very bottom (including item height)
     val isAtBottom by remember {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
@@ -127,7 +126,6 @@ fun AiWorkspaceScreen(
         }
     }
 
-    // Gesture-aware scroll state tracking
     LaunchedEffect(isUserDragging, isAtBottom) {
         if (isUserDragging && !isAtBottom) {
             userScrolledUp = true
@@ -147,7 +145,6 @@ fun AiWorkspaceScreen(
         }
     }
 
-    // Auto-scroll to absolute bottom of last message as new tokens arrive (only when user is not dragging up)
     val lastMessageContent = state.messages.lastOrNull()?.content ?: ""
     LaunchedEffect(state.messages.size, lastMessageContent.length) {
         if (state.messages.isNotEmpty() && !userScrolledUp && !isUserDragging) {
@@ -158,23 +155,23 @@ fun AiWorkspaceScreen(
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "WHISK // AI WORKSPACE",
-                subtitle = "${state.activeSessionTitle} // ${state.config.providerType.name}",
+                title = "AI Workspace",
+                subtitle = "${state.activeSessionTitle} • ${state.config.providerType.name}",
                 onMenuClick = onMenuClick,
                 actions = {
                     Box(
                         modifier = Modifier
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onStartNewSession()
                             }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                     ) {
                         Text(
-                            text = "+ NEW",
+                            text = "+ New Chat",
                             style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -221,7 +218,7 @@ fun AiWorkspaceScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -233,34 +230,32 @@ fun AiWorkspaceScreen(
                     },
                 ) {
                     Text(
-                        text = if (state.isVaultRagEnabled) "[*] VAULT RAG ACTIVE" else "[ ] RAG OFF",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
+                        text = if (state.isVaultRagEnabled) "✓ Vault RAG Active" else "Vault RAG Off",
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (state.isVaultRagEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    val scopes = listOf(null to "ALL", "note" to "NOTES", "project" to "PROJECTS", "repository" to "REPOS", "task" to "TASKS")
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val scopes = listOf(null to "All", "note" to "Notes", "project" to "Projects", "repository" to "Repos", "task" to "Tasks")
                     items(scopes) { (scopeType, label) ->
                         val isSelected = state.selectedSearchScopeTypeId == scopeType
                         Box(
                             modifier = Modifier
-                                .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onSetScopeType?.invoke(scopeType)
                                 }
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                         ) {
                             Text(
                                 text = label,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
-                                fontSize = 9.sp,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -272,25 +267,24 @@ fun AiWorkspaceScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                        .padding(8.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .padding(10.dp),
                 ) {
                     Text(
-                        text = "SOURCES CITED (${state.retrievedSources.size}):",
+                        text = "Sources cited (${state.retrievedSources.size}):",
                         style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 10.sp,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(state.retrievedSources) { cite ->
                             Box(
                                 modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
                                     .background(MaterialTheme.colorScheme.surface)
-                                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         onOpenNote(cite.sourceObjectId)
@@ -298,10 +292,8 @@ fun AiWorkspaceScreen(
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
                             ) {
                                 Text(
-                                    text = "[${cite.index}] ${cite.sourceTitle} > ${cite.headingPath}",
+                                    text = "${cite.sourceTitle} > ${cite.headingPath}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = VercelMonoFontFamily,
-                                    fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
                                 )
@@ -315,43 +307,43 @@ fun AiWorkspaceScreen(
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 items(AiProviderType.entries.toTypedArray()) { provider ->
                     val isSelected = state.config.providerType == provider
                     Box(
                         modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
                             .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
                             )
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onSwitchProvider(provider)
                             }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
                         Text(
                             text = provider.name,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
 
             // Active Context Banner
             if (activeNote != null) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                         .padding(10.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -359,22 +351,20 @@ fun AiWorkspaceScreen(
                             imageVector = Icons.Default.Description,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(16.dp),
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "CONTEXT // ${activeNote.title.uppercase()}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
+                            text = "Context: ${activeNote.title}",
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "${activeNote.body.length} CHARS • ~${state.contextPayload.estimateTokenCount()} TOKENS GROUNDED",
+                        text = "${activeNote.body.length} characters • ~${state.contextPayload.estimateTokenCount()} tokens grounded",
                         style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -385,7 +375,9 @@ fun AiWorkspaceScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(12.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -393,21 +385,19 @@ fun AiWorkspaceScreen(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(18.dp),
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "ON-DEVICE GEMMA 2B LITERTLM",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontFamily = DotMatrixFontFamily,
+                            text = "On-Device Gemma 2B LiteRTLM",
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                     Text(
-                        text = state.localStatus.statusText.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
+                        text = state.localStatus.statusText,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(vertical = 4.dp),
                     )
@@ -418,24 +408,23 @@ fun AiWorkspaceScreen(
                                 .fillMaxWidth()
                                 .padding(vertical = 6.dp),
                             color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surface,
                         )
                     } else {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(MaterialTheme.colorScheme.primary)
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     onDownloadModel()
                                 }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 10.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                text = "DOWNLOAD MODEL FROM HUGGING FACE",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
+                                text = "Download Model from Hugging Face",
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimary,
                             )
@@ -448,26 +437,26 @@ fun AiWorkspaceScreen(
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 listOf(
-                    "SUMMARIZE NOTE" to "Summarize active note into key bullet points",
-                    "EXPLAIN CODE" to "Explain code snippets in active note and suggest optimizations",
-                    "EXTRACT TODOS" to "Extract TODO tasks from active note context",
-                    "DRAFT DOCS" to "Draft architecture documentation for this module",
+                    "Summarize Note" to "Summarize active note into key bullet points",
+                    "Explain Code" to "Explain code snippets in active note and suggest optimizations",
+                    "Extract TODOs" to "Extract TODO tasks from active note context",
+                    "Draft Docs" to "Draft architecture documentation for this module",
                 ).forEach { (label, prompt) ->
                     item {
                         Box(
                             modifier = Modifier
-                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                                 .clickable { handleSendPrompt(prompt) }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
                             Text(
-                                text = "> $label",
+                                text = label,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
@@ -475,9 +464,9 @@ fun AiWorkspaceScreen(
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
 
-            // Messages History Viewport with Floating Scroll To Bottom Button
+            // Messages History Viewport
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -495,23 +484,22 @@ fun AiWorkspaceScreen(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(bottom = 12.dp)
+                                modifier = Modifier.size(36.dp)
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "WHISK AI ASSISTANT",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontFamily = DotMatrixFontFamily,
+                                text = "Whisk AI Assistant",
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = if (activeNote != null) {
-                                    "GROUNDED IN '${activeNote.title.uppercase()}'. ASK QUESTIONS, GENERATE CODE, OR REQUEST EDITS."
+                                    "Grounded in '${activeNote.title}'. Ask questions, generate code, or request edits."
                                 } else {
-                                    "SELECT A NOTE FROM VAULT OR ASK A GENERAL TECHNICAL QUESTION."
+                                    "Select a note from your vault or ask a general technical question."
                                 },
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
@@ -522,8 +510,8 @@ fun AiWorkspaceScreen(
                         state = listState,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.messages, key = { it.id }) { msg ->
                             val isUser = msg.role == AiRole.USER
@@ -533,33 +521,31 @@ fun AiWorkspaceScreen(
                             ) {
                                 Column(
                                     modifier = Modifier
-                                        .fillMaxWidth(0.95f)
-                                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                        .fillMaxWidth(0.92f)
+                                        .clip(RoundedCornerShape(16.dp))
                                         .background(
-                                            if (isUser) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
+                                            if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                                         )
-                                        .padding(10.dp)
+                                        .padding(14.dp)
                                 ) {
                                     Text(
-                                        text = if (isUser) "[YOU]" else "[WHISK_AI]",
+                                        text = if (isUser) "You" else "Whisk AI",
                                         style = MaterialTheme.typography.labelSmall,
-                                        fontFamily = DotMatrixFontFamily,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
-                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Spacer(modifier = Modifier.height(4.dp))
                                     if (isUser) {
                                         Text(
                                             text = msg.content.ifBlank { "..." },
                                             style = MaterialTheme.typography.bodyMedium,
-                                            fontFamily = VercelMonoFontFamily,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
                                     } else {
                                         RenderMarkdownPreview(
                                             body = msg.content.ifBlank { "..." },
                                             onLinkClick = { noteIdOrTitle -> onOpenNote(noteIdOrTitle) },
-                                        ) { _ -> }
+                                        )
                                     }
                                 }
                             }
@@ -578,8 +564,9 @@ fun AiWorkspaceScreen(
                 ) {
                     Box(
                         modifier = Modifier
+                            .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surface)
-                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape)
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 userScrolledUp = false
@@ -587,7 +574,7 @@ fun AiWorkspaceScreen(
                                     listState.animateScrollToItem(state.messages.size - 1)
                                 }
                             }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -595,13 +582,12 @@ fun AiWorkspaceScreen(
                                 imageVector = Icons.Default.ArrowDownward,
                                 contentDescription = "Scroll to Bottom",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "LATEST",
+                                text = "Latest",
                                 style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -610,13 +596,13 @@ fun AiWorkspaceScreen(
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
 
-            // Terminal Prompt Input Row Sticky Above Keyboard
+            // Prompt Input Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
@@ -624,20 +610,19 @@ fun AiWorkspaceScreen(
                     onValueChange = { inputText = it },
                     placeholder = {
                         Text(
-                            "> ASK WHISK AI...",
-                            fontFamily = DotMatrixFontFamily,
-                            fontSize = 12.sp,
+                            "Ask Whisk AI...",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = VercelMonoFontFamily),
+                    textStyle = MaterialTheme.typography.bodyMedium,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                     ),
-                    shape = RoundedCornerShape(0.dp),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.weight(1f),
                     singleLine = false,
                     maxLines = 4
@@ -645,10 +630,10 @@ fun AiWorkspaceScreen(
 
                 Box(
                     modifier = Modifier
-                        .padding(start = 6.dp)
+                        .padding(start = 8.dp)
                         .size(48.dp)
+                        .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
                         .clickable {
                             if (state.isGenerating) {
                                 onStopGeneration()
@@ -667,7 +652,6 @@ fun AiWorkspaceScreen(
                 }
             }
 
-            // Bottom Navigation Bar Spacing when Keyboard is Closed
             val density = LocalDensity.current
             val isKeyboardVisible = WindowInsets.ime.getBottom(density) > 0
             if (!isKeyboardVisible) {
@@ -685,7 +669,7 @@ fun AiWorkspaceScreen(
         ModalBottomSheet(
             onDismissRequest = { showHistorySheet = false },
             containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(0.dp)
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -698,59 +682,43 @@ fun AiWorkspaceScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "CHAT SESSIONS // [${state.historySessions.size}]",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontFamily = DotMatrixFontFamily,
+                        text = "Chat History (${state.historySessions.size})",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-
-                    Box(
-                        modifier = Modifier
-                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                showHistorySheet = false
-                                onStartNewSession()
-                            }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "+ NEW CHAT",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                    IconButton(onClick = { showHistorySheet = false }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Close",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
 
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 if (state.historySessions.isEmpty()) {
                     Text(
-                        text = "NO PREVIOUS CHAT SESSIONS SAVED IN HISTORY.",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = DotMatrixFontFamily,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 16.dp)
+                        text = "No saved chat sessions in history.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(state.historySessions, key = { it.id }) { session ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                                     .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        showHistorySheet = false
                                         onLoadSession(session)
+                                        showHistorySheet = false
                                     }
                                     .padding(12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -758,115 +726,33 @@ fun AiWorkspaceScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = session.title.uppercase(),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontFamily = DotMatrixFontFamily,
+                                        text = session.title,
+                                        style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = "${session.messages.size} MESSAGES",
+                                        text = "${session.messages.size} messages",
                                         style = MaterialTheme.typography.labelSmall,
-                                        fontFamily = DotMatrixFontFamily,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(top = 2.dp)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
-                                IconButton(
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        onDeleteSession(session.id)
-                                    },
-                                ) {
+                                IconButton(onClick = { onDeleteSession(session.id) }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete Session",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(16.dp)
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
                         }
                     }
                 }
-            }
-        }
-    }
-
-    // AI Edit Preview Sheet
-    if (state.generatedEditPreview != null) {
-        val editContent = state.generatedEditPreview
-        ModalBottomSheet(
-            onDismissRequest = onDismissEdit,
-            containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(0.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    text = "REVIEW PROPOSED EDIT",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontFamily = DotMatrixFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "APPLY GENERATED CONTENT TO '${activeNote?.title?.uppercase() ?: "NOTE"}'",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-                )
-
-                CodeBlockView(code = editContent, language = "markdown")
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .clickable { onDismissEdit() }
-                            .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "DISMISS",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .clickable { onApplyEdit(editContent) }
-                            .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "APPLY EDIT",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }

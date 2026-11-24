@@ -27,11 +27,11 @@ class BrutalistNavigationTest {
         assertEquals("ai", NavDestination.AI.route)
         assertEquals("settings", NavDestination.Settings.route)
 
-        assertEquals("VAULT", NavDestination.Notes.label)
-        assertEquals("SEARCH", NavDestination.Search.label)
-        assertEquals("GRAPH", NavDestination.Graph.label)
-        assertEquals("AI", NavDestination.AI.label)
-        assertEquals("SETTINGS", NavDestination.Settings.label)
+        assertEquals("Vault", NavDestination.Notes.label)
+        assertEquals("Search", NavDestination.Search.label)
+        assertEquals("Graph", NavDestination.Graph.label)
+        assertEquals("AI Assistant", NavDestination.AI.label)
+        assertEquals("Settings", NavDestination.Settings.label)
     }
 
     @Test

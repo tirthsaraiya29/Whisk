@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,18 +39,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.Note
 import com.whisk.ui.components.MarkdownEditor
 import com.whisk.ui.components.WhiskTopBar
-import com.whisk.ui.theme.DotMatrixFontFamily
-import com.whisk.ui.theme.VercelMonoFontFamily
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,8 +75,8 @@ fun DailyNotesScreen(
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "DAILY WORKSPACE // ${state.dateKey}",
-                subtitle = if (state.isSaving) "SAVING..." else "CANONICAL DAILY NOTE",
+                title = "Daily Journal • ${state.dateKey}",
+                subtitle = if (state.isSaving) "Saving..." else "Canonical Daily Note",
                 onMenuClick = onMenuClick,
                 actions = {
                     IconButton(
@@ -106,8 +105,7 @@ fun DailyNotesScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -117,7 +115,7 @@ fun DailyNotesScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onPrevDay()
                         },
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(36.dp),
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -126,11 +124,12 @@ fun DailyNotesScreen(
                         )
                     }
 
-                    // Date Key Picker Display
+                    // Date Key Picker Display Pill
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(0.dp))
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .clickable {
                                 val cal = Calendar.getInstance()
                                 DatePickerDialog(
@@ -144,19 +143,18 @@ fun DailyNotesScreen(
                                     cal.get(Calendar.DAY_OF_MONTH),
                                 ).show()
                             }
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.CalendarToday,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(16.dp),
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = state.dateKey,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -167,7 +165,7 @@ fun DailyNotesScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onNextDay()
                         },
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(36.dp),
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -182,69 +180,66 @@ fun DailyNotesScreen(
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onGoToToday()
                     },
-                    shape = RoundedCornerShape(0.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = "TODAY",
-                        fontFamily = DotMatrixFontFamily,
-                        fontSize = 10.sp,
+                        text = "Today",
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                     )
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
 
             // AI Copilot Suggestion Banner
             state.aiSuggestion?.let { suggestion ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp)
-                        .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp)),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(2.dp),
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    shape = RoundedCornerShape(12.dp),
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "AI DAILY REFLECTION SUGGESTION",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
+                                text = "AI Daily Reflection Suggestion",
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary,
                             )
-                            IconButton(onClick = onDismissAiSuggestion, modifier = Modifier.size(20.dp)) {
+                            IconButton(onClick = onDismissAiSuggestion, modifier = Modifier.size(24.dp)) {
                                 Icon(Icons.Default.Close, contentDescription = "Dismiss")
                             }
                         }
 
                         Text(
                             text = suggestion,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontFamily = VercelMonoFontFamily,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(vertical = 8.dp),
                         )
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(
                                 onClick = onApplyAiSuggestion,
-                                shape = RoundedCornerShape(0.dp),
+                                shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             ) {
-                                Text("APPEND TO JOURNAL", fontFamily = DotMatrixFontFamily, fontSize = 10.sp)
+                                Text("Append to Journal", style = MaterialTheme.typography.labelSmall)
                             }
                             OutlinedButton(
                                 onClick = onDismissAiSuggestion,
-                                shape = RoundedCornerShape(0.dp),
+                                shape = RoundedCornerShape(8.dp),
                             ) {
-                                Text("DISMISS", fontFamily = DotMatrixFontFamily, fontSize = 10.sp)
+                                Text("Dismiss", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -256,14 +251,15 @@ fun DailyNotesScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                        .padding(12.dp),
                 ) {
                     if (state.tasksToday.isNotEmpty()) {
                         Text(
-                            text = "TODAY'S TASKS (${state.tasksToday.count { it.isCompleted }}/${state.tasksToday.size})",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
+                            text = "Today's Tasks (${state.tasksToday.count { it.isCompleted }}/${state.tasksToday.size})",
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -281,8 +277,8 @@ fun DailyNotesScreen(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = task.title,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontFamily = VercelMonoFontFamily,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
@@ -291,26 +287,22 @@ fun DailyNotesScreen(
                     if (state.activityEvents.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "ACTIVITY LOG (${state.activityEvents.size} EVENTS)",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = DotMatrixFontFamily,
+                            text = "Activity Log (${state.activityEvents.size} events)",
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFD97706),
                         )
                         state.activityEvents.take(2).forEach { event ->
                             Text(
-                                text = "• ${event.eventType.displayName}: ${event.relatedObjectTitle ?: event.metadata ?: ""}",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontFamily = DotMatrixFontFamily,
+                                text = "• ${event.eventType.name}: ${event.relatedObjectTitle ?: ""}",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
                 }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
             }
 
-            // Daily Journal Editor
             MarkdownEditor(
                 title = note.title,
                 onTitleChange = { newTitle -> onUpdateJournal(newTitle, note.body) },

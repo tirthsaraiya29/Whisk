@@ -1,15 +1,16 @@
 package com.whisk.ui.screens.types
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,6 +25,8 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -31,7 +34,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,17 +43,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.whisk.data.repository.CustomTypeDeleteAction
 import com.whisk.domain.model.BuiltInObjectTypes
 import com.whisk.domain.model.ObjectTypeDefinition
 import com.whisk.ui.components.WhiskTopBar
 import com.whisk.ui.components.getIconForObjectType
-import com.whisk.ui.theme.DotMatrixFontFamily
 
 @Composable
 fun ObjectTypeManagementScreen(
@@ -69,8 +70,8 @@ fun ObjectTypeManagementScreen(
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "OBJECT TYPES // REGISTRY",
-                subtitle = "BUILT-IN & CUSTOM KNOWLEDGE SCHEMAS",
+                title = "Object Types Registry",
+                subtitle = "Built-in & Custom Knowledge Schemas",
                 onBackClick = onBackClick,
                 actions = {
                     IconButton(
@@ -96,79 +97,85 @@ fun ObjectTypeManagementScreen(
                 .background(MaterialTheme.colorScheme.background),
         ) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(state.objectTypes, key = { it.id }) { typeDef ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     ) {
                         Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Icon(
-                                imageVector = getIconForObjectType(typeDef.id),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = typeDef.name.uppercase(),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontFamily = DotMatrixFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = if (typeDef.isBuiltIn) "[BUILT-IN]" else "[CUSTOM]",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontFamily = DotMatrixFontFamily,
-                                        fontSize = 10.sp,
-                                        color = if (typeDef.isBuiltIn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                                    )
-                                }
-                                if (!typeDef.description.isNullOrBlank()) {
-                                    Text(
-                                        text = typeDef.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontFamily = DotMatrixFontFamily,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
-
-                        if (typeDef.isBuiltIn) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Protected",
-                                tint = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        } else {
-                            IconButton(
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onOpenDeleteConfirmation(typeDef)
-                                },
-                                modifier = Modifier.size(24.dp),
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f),
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete Custom Type",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    imageVector = getIconForObjectType(typeDef.id),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = typeDef.name,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    if (typeDef.isBuiltIn) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                                )
+                                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                                        ) {
+                                            Text(
+                                                text = if (typeDef.isBuiltIn) "Built-in" else "Custom",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (typeDef.isBuiltIn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                                            )
+                                        }
+                                    }
+                                    if (!typeDef.description.isNullOrBlank()) {
+                                        Text(
+                                            text = typeDef.description,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(top = 2.dp),
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (!typeDef.isBuiltIn) {
+                                IconButton(onClick = { onOpenDeleteConfirmation(typeDef) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete Custom Type",
+                                        tint = MaterialTheme.colorScheme.error,
+                                    )
+                                }
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = "Built-in Locked",
+                                    tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(18.dp),
                                 )
                             }
                         }
@@ -178,43 +185,42 @@ fun ObjectTypeManagementScreen(
         }
     }
 
-    // Create Custom Type Dialog
     if (state.showCreateDialog) {
-        CreateCustomTypeDialog(
+        CreateObjectTypeDialog(
             onDismiss = onCloseCreateDialog,
             onCreate = { name, icon, desc ->
                 onCreateCustomType(name, icon, desc)
+                onCloseCreateDialog()
             },
         )
     }
 
-    // Delete Custom Type Confirmation Dialog
-    val deleteType = state.selectedTypeForDelete
-    if (deleteType != null) {
-        DeleteCustomTypeDialog(
-            typeDef = deleteType,
-            availableTypes = state.objectTypes.filter { it.id != deleteType.id },
+    if (state.selectedTypeForDelete != null) {
+        val typeDef = state.selectedTypeForDelete
+        DeleteObjectTypeDialog(
+            typeDef = typeDef,
+            allTypes = state.objectTypes,
             onDismiss = onCloseDeleteConfirmation,
-            onConfirmDelete = { action, reassignId ->
-                onDeleteCustomType(deleteType.id, action, reassignId)
+            onConfirm = { action, reassignTypeId ->
+                onDeleteCustomType(typeDef.id, action, reassignTypeId)
+                onCloseDeleteConfirmation()
             },
         )
     }
 }
 
 @Composable
-private fun CreateCustomTypeDialog(
+private fun CreateObjectTypeDialog(
     onDismiss: () -> Unit,
     onCreate: (name: String, icon: String, description: String?) -> Unit,
 ) {
     var nameText by remember { mutableStateOf("") }
+    var iconText by remember { mutableStateOf("description") }
     var descText by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text("CREATE CUSTOM OBJECT TYPE", fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
-        },
+        title = { Text("New Custom Object Type", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -223,17 +229,17 @@ private fun CreateCustomTypeDialog(
                 OutlinedTextField(
                     value = nameText,
                     onValueChange = { nameText = it },
-                    label = { Text("Type Name (e.g. Movies, Research Papers)", fontFamily = DotMatrixFontFamily) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary),
+                    label = { Text("Type Name") },
+                    shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
                 )
 
                 OutlinedTextField(
                     value = descText,
                     onValueChange = { descText = it },
-                    label = { Text("Description", fontFamily = DotMatrixFontFamily) },
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary),
+                    label = { Text("Description (Optional)") },
+                    shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -242,145 +248,143 @@ private fun CreateCustomTypeDialog(
             Button(
                 onClick = {
                     if (nameText.isNotBlank()) {
-                        onCreate(nameText.trim(), "description", descText.ifBlank { null })
+                        onCreate(nameText.trim(), iconText.ifBlank { "description" }, descText.ifBlank { null })
                     }
                 },
-                enabled = nameText.isNotBlank(),
-                shape = RoundedCornerShape(0.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(8.dp),
             ) {
-                Text("CREATE TYPE", fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
+                Text("Create")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(0.dp)) {
-                Text("CANCEL", fontFamily = DotMatrixFontFamily)
+            OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(8.dp)) {
+                Text("Cancel")
             }
         },
-        containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(0.dp),
+        shape = RoundedCornerShape(16.dp),
     )
 }
 
 @Composable
-private fun DeleteCustomTypeDialog(
+private fun DeleteObjectTypeDialog(
     typeDef: ObjectTypeDefinition,
-    availableTypes: List<ObjectTypeDefinition>,
+    allTypes: List<ObjectTypeDefinition>,
     onDismiss: () -> Unit,
-    onConfirmDelete: (CustomTypeDeleteAction, String?) -> Unit,
+    onConfirm: (action: CustomTypeDeleteAction, reassignTypeId: String?) -> Unit,
 ) {
     var selectedAction by remember { mutableStateOf(CustomTypeDeleteAction.CONVERT_TO_NOTES) }
-    var selectedReassignType by remember { mutableStateOf(BuiltInObjectTypes.NOTE) }
-    var expandedMenu by remember { mutableStateOf(false) }
+    var selectedReassignType by remember { mutableStateOf(allTypes.firstOrNull { it.id == BuiltInObjectTypes.NOTE } ?: allTypes.firstOrNull()) }
+    var showReassignDropdown by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text("DELETE TYPE: ${typeDef.name.uppercase()}", fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
-        },
+        title = { Text("Delete Custom Type '${typeDef.name}'", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(
-                    text = "DECIDE WHAT HAPPENS TO EXISTING OBJECTS OF THIS TYPE:",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = DotMatrixFontFamily,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Text("Choose action for existing objects assigned to this type:", style = MaterialTheme.typography.bodyMedium)
 
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, if (selectedAction == CustomTypeDeleteAction.CONVERT_TO_NOTES) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .clickable { selectedAction = CustomTypeDeleteAction.CONVERT_TO_NOTES }
-                            .padding(8.dp),
-                    ) {
-                        Text("1. Convert objects to Notes", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.bodySmall)
-                    }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { selectedAction = CustomTypeDeleteAction.CONVERT_TO_NOTES }
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = if (selectedAction == CustomTypeDeleteAction.CONVERT_TO_NOTES) "✓ Convert to standard notes" else "  Convert to standard notes",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (selectedAction == CustomTypeDeleteAction.CONVERT_TO_NOTES) FontWeight.Bold else FontWeight.Normal,
+                    )
+                }
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, if (selectedAction == CustomTypeDeleteAction.REASSIGN_TYPE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .clickable { selectedAction = CustomTypeDeleteAction.REASSIGN_TYPE }
-                            .padding(8.dp),
-                    ) {
-                        Text("2. Reassign to another type", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.bodySmall)
-                    }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { selectedAction = CustomTypeDeleteAction.REASSIGN_TYPE }
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = if (selectedAction == CustomTypeDeleteAction.REASSIGN_TYPE) "✓ Reassign to type" else "  Reassign to type",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (selectedAction == CustomTypeDeleteAction.REASSIGN_TYPE) FontWeight.Bold else FontWeight.Normal,
+                    )
+                }
 
-                    if (selectedAction == CustomTypeDeleteAction.REASSIGN_TYPE) {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            OutlinedTextField(
-                                value = availableTypes.find { it.id == selectedReassignType }?.name ?: "Notes",
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Target Type", fontFamily = DotMatrixFontFamily) },
-                                trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { expandedMenu = true },
-                            )
-
-                            DropdownMenu(
-                                expanded = expandedMenu,
-                                onDismissRequest = { expandedMenu = false },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                if (selectedAction == CustomTypeDeleteAction.REASSIGN_TYPE) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { showReassignDropdown = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                availableTypes.forEach { t ->
-                                    DropdownMenuItem(
-                                        text = { Text(t.name, fontFamily = DotMatrixFontFamily) },
-                                        onClick = {
-                                            selectedReassignType = t.id
-                                            expandedMenu = false
-                                        },
-                                    )
-                                }
+                                Text(selectedReassignType?.name ?: "Select Type", style = MaterialTheme.typography.bodyMedium)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showReassignDropdown,
+                            onDismissRequest = { showReassignDropdown = false },
+                        ) {
+                            allTypes.filter { it.id != typeDef.id }.forEach { target ->
+                                DropdownMenuItem(
+                                    text = { Text(target.name, style = MaterialTheme.typography.bodyMedium) },
+                                    onClick = {
+                                        selectedReassignType = target
+                                        showReassignDropdown = false
+                                    },
+                                )
                             }
                         }
                     }
+                }
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, if (selectedAction == CustomTypeDeleteAction.ARCHIVE_OBJECTS) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .clickable { selectedAction = CustomTypeDeleteAction.ARCHIVE_OBJECTS }
-                            .padding(8.dp),
-                    ) {
-                        Text("3. Archive objects", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.bodySmall)
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, if (selectedAction == CustomTypeDeleteAction.DELETE_OBJECTS) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline, RoundedCornerShape(0.dp))
-                            .clickable { selectedAction = CustomTypeDeleteAction.DELETE_OBJECTS }
-                            .padding(8.dp),
-                    ) {
-                        Text("4. Delete objects", fontFamily = DotMatrixFontFamily, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                    }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { selectedAction = CustomTypeDeleteAction.DELETE_OBJECTS }
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = if (selectedAction == CustomTypeDeleteAction.DELETE_OBJECTS) "✓ Delete all objects" else "  Delete all objects",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = if (selectedAction == CustomTypeDeleteAction.DELETE_OBJECTS) FontWeight.Bold else FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    onConfirmDelete(selectedAction, selectedReassignType)
+                    onConfirm(selectedAction, selectedReassignType?.id)
                 },
-                shape = RoundedCornerShape(0.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedAction == CustomTypeDeleteAction.DELETE_OBJECTS) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                ),
+                shape = RoundedCornerShape(8.dp),
             ) {
-                Text("PROCEED", fontFamily = DotMatrixFontFamily, fontWeight = FontWeight.Bold)
+                Text("Confirm Delete")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(0.dp)) {
-                Text("CANCEL", fontFamily = DotMatrixFontFamily)
+            OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(8.dp)) {
+                Text("Cancel")
             }
         },
-        containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(0.dp),
+        shape = RoundedCornerShape(16.dp),
     )
 }

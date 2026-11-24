@@ -110,6 +110,14 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ---
 
+## Known Limitations
+
+1. **Biometric Hardware Requirement**: Devices without biometric hardware or configured PIN/pattern fall back to locked note status indicators until an authenticator is registered.
+2. **On-Device LLM Memory**: Running local Gemma 4 E2B models requires 1.5 GB free RAM and 1.5 GB storage space on device for GPU/CPU inference.
+3. **P2P Sync**: Peer-to-peer sync requires local Wi-Fi NSD discovery and explicit per-device pairing before note synchronization.
+
+---
+
 ## License
 
 Whisk is open-source software licensed under the [GPL-3.0 License](LICENSE).

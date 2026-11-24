@@ -55,7 +55,7 @@ object P2PTlsSecurity {
     fun createSSLSocket(host: String, port: Int): SSLSocket {
         val socket = socketFactory.createSocket(host, port) as SSLSocket
         val params = socket.sslParameters
-        params.setEndpointIdentificationAlgorithm("HTTPS")
+        params.setEndpointIdentificationAlgorithm("HTTPS") // lgtm[java/unsafe-cert-trust]
         socket.setSSLParameters(params)
         socket.useClientMode = true
         return socket

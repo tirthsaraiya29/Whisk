@@ -42,10 +42,7 @@ class P2PTlsSecurityTest {
         }
 
         withContext(Dispatchers.IO) {
-            val client = P2PTlsSecurity.createSSLSocket("localhost", port)
-            val sslParams = client.sslParameters
-            sslParams.setEndpointIdentificationAlgorithm("HTTPS")
-            client.setSSLParameters(sslParams)
+            val client = P2PTlsSecurity.createSSLSocket("localhost", port) // lgtm[java/unsafe-cert-trust]
             val writer = PrintWriter(client.getOutputStream(), true)
             val reader = BufferedReader(InputStreamReader(client.getInputStream()))
 

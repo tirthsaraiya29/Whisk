@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout full repository history
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
@@ -23,7 +23,7 @@ jobs:
         run: git fetch --all --tags --prune
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@42374261723dbe46f17388b32e0c9504988bdb08 # v5.4.0
         with:
           python-version: "3.12"
 
@@ -318,7 +318,7 @@ jobs:
           PY
 
       - name: Upload analytics reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4beb437bd9807152295ce06573c6565074ff3666 # v4.6.1
         with:
           name: whisk-git-analytics
           path: reports/

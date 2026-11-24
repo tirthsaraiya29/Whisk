@@ -180,10 +180,15 @@ fun MermaidDiagramView(
                         val webView = WebView(ctx)
                         val webSettings = webView.settings
 
+                        @Suppress("DEPRECATION")
                         @android.annotation.SuppressLint("SetJavaScriptEnabled")
-                        webSettings.javaScriptEnabled = true
+                        webSettings.javaScriptEnabled = true // lgtm[java/android/websettings-javascript-enabled] Offline Mermaid.js diagram rendering in sandboxed WebView
                         webSettings.allowContentAccess = false
                         webSettings.allowFileAccess = false
+                        @Suppress("DEPRECATION")
+                        webSettings.allowFileAccessFromFileURLs = false
+                        @Suppress("DEPRECATION")
+                        webSettings.allowUniversalAccessFromFileURLs = false
                         webSettings.domStorageEnabled = true
                         webSettings.loadWithOverviewMode = true
                         webSettings.useWideViewPort = true

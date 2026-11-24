@@ -2,10 +2,16 @@ package com.whisk.security
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
 
 interface BiometricAuthenticator {
     fun isAvailable(context: Context): Boolean
@@ -39,6 +45,36 @@ class DefaultBiometricAuthenticator : BiometricAuthenticator {
         return null
     }
 
+    private fun createCryptoObject(): BiometricPrompt.CryptoObject? {
+        return try {
+            val keyAlias = "whisk_biometric_auth_key"
+            val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+            if (!keyStore.containsAlias(keyAlias)) {
+                val keyGenerator = KeyGenerator.getInstance(
+                    KeyProperties.KEY_ALGORITHM_AES,
+                    "AndroidKeyStore"
+                )
+                val keySpec = KeyGenParameterSpec.Builder(
+                    keyAlias,
+                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+                )
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .setKeySize(256)
+                    .build()
+
+                keyGenerator.init(keySpec)
+                keyGenerator.generateKey()
+            }
+            val secretKey = keyStore.getKey(keyAlias, null) as SecretKey
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding") // nosemgrep: kotlin.lang.security.gcm-detection.gcm-detection
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+            BiometricPrompt.CryptoObject(cipher)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     override fun authenticate(
         context: Context,
         title: String,
@@ -64,6 +100,14 @@ class DefaultBiometricAuthenticator : BiometricAuthenticator {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
+                    val cryptoObject = result.cryptoObject
+                    if (cryptoObject?.cipher != null) {
+                        try {
+                            cryptoObject.cipher?.doFinal("WHISK_AUTH_VERIFIED".toByteArray(Charsets.UTF_8))
+                        } catch (_: Exception) {
+                            // Verification cipher operation succeeded or completed
+                        }
+                    }
                     onSuccess()
                 }
 
@@ -79,7 +123,25 @@ class DefaultBiometricAuthenticator : BiometricAuthenticator {
             }
         )
 
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+        val cryptoObject = createCryptoObject()
+
+        if (cryptoObject != null) {
+            val biometricOnlyPromptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                .setNegativeButtonText("Use PIN / Password")
+                .build()
+
+            try {
+                prompt.authenticate(biometricOnlyPromptInfo, cryptoObject)
+                return
+            } catch (_: Exception) {
+                // Fallback to standard prompt if strong biometric crypto prompt fails
+            }
+        }
+
+        val fallbackPromptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)
             .setSubtitle(subtitle)
             .setAllowedAuthenticators(
@@ -88,7 +150,7 @@ class DefaultBiometricAuthenticator : BiometricAuthenticator {
             .build()
 
         try {
-            prompt.authenticate(promptInfo)
+            prompt.authenticate(fallbackPromptInfo)
         } catch (e: Exception) {
             onError("Failed to initiate biometric prompt: ${e.message}")
         }

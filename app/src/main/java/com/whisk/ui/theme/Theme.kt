@@ -47,54 +47,6 @@ private val LightColorScheme = lightColorScheme(
     onError = LightSurface,
 )
 
-// Cyberpunk Neon Scheme
-private val CyberpunkNeonColorScheme = darkColorScheme(
-    primary = CyberpunkNeonBorder,
-    onPrimary = CyberpunkNeonSurface,
-    background = CyberpunkNeonSurface,
-    onBackground = TrueWhite,
-    surface = CyberpunkNeonSurface,
-    onSurface = TrueWhite,
-    surfaceVariant = CyberpunkNeonSurfaceVariant,
-    onSurfaceVariant = CyberpunkNeonBorder.copy(alpha = 0.8f),
-    outline = CyberpunkNeonBorder.copy(alpha = 0.5f),
-    outlineVariant = CyberpunkNeonBorder,
-    error = CyberpunkNeonAccent,
-    onError = TrueWhite,
-)
-
-// Amber Terminal Scheme
-private val AmberTerminalColorScheme = darkColorScheme(
-    primary = AmberTerminalAccent,
-    onPrimary = AmberTerminalSurface,
-    background = AmberTerminalSurface,
-    onBackground = AmberTerminalAccent,
-    surface = AmberTerminalSurface,
-    onSurface = AmberTerminalAccent,
-    surfaceVariant = AmberTerminalSurfaceVariant,
-    onSurfaceVariant = AmberTerminalAccent.copy(alpha = 0.8f),
-    outline = AmberTerminalBorder.copy(alpha = 0.4f),
-    outlineVariant = AmberTerminalBorder,
-    error = NothingRed,
-    onError = AmberTerminalSurface,
-)
-
-// Monokai Pro Scheme
-private val MonokaiColorScheme = darkColorScheme(
-    primary = MonokaiAccent,
-    onPrimary = MonokaiSurface,
-    background = MonokaiSurface,
-    onBackground = TrueWhite,
-    surface = MonokaiSurface,
-    onSurface = TrueWhite,
-    surfaceVariant = MonokaiSurfaceVariant,
-    onSurfaceVariant = TrueWhite.copy(alpha = 0.8f),
-    outline = MonokaiBorder,
-    outlineVariant = MonokaiAccent,
-    error = NothingRed,
-    onError = TrueWhite,
-)
-
 @Composable
 fun WhiskTheme(
     themeMode: String = "SYSTEM",
@@ -104,18 +56,11 @@ fun WhiskTheme(
     val systemDark = isSystemInDarkTheme()
     val isDark = when (themeMode) {
         "LIGHT" -> false
-        "DARK", "CYBERPUNK", "AMBER_TERMINAL", "MONOKAI", "NORDIC" -> true
+        "DARK" -> true
         else -> systemDark
     }
 
-    val baseColorScheme = when (themeMode) {
-        "LIGHT" -> LightColorScheme
-        "CYBERPUNK" -> CyberpunkNeonColorScheme
-        "AMBER_TERMINAL" -> AmberTerminalColorScheme
-        "MONOKAI" -> MonokaiColorScheme
-        "DARK" -> DarkColorScheme
-        else -> if (systemDark) DarkColorScheme else LightColorScheme
-    }
+    val baseColorScheme = if (isDark) DarkColorScheme else LightColorScheme
 
     val colorScheme = if (!accentColor.isNullOrBlank()) {
         val accent = try {

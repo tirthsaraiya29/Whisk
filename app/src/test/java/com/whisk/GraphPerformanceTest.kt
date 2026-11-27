@@ -20,6 +20,7 @@ class FakeNoteDaoForGraph(private val notes: List<NoteEntity>) : NoteDao {
     override fun getFavoriteNotes(): Flow<List<NoteEntity>> = flowOf(emptyList())
     override fun getArchivedNotes(): Flow<List<NoteEntity>> = flowOf(emptyList())
     override fun getNotesByFolder(folder: String): Flow<List<NoteEntity>> = flowOf(emptyList())
+    override fun getAllNotesByVaultId(vaultId: String): Flow<List<NoteEntity>> = flowOf(notes.filter { note -> note.vaultId == null || note.vaultId == vaultId })
     override fun getNotesByTypeId(typeId: String): Flow<List<NoteEntity>> = flowOf(emptyList())
     override suspend fun getNoteById(id: String): NoteEntity? = notes.find { it.id == id }
     override suspend fun getNoteByTitle(title: String): NoteEntity? = notes.find { it.title == title }

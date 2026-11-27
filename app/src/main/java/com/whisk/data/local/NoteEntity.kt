@@ -35,6 +35,7 @@ data class NoteEntity(
     @ColumnInfo(defaultValue = "0") val isPinned: Boolean = false,
     @ColumnInfo(defaultValue = "NULL") val deletedAt: Long? = null,
     @ColumnInfo(defaultValue = "NULL") val accentColor: String? = null,
+    val vaultId: String? = null,
     @ColumnInfo(defaultValue = "0") val isLocked: Boolean = false,
 ) {
     fun toDomain(): Note {

@@ -80,6 +80,7 @@ class FakeNoteDao : NoteDao {
     override fun getNotesByFolder(folder: String): Flow<List<NoteEntity>> = _notes.map { list -> list.filter { it.folder == folder } }
     override fun searchNotes(query: String): Flow<List<NoteEntity>> = _notes
     override fun searchNotesFts(query: String): Flow<List<NoteEntity>> = _notes
+    override fun getAllNotesByVaultId(vaultId: String): Flow<List<NoteEntity>> = _notes.map { list -> list.filter { note -> note.vaultId == null || note.vaultId == vaultId } }
     override suspend fun insertNote(note: NoteEntity) {
         _notes.value = _notes.value.filter { it.id != note.id } + note
     }

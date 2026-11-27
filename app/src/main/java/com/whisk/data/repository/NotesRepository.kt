@@ -31,10 +31,10 @@ class NotesRepository(
     private val taskDao: TaskDao,
     private val vectorRepository: VectorRepository? = null,
     private val indexingRepository: IndexingRepository? = null,
-    private val taskSchedulerManager: com.whisk.tasks.TaskSchedulerManager? = null,
+    private val taskSchedulerManager: com.whisk.tasks.TaskSchedulerManager? = null, private val activeVaultId: String = "vault_personal",
 ) {
 
-    val allNotes: Flow<List<Note>> = noteDao.getAllNotes().map { entities ->
+    val allNotes: Flow<List<Note>> = noteDao.getAllNotesByVaultId(activeVaultId).map { entities ->
         entities.map { it.toDomain() }
     }
 

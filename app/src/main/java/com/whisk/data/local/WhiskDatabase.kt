@@ -34,7 +34,7 @@ import com.whisk.data.local.rag.IndexingStateEntity
         EmbeddingVectorEntity::class,
         IndexingStateEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = false,
 )
 abstract class WhiskDatabase : RoomDatabase() {

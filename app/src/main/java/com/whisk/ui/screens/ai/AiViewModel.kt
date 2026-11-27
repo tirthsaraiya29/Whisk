@@ -224,6 +224,16 @@ class AiViewModel(
         _isVaultRagEnabled.value = enabled
     }
 
+    fun generateMermaidDiagram(prompt: String): String {
+        // TODO: Call RemoteAiManager to generate mermaid diagram
+        // For now, return a simple placeholder
+        return """
+            graph TD
+                A[Start] --> B[Mermaid Diagram]
+                B --> C[End]
+        """.trimIndent()
+    }
+
     fun setSearchScope(typeId: String?) {
         _selectedSearchScopeTypeId.value = typeId
     }

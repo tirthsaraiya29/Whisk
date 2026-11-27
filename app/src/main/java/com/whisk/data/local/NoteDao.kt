@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
+    @Query("SELECT * FROM notes WHERE vaultId = :vaultId AND isArchived = 0 AND deletedAt IS NULL ORDER BY isPinned DESC, updatedAt DESC")
+    fun getAllNotesByVaultId(vaultId: String): Flow<List<NoteEntity>>
+
     @Query("SELECT * FROM notes WHERE isArchived = 0 AND deletedAt IS NULL ORDER BY isPinned DESC, updatedAt DESC")
     fun getAllNotes(): Flow<List<NoteEntity>>
 

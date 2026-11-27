@@ -46,6 +46,7 @@ class KnowledgeAnalysisEngineTest {
             override fun getFavoriteNotes(): kotlinx.coroutines.flow.Flow<List<com.whisk.data.local.NoteEntity>> = kotlinx.coroutines.flow.emptyFlow()
             override fun getArchivedNotes(): kotlinx.coroutines.flow.Flow<List<com.whisk.data.local.NoteEntity>> = kotlinx.coroutines.flow.emptyFlow()
             override fun getNotesByFolder(folder: String): kotlinx.coroutines.flow.Flow<List<com.whisk.data.local.NoteEntity>> = kotlinx.coroutines.flow.emptyFlow()
+    override fun getAllNotesByVaultId(vaultId: String): kotlinx.coroutines.flow.Flow<List<com.whisk.data.local.NoteEntity>> = kotlinx.coroutines.flow.emptyFlow()
             override fun searchNotes(query: String): kotlinx.coroutines.flow.Flow<List<com.whisk.data.local.NoteEntity>> = kotlinx.coroutines.flow.emptyFlow()
             override fun searchNotesFts(query: String): kotlinx.coroutines.flow.Flow<List<com.whisk.data.local.NoteEntity>> = kotlinx.coroutines.flow.emptyFlow()
             override suspend fun insertNote(note: com.whisk.data.local.NoteEntity) {}

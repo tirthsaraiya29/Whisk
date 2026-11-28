@@ -1,3 +1,4 @@
+IMPLEMENTATION_PLAN.md
 *.iml
 .gradle
 /local.properties
@@ -16,6 +17,8 @@ local.properties
 # Build outputs
 **/build/
 **/.gradle/
-
+app/release
+kotlin/
+unsloth-tmp/
 # Release artifacts
-app/release/**
+app/release/**unsloth-tmp/

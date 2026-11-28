@@ -3,6 +3,7 @@ package com.whisk.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,14 +21,25 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.NoteAdd
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.UnfoldLess
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +49,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,14 +66,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.Note
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.runtime.collectAsState
 import com.whisk.vault.EnhancedMultiVaultManager
 
 /**
- * Modern Sleek Sidebar Drawer.
- * Clean vault organization, folder hierarchy, search filtering, and quick navigation actions.
+ * Obsidian-grade File Explorer Drawer.
+ * Clean vault organization, expandable folder tree, quick action row, and vault status footer.
  */
 @Composable
 fun SidebarDrawer(
@@ -76,7 +86,8 @@ fun SidebarDrawer(
     val haptic = LocalHapticFeedback.current
     var filterQuery by remember { mutableStateOf("") }
     val expandedFolders = remember { mutableStateMapOf<String, Boolean>() }
-    
+    var showVaultDropdown by remember { mutableStateOf(false) }
+
     val vaults by multiVaultManager.vaults.collectAsState()
     val activeVault by multiVaultManager.activeVault.collectAsState()
 
@@ -90,12 +101,16 @@ fun SidebarDrawer(
         filteredNotes.groupBy { (it.folder ?: "").ifBlank { "Vault Root" } }
     }
 
+    val folderCount = remember(folderGroups) {
+        folderGroups.keys.filter { it != "Vault Root" }.size
+    }
+
     Surface(
         modifier = modifier
             .fillMaxHeight()
-            .fillMaxWidth(0.84f),
+            .fillMaxWidth(0.85f),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 4.dp,
+        tonalElevation = 2.dp,
     ) {
         Column(
             modifier = Modifier
@@ -103,112 +118,40 @@ fun SidebarDrawer(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-            // Drawer Header
+            // Header Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
+                    .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column {
-                    Text(
-                        text = "Whisk Vault",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = "${notes.size} notes stored",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(
+                    text = activeVault?.name ?: "Whisk Vault",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    IconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onNewNote()
-                            onCloseDrawer()
-                        },
-                        modifier = Modifier.size(36.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "New Note",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onCloseDrawer()
-                        },
-                        modifier = Modifier.size(36.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close Drawer",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-
-            // Vault Switcher Pills
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                vaults.forEach { vault ->
-                    val isSelected = activeVault?.id == vault.id
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .border(
-                                1.dp,
-                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                                RoundedCornerShape(8.dp),
-                            )
-                            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                multiVaultManager.switchVault(vault.id)
-                            }
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            text = vault.name,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                
                 IconButton(
                     onClick = {
-                        onNavigate("vaults")
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onCloseDrawer()
                     },
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(32.dp),
                 ) {
-                    Icon(Icons.Default.Settings, contentDescription = "Manage Vaults", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close Drawer",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Search Filter
+            // Quick Filter Input
             OutlinedTextField(
                 value = filterQuery,
                 onValueChange = { filterQuery = it },
@@ -222,18 +165,18 @@ fun SidebarDrawer(
                 textStyle = MaterialTheme.typography.bodyMedium,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                 ),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 singleLine = true,
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // File Tree List
+            // File Explorer Tree
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -249,19 +192,19 @@ fun SidebarDrawer(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(6.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         expandedFolders[folderName] = !isExpanded
                                     }
-                                    .padding(vertical = 8.dp, horizontal = 6.dp),
+                                    .padding(vertical = 6.dp, horizontal = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(
                                     imageVector = if (isExpanded) Icons.Default.FolderOpen else Icons.Default.Folder,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp),
+                                    modifier = Modifier.size(16.dp),
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
@@ -288,7 +231,7 @@ fun SidebarDrawer(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(start = if (isRoot) 0.dp else 16.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(6.dp))
                                     .background(
                                         if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                                     )
@@ -297,14 +240,14 @@ fun SidebarDrawer(
                                         onSelectNote(note.id)
                                         onCloseDrawer()
                                     }
-                                    .padding(vertical = 8.dp, horizontal = 10.dp),
+                                    .padding(vertical = 6.dp, horizontal = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.InsertDriveFile,
                                     contentDescription = null,
                                     tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(16.dp),
+                                    modifier = Modifier.size(15.dp),
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
@@ -321,76 +264,146 @@ fun SidebarDrawer(
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
 
-            // Quick Navigation Destinations Grid
+            // File Explorer Action Icons Bar (Obsidian Screenshot 4 Style)
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                DrawerIconButton(
-                    label = "Daily",
+                IconButton(
                     onClick = {
-                        onNavigate("daily_notes")
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onNewNote()
                         onCloseDrawer()
                     },
-                )
-                DrawerIconButton(
-                    label = "Views",
-                    onClick = {
-                        onNavigate("database_views")
-                        onCloseDrawer()
-                    },
-                )
-                DrawerIconButton(
-                    label = "Search",
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = "New Note", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                }
+
+                IconButton(
                     onClick = {
                         onNavigate("search")
                         onCloseDrawer()
                     },
-                )
-                DrawerIconButton(
-                    label = "Graph",
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = "Search Vault", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
+                }
+
+                IconButton(
                     onClick = {
                         onNavigate("graph")
                         onCloseDrawer()
                     },
-                )
-                DrawerIconButton(
-                    label = "Settings",
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(Icons.Default.Hub, contentDescription = "Knowledge Graph", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
+                }
+
+                IconButton(
+                    onClick = {
+                        onNavigate("daily_notes")
+                        onCloseDrawer()
+                    },
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(Icons.Default.CalendarToday, contentDescription = "Daily Log", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
+                }
+
+                IconButton(
+                    onClick = {
+                        expandedFolders.clear()
+                    },
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(Icons.Default.UnfoldLess, contentDescription = "Collapse All", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
+
+            // Active Vault Footer Bar (Obsidian Screenshot 4)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { showVaultDropdown = true }
+                            .padding(vertical = 4.dp, horizontal = 6.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Folder,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = activeVault?.name ?: "Vault",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                            Text(
+                                text = "${notes.size} files, $folderCount folders",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = showVaultDropdown,
+                        onDismissRequest = { showVaultDropdown = false },
+                    ) {
+                        vaults.forEach { vault ->
+                            DropdownMenuItem(
+                                text = { Text(vault.name, fontWeight = if (vault.id == activeVault?.id) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = {
+                                    showVaultDropdown = false
+                                    multiVaultManager.switchVault(vault.id)
+                                },
+                            )
+                        }
+                    }
+                }
+
+                IconButton(
                     onClick = {
                         onNavigate("settings")
                         onCloseDrawer()
                     },
-                )
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Vault Settings",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun DrawerIconButton(
-    label: String,
-    onClick: () -> Unit,
-) {
-    val haptic = LocalHapticFeedback.current
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onClick()
-            }
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-        )
     }
 }

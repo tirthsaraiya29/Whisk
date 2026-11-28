@@ -1,5 +1,6 @@
 package com.whisk.ui.screens.graph
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,8 +22,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -34,6 +40,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -76,7 +84,13 @@ fun KnowledgeGraphScreen(
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var nodeSearchQuery by remember { mutableStateOf("") }
-    var showPhysicsSheet by remember { mutableStateOf(false) }
+    var showGraphSettingsPopover by remember { mutableStateOf(false) }
+
+    // Obsidian Graph Settings Sections State
+    var showFiltersSection by remember { mutableStateOf(false) }
+    var showGroupsSection by remember { mutableStateOf(false) }
+    var showDisplaySection by remember { mutableStateOf(false) }
+    var showForcesSection by remember { mutableStateOf(false) }
 
     var kRepulsion by remember { mutableFloatStateOf(14000f) }
     var kAttraction by remember { mutableFloatStateOf(0.06f) }
@@ -85,7 +99,7 @@ fun KnowledgeGraphScreen(
     val nodeColorNote = MaterialTheme.colorScheme.primary
     val nodeColorTag = Color(0xFFD97706)
     val nodeColorProject = Color(0xFF8B5CF6)
-    val edgeColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+    val edgeColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
     val textColor = MaterialTheme.colorScheme.onBackground
 
     val textMeasurer = rememberTextMeasurer()
@@ -121,7 +135,7 @@ fun KnowledgeGraphScreen(
             posMap[node.id] = Offset(500f + (r * cos(theta)), 500f + (r * sin(theta)))
         }
 
-        val iterations = 45
+        val iterations = 40
         val edgeList = state.graph.edges.filter { e -> posMap.containsKey(e.sourceId) && posMap.containsKey(e.targetId) }
 
         repeat(iterations) {
@@ -171,15 +185,15 @@ fun KnowledgeGraphScreen(
     Scaffold(
         topBar = {
             WhiskTopBar(
-                title = "Knowledge Graph",
+                title = "Graph view",
                 subtitle = "${nodes.size} nodes • ${state.graph.edges.size} connections",
                 onMenuClick = onMenuClick,
                 actions = {
                     IconButton(onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        showPhysicsSheet = true
+                        showGraphSettingsPopover = !showGraphSettingsPopover
                     }) {
-                        Icon(Icons.Default.Tune, contentDescription = "Graph Physics Settings")
+                        Icon(Icons.Default.Tune, contentDescription = "Graph Settings Controls")
                     }
 
                     IconButton(onClick = {
@@ -194,148 +208,253 @@ fun KnowledgeGraphScreen(
             )
         },
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .imePadding()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            // Search Input
-            OutlinedTextField(
-                value = nodeSearchQuery,
-                onValueChange = { nodeSearchQuery = it },
-                placeholder = {
-                    Text(
-                        "Filter nodes...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                },
-                textStyle = MaterialTheme.typography.bodyMedium,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                ),
-                shape = RoundedCornerShape(12.dp),
+            // Dark Graph Canvas
+            Canvas(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                singleLine = true,
-            )
-
-            // Legend Status Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            val dampedZoom = 1f + (zoom - 1f) * 0.65f
+                            scale = (scale * dampedZoom).coerceIn(0.35f, 3.5f)
+                            offset += pan
+                        }
+                    }
+                    .pointerInput(nodes, nodePositions, scale, offset) {
+                        detectTapGestures { tapOffset ->
+                            var clickedNode: GraphNode? = null
+                            var closestDist = Float.MAX_VALUE
+                            nodes.forEach { node ->
+                                val rawPos = nodePositions[node.id] ?: return@forEach
+                                val canvasPos = (rawPos * scale) + offset
+                                val dist = (canvasPos - tapOffset).getDistance()
+                                val degree = nodeDegrees[node.id] ?: 1
+                                val radius = (12f + (degree * 3f)).coerceIn(10f, 26f) * scale
+                                val touchThreshold = maxOf(60f, radius + 25f)
+                                if (dist < touchThreshold && dist < closestDist) {
+                                    closestDist = dist
+                                    clickedNode = node
+                                }
+                            }
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onNodeSelect(clickedNode)
+                        }
+                    },
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(nodeColorNote))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Note", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+                state.graph.edges.forEach { (sourceId, targetId) ->
+                    val srcPos = nodePositions[sourceId]
+                    val tgtPos = nodePositions[targetId]
+                    if (srcPos != null && tgtPos != null) {
+                        val p1 = (srcPos * scale) + offset
+                        val p2 = (tgtPos * scale) + offset
+                        drawLine(
+                            color = edgeColor,
+                            start = p1,
+                            end = p2,
+                            strokeWidth = 1.5f * scale,
+                            cap = StrokeCap.Round,
+                        )
+                    }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(nodeColorTag))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Tag", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(nodeColorProject))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "Project", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+
+                nodes.forEach { node ->
+                    val rawPos = nodePositions[node.id] ?: return@forEach
+                    val center = (rawPos * scale) + offset
+                    val degree = nodeDegrees[node.id] ?: 1
+                    val radius = (12f + (degree * 3f)).coerceIn(10f, 26f) * scale
+                    val color = when {
+                        node.label.startsWith("#") || node.type == NodeType.TAG -> nodeColorTag
+                        node.label.contains("PROJECT", ignoreCase = true) -> nodeColorProject
+                        else -> nodeColorNote
+                    }
+
+                    drawCircle(
+                        color = color,
+                        radius = radius,
+                        center = center,
+                    )
+
+                    val textLayout = textMeasurer.measure(
+                        text = node.label,
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontSize = (12.sp.value * scale.coerceIn(0.8f, 1.4f)).sp,
+                            color = textColor,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    )
+                    drawText(
+                        textLayoutResult = textLayout,
+                        topLeft = Offset(
+                            center.x - (textLayout.size.width / 2f),
+                            center.y + radius + 4f,
+                        ),
+                    )
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 1.dp)
-
-            // Interactive Canvas Viewport
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
-            ) {
-                Canvas(
+            // Floating Obsidian Graph Settings Control Panel (Screenshot 2)
+            if (showGraphSettingsPopover) {
+                Card(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(Unit) {
-                            detectTransformGestures { _, pan, zoom, _ ->
-                                val dampedZoom = 1f + (zoom - 1f) * 0.65f
-                                scale = (scale * dampedZoom).coerceIn(0.35f, 3.5f)
-                                offset += pan
-                            }
-                        }
-                        .pointerInput(nodes, nodePositions, scale, offset) {
-                            detectTapGestures { tapOffset ->
-                                var clickedNode: GraphNode? = null
-                                var closestDist = Float.MAX_VALUE
-                                nodes.forEach { node ->
-                                    val rawPos = nodePositions[node.id] ?: return@forEach
-                                    val canvasPos = (rawPos * scale) + offset
-                                    val dist = (canvasPos - tapOffset).getDistance()
-                                    val degree = nodeDegrees[node.id] ?: 1
-                                    val radius = (12f + (degree * 3f)).coerceIn(10f, 26f) * scale
-                                    val touchThreshold = maxOf(60f, radius + 25f)
-                                    if (dist < touchThreshold && dist < closestDist) {
-                                        closestDist = dist
-                                        clickedNode = node
-                                    }
-                                }
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                onNodeSelect(clickedNode)
-                            }
-                        },
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .width(280.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 ) {
-                    state.graph.edges.forEach { (sourceId, targetId) ->
-                        val srcPos = nodePositions[sourceId]
-                        val tgtPos = nodePositions[targetId]
-                        if (srcPos != null && tgtPos != null) {
-                            val p1 = (srcPos * scale) + offset
-                            val p2 = (tgtPos * scale) + offset
-                            drawLine(
-                                color = edgeColor,
-                                start = p1,
-                                end = p2,
-                                strokeWidth = 1.5f * scale,
-                                cap = StrokeCap.Round,
-                            )
-                        }
-                    }
-
-                    nodes.forEach { node ->
-                        val rawPos = nodePositions[node.id] ?: return@forEach
-                        val center = (rawPos * scale) + offset
-                        val degree = nodeDegrees[node.id] ?: 1
-                        val radius = (12f + (degree * 3f)).coerceIn(10f, 26f) * scale
-                        val color = when {
-                            node.label.startsWith("#") || node.type == NodeType.TAG -> nodeColorTag
-                            node.label.contains("PROJECT", ignoreCase = true) -> nodeColorProject
-                            else -> nodeColorNote
-                        }
-
-                        drawCircle(
-                            color = color,
-                            radius = radius,
-                            center = center,
-                        )
-
-                        val textLayout = textMeasurer.measure(
-                            text = node.label,
-                            style = androidx.compose.ui.text.TextStyle(
-                                fontSize = (12.sp.value * scale.coerceIn(0.8f, 1.4f)).sp,
-                                color = textColor,
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Graph Controls",
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                            ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Row {
+                                IconButton(
+                                    onClick = {
+                                        scale = 1f
+                                        offset = Offset.Zero
+                                        onResetGraph()
+                                    },
+                                    modifier = Modifier.size(28.dp),
+                                ) {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Reset", modifier = Modifier.size(16.dp))
+                                }
+                                IconButton(
+                                    onClick = { showGraphSettingsPopover = false },
+                                    modifier = Modifier.size(28.dp),
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                            modifier = Modifier.padding(vertical = 8.dp),
                         )
-                        drawText(
-                            textLayoutResult = textLayout,
-                            topLeft = Offset(
-                                center.x - (textLayout.size.width / 2f),
-                                center.y + radius + 4f,
-                            ),
-                        )
+
+                        // 1. Filters Header Accordion
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { showFiltersSection = !showFiltersSection }
+                                .padding(vertical = 6.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("Filters", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Icon(if (showFiltersSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
+                        AnimatedVisibility(visible = showFiltersSection) {
+                            Column(modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)) {
+                                OutlinedTextField(
+                                    value = nodeSearchQuery,
+                                    onValueChange = { nodeSearchQuery = it },
+                                    placeholder = { Text("Filter nodes...", style = MaterialTheme.typography.bodySmall) },
+                                    textStyle = MaterialTheme.typography.bodySmall,
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text("Show Orphans", style = MaterialTheme.typography.bodySmall)
+                                    Switch(
+                                        checked = state.showOrphans,
+                                        onCheckedChange = { onToggleOrphans() },
+                                        modifier = Modifier.size(32.dp),
+                                    )
+                                }
+                            }
+                        }
+
+                        // 2. Groups Header Accordion
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { showGroupsSection = !showGroupsSection }
+                                .padding(vertical = 6.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("Groups", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Icon(if (showGroupsSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
+                        AnimatedVisibility(visible = showGroupsSection) {
+                            Text("Auto-grouped by #tags and note types.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(8.dp))
+                        }
+
+                        // 3. Display Header Accordion
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { showDisplaySection = !showDisplaySection }
+                                .padding(vertical = 6.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("Display", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Icon(if (showDisplaySection) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
+                        AnimatedVisibility(visible = showDisplaySection) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("Max Nodes: $maxNodesLimit", style = MaterialTheme.typography.bodySmall)
+                                Slider(
+                                    value = maxNodesLimit.toFloat(),
+                                    onValueChange = { maxNodesLimit = it.toInt() },
+                                    valueRange = 20f..200f,
+                                )
+                            }
+                        }
+
+                        // 4. Forces Header Accordion
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { showForcesSection = !showForcesSection }
+                                .padding(vertical = 6.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("Forces", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Icon(if (showForcesSection) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
+                        AnimatedVisibility(visible = showForcesSection) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Text("Repulsion: ${kRepulsion.toInt()}", style = MaterialTheme.typography.bodySmall)
+                                Slider(
+                                    value = kRepulsion,
+                                    onValueChange = { kRepulsion = it },
+                                    valueRange = 5000f..35000f,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -388,56 +507,6 @@ fun KnowledgeGraphScreen(
                         )
                     }
                 }
-            }
-        }
-    }
-
-    // Graph Physics & Performance Tuning Sheet
-    if (showPhysicsSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showPhysicsSheet = false },
-            containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-            ) {
-                Text(
-                    text = "Graph Physics & Layout Tuning",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Repulsion Force: ${kRepulsion.toInt()}",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Slider(
-                    value = kRepulsion,
-                    onValueChange = { kRepulsion = it },
-                    valueRange = 5000f..35000f,
-                    colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "Node Limit: $maxNodesLimit",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Slider(
-                    value = maxNodesLimit.toFloat(),
-                    onValueChange = { maxNodesLimit = it.toInt() },
-                    valueRange = 20f..200f,
-                    colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }

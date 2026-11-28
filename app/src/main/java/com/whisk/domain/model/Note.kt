@@ -24,6 +24,7 @@ data class Note(
     val deletedAt: Long? = null,
     val accentColor: String? = null,
     val isLocked: Boolean = false,
+    val vaultId: String? = null,
 )
 
 data class NoteLink(
@@ -45,6 +46,7 @@ data class Folder(
     val name: String,
     val parentId: String? = null,
     val noteCount: Int = 0,
+    val vaultId: String? = null,
 )
 
 data class Tag(

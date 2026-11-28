@@ -45,10 +45,13 @@ class CloudBackupWorker(
         var backupFile: File? = null
         try {
             val database = WhiskDatabase.getDatabase(applicationContext)
+            val prefsManager = com.whisk.data.local.PreferencesManager(applicationContext)
+            val multiVaultManager = com.whisk.vault.EnhancedMultiVaultManager(prefsManager)
             val notesRepository = NotesRepository(
                 noteDao = database.noteDao(),
                 folderDao = database.folderDao(),
-                taskDao = database.taskDao()
+                taskDao = database.taskDao(),
+                multiVaultManager = multiVaultManager
             )
             val exportRepo = ExportImportRepository(
                 context = applicationContext,

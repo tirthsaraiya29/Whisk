@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,7 +53,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.Note
-import com.whisk.ui.theme.VercelMonoFontFamily
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.collectAsState
+import com.whisk.vault.EnhancedMultiVaultManager
 
 /**
  * Modern Sleek Sidebar Drawer.
@@ -66,11 +70,15 @@ fun SidebarDrawer(
     onNewNote: () -> Unit,
     onNavigate: (String) -> Unit,
     onCloseDrawer: () -> Unit,
+    multiVaultManager: EnhancedMultiVaultManager,
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
     var filterQuery by remember { mutableStateOf("") }
     val expandedFolders = remember { mutableStateMapOf<String, Boolean>() }
+    
+    val vaults by multiVaultManager.vaults.collectAsState()
+    val activeVault by multiVaultManager.activeVault.collectAsState()
 
     val filteredNotes = remember(notes, filterQuery) {
         if (filterQuery.isBlank()) notes else notes.filter { note ->
@@ -97,9 +105,6 @@ fun SidebarDrawer(
                 .imePadding()
                 .padding(16.dp),
         ) {
-            var activeVaultName by remember { mutableStateOf("Personal") }
-            val vaultOptions = remember { listOf("Personal", "Work", "Research", "Code") }
-
             // Drawer Header
             Row(
                 modifier = Modifier
@@ -158,11 +163,13 @@ fun SidebarDrawer(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
+                    .padding(bottom = 12.dp)
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                vaultOptions.forEach { vault ->
-                    val isSelected = activeVaultName == vault
+                vaults.forEach { vault ->
+                    val isSelected = activeVault?.id == vault.id
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -174,17 +181,27 @@ fun SidebarDrawer(
                             .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                activeVaultName = vault
+                                multiVaultManager.switchVault(vault.id)
                             }
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
                         Text(
-                            text = vault,
+                            text = vault.name,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+                }
+                
+                IconButton(
+                    onClick = {
+                        onNavigate("vaults")
+                        onCloseDrawer()
+                    },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(Icons.Default.Settings, contentDescription = "Manage Vaults", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 

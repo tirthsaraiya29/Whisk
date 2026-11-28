@@ -84,7 +84,7 @@ import com.whisk.domain.model.Note
 import com.whisk.domain.model.NotePropertyItem
 import com.whisk.domain.model.PropertyDefinition
 import com.whisk.domain.model.PropertyType
-import com.whisk.ui.components.MarkdownEditor
+import com.whisk.ui.components.EnhancedMarkdownEditor
 import com.whisk.ui.components.WhiskTopBar
 import com.whisk.domain.model.RelationshipType
 import com.whisk.ui.components.RelationshipSection
@@ -522,7 +522,7 @@ fun NoteDetailScreen(
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
-            MarkdownEditor(
+            EnhancedMarkdownEditor(
                 title = note.title,
                 onTitleChange = { newTitle -> onTitleChange(newTitle, note.body) },
                 body = note.body,

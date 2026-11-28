@@ -33,6 +33,8 @@ open class PreferencesManager(private val context: Context) {
         val KEY_AI_HF_MODEL_URL = stringPreferencesKey("ai_hf_model_url")
         val KEY_AI_USE_GPU = booleanPreferencesKey("ai_use_gpu")
         val KEY_SAVED_AI_SESSIONS = stringPreferencesKey("saved_ai_sessions")
+        val KEY_SAVED_VAULTS_JSON = stringPreferencesKey("saved_vaults_json")
+        val KEY_ACTIVE_VAULT_ID = stringPreferencesKey("active_vault_id")
 
         val KEY_GITHUB_DEFAULT_REPO = stringPreferencesKey("github_default_repo")
         val KEY_MCP_ENDPOINT = stringPreferencesKey("mcp_endpoint")
@@ -177,6 +179,30 @@ open class PreferencesManager(private val context: Context) {
     open suspend fun saveAiSessionsJson(jsonStr: String) {
         context.dataStore.edit { prefs ->
             prefs[KEY_SAVED_AI_SESSIONS] = jsonStr
+        }
+    }
+    
+    val savedVaultsJson: Flow<String> by lazy {
+        context.dataStore.data.map { prefs ->
+            prefs[KEY_SAVED_VAULTS_JSON] ?: "[]"
+        }
+    }
+    
+    suspend fun saveVaultsJson(jsonStr: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SAVED_VAULTS_JSON] = jsonStr
+        }
+    }
+    
+    val activeVaultId: Flow<String> by lazy {
+        context.dataStore.data.map { prefs ->
+            prefs[KEY_ACTIVE_VAULT_ID] ?: "vault_personal"
+        }
+    }
+    
+    suspend fun saveActiveVaultId(vaultId: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_ACTIVE_VAULT_ID] = vaultId
         }
     }
 }

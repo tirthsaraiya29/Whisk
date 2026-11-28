@@ -60,6 +60,7 @@ data class NoteEntity(
             isPinned = isPinned,
             deletedAt = deletedAt,
             accentColor = accentColor,
+            vaultId = vaultId,
             isLocked = isLocked || tags.split(",").any { it.trim().equals("locked", true) || it.trim().equals("secret", true) },
         )
     }
@@ -87,6 +88,7 @@ data class NoteEntity(
                 isPinned = note.isPinned,
                 deletedAt = note.deletedAt,
                 accentColor = note.accentColor,
+                vaultId = note.vaultId,
                 isLocked = note.isLocked || note.tags.any { it.equals("locked", true) || it.equals("secret", true) },
             )
         }

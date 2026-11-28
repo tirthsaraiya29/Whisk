@@ -9,9 +9,10 @@ data class FolderEntity(
     @PrimaryKey val id: String,
     val name: String,
     val parentId: String?,
+    val vaultId: String? = null,
 ) {
-    fun toDomain(noteCount: Int = 0) = Folder(id = id, name = name, parentId = parentId, noteCount = noteCount)
+    fun toDomain(noteCount: Int = 0) = Folder(id = id, name = name, parentId = parentId, noteCount = noteCount, vaultId = vaultId)
     companion object {
-        fun fromDomain(folder: Folder) = FolderEntity(id = folder.id, name = folder.name, parentId = folder.parentId)
+        fun fromDomain(folder: Folder) = FolderEntity(id = folder.id, name = folder.name, parentId = folder.parentId, vaultId = folder.vaultId)
     }
 }

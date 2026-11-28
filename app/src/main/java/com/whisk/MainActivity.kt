@@ -63,6 +63,7 @@ import com.whisk.data.repository.PropertyRepository
 import com.whisk.data.repository.RelationshipRepository
 import com.whisk.diagnostic.VaultHealthScanner
 import com.whisk.domain.model.Note
+import com.whisk.vault.EnhancedMultiVaultManager
 import com.whisk.widget.DailyNoteWidget
 import com.whisk.widget.QuickCaptureWidget
 import kotlinx.coroutines.Dispatchers
@@ -98,6 +99,9 @@ import com.whisk.ui.screens.types.ObjectTypeManagementScreen
 import com.whisk.ui.screens.types.ObjectTypeManagementViewModel
 import com.whisk.ui.screens.views.DatabaseViewsScreen
 import com.whisk.ui.screens.views.DatabaseViewsViewModel
+import com.whisk.ui.screens.vault.EnhancedVaultListScreen
+
+import com.whisk.ui.screens.vault.EnhancedVaultListScreen
 import com.whisk.ui.theme.WhiskTheme
 import kotlinx.coroutines.launch
 
@@ -111,6 +115,7 @@ class MainActivity : FragmentActivity() {
 
     private lateinit var database: WhiskDatabase
     private lateinit var preferencesManager: PreferencesManager
+    private lateinit var multiVaultManager: EnhancedMultiVaultManager
     private lateinit var notesRepository: NotesRepository
     private lateinit var propertyRepository: PropertyRepository
     private lateinit var objectTypeRepository: ObjectTypeRepository
@@ -160,6 +165,7 @@ class MainActivity : FragmentActivity() {
         // Initialize Application Dependencies
         database = WhiskDatabase.getDatabase(this)
         preferencesManager = PreferencesManager(this)
+        multiVaultManager = EnhancedMultiVaultManager(preferencesManager)
 
         val taskSchedulerManager = com.whisk.tasks.TaskSchedulerManager(this)
 
@@ -174,6 +180,7 @@ class MainActivity : FragmentActivity() {
             vectorRepository,
             indexingRepository,
             taskSchedulerManager,
+            multiVaultManager,
         )
 
         propertyRepository = PropertyRepository(database.propertyDao(), database.noteDao())
@@ -232,6 +239,7 @@ class MainActivity : FragmentActivity() {
                     localGemmaManager = localGemmaManager,
                     remoteAiManager = remoteAiManager,
                     preferencesManager = preferencesManager,
+                    multiVaultManager = multiVaultManager,
                     documentIndexer = documentIndexer,
                     hybridSearchEngine = hybridSearchEngine,
                     indexingRepository = indexingRepository,
@@ -333,6 +341,7 @@ fun WhiskApp(
     localGemmaManager: LocalGemmaManager,
     remoteAiManager: RemoteAiManager,
     preferencesManager: PreferencesManager,
+    multiVaultManager: EnhancedMultiVaultManager,
     documentIndexer: DocumentIndexer,
     hybridSearchEngine: HybridSearchEngine,
     indexingRepository: IndexingRepository,
@@ -395,6 +404,7 @@ fun WhiskApp(
                 },
                 onNavigate = { route -> navController.navigate(route) },
                 onCloseDrawer = { scope.launch { drawerState.close() } },
+                multiVaultManager = multiVaultManager,
             )
         },
     ) {
@@ -873,6 +883,17 @@ fun WhiskApp(
                     onOpenNote = { noteId -> navController.navigate("note_detail/$noteId") },
                     onMenuClick = { scope.launch { drawerState.open() } },
                     allNotes = allNotes,
+                )
+            }
+            
+            // 15. Vaults Destination
+            composable("vaults") {
+                EnhancedVaultListScreen(
+                    multiVaultManager = multiVaultManager,
+                    onVaultSelected = { vault ->
+                        multiVaultManager.switchVault(vault.id)
+                        navController.popBackStack()
+                    }
                 )
             }
         }

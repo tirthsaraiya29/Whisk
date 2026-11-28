@@ -28,10 +28,13 @@ class TaskAlarmReceiver : BroadcastReceiver() {
         if (action == ACTION_COMPLETE_TASK) {
             CoroutineScope(Dispatchers.IO).launch {
                 val db = WhiskDatabase.getDatabase(context)
+                val prefsManager = com.whisk.data.local.PreferencesManager(context)
+                val multiVaultManager = com.whisk.vault.EnhancedMultiVaultManager(prefsManager)
                 val repo = NotesRepository(
                     noteDao = db.noteDao(),
                     folderDao = db.folderDao(),
-                    taskDao = db.taskDao()
+                    taskDao = db.taskDao(),
+                    multiVaultManager = multiVaultManager
                 )
                 repo.toggleTaskStatus(taskId, targetStatus = true)
                 // Dismiss notification

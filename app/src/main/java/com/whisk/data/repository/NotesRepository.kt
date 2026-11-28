@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 
 import com.whisk.domain.model.BrokenLinkItem
 import com.whisk.domain.model.UnlinkedMention
+import com.whisk.vault.EnhancedMultiVaultManager
 
 class NotesRepository(
     private val noteDao: NoteDao,
@@ -31,10 +32,16 @@ class NotesRepository(
     private val taskDao: TaskDao,
     private val vectorRepository: VectorRepository? = null,
     private val indexingRepository: IndexingRepository? = null,
-    private val taskSchedulerManager: com.whisk.tasks.TaskSchedulerManager? = null, private val activeVaultId: String = "vault_personal",
+    private val taskSchedulerManager: com.whisk.tasks.TaskSchedulerManager? = null,
+    private val multiVaultManager: EnhancedMultiVaultManager,
 ) {
 
-    val allNotes: Flow<List<Note>> = noteDao.getAllNotesByVaultId(activeVaultId).map { entities ->
+    private val activeVaultId: Flow<String> = multiVaultManager.activeVault.map { it?.id ?: "vault_personal" }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val allNotes: Flow<List<Note>> = activeVaultId.flatMapLatest { vaultId ->
+        noteDao.getAllNotesByVaultId(vaultId)
+    }.map { entities ->
         entities.map { it.toDomain() }
     }
 
@@ -98,7 +105,8 @@ class NotesRepository(
     }
 
     suspend fun saveNote(note: Note) {
-        val entity = NoteEntity.fromDomain(note.copy(updatedAt = System.currentTimeMillis()))
+        val vaultId = multiVaultManager.activeVault.value?.id ?: "vault_personal"
+        val entity = NoteEntity.fromDomain(note.copy(updatedAt = System.currentTimeMillis(), vaultId = vaultId))
         noteDao.insertNote(entity)
         syncTasksForNote(note)
         if (note.isArchived) {
@@ -282,7 +290,8 @@ class NotesRepository(
     }
 
     suspend fun addFolder(name: String) {
-        folderDao.insertFolder(FolderEntity(id = java.util.UUID.randomUUID().toString(), name = name, parentId = null))
+        val vaultId = multiVaultManager.activeVault.value?.id ?: "vault_personal"
+        folderDao.insertFolder(FolderEntity(id = java.util.UUID.randomUUID().toString(), name = name, parentId = null, vaultId = vaultId))
     }
 
     suspend fun toggleTaskStatus(taskId: String, targetStatus: Boolean? = null) {

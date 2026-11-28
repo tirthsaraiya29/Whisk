@@ -8,10 +8,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.whisk.R
 
-// Authentic Nothing Dot-Matrix Font Family
-val DotMatrixFontFamily = FontFamily(
-    Font(R.font.dotgothic16, FontWeight.Normal),
-)
+// Clean Sans-Serif Typography for Whisk Knowledge Workspace
+val DotMatrixFontFamily = FontFamily.Default
 
 // Authentic Vercel Mono Font Family (Used strictly for Code / Technical Badges)
 val VercelMonoFontFamily = FontFamily(

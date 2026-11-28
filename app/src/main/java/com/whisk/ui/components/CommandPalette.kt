@@ -80,7 +80,7 @@ fun CommandPalette(
                 onNewNote()
                 onDismiss()
             },
-            CommandItem("daily_notes_workspace", "Daily Notes Workspace", "Canonical daily notes workspace & activity log", "⌘D", Icons.Default.CalendarToday) {
+            CommandItem("daily_notes_workspace", "Daily Log Workspace", "Canonical daily notes workspace & activity log", "⌘D", Icons.Default.CalendarToday) {
                 onNavigate("daily_notes")
                 onDismiss()
             },
@@ -138,10 +138,10 @@ fun CommandPalette(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), RoundedCornerShape(16.dp)),
+                .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -161,7 +161,7 @@ fun CommandPalette(
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
                     ),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth(),
@@ -173,7 +173,7 @@ fun CommandPalette(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(280.dp),
+                        .height(300.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     items(filtered, key = { it.id }) { item ->
@@ -204,12 +204,12 @@ fun CommandPalette(
                                     Text(
                                         text = item.title,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
                                         text = item.subtitle,
-                                        style = MaterialTheme.typography.labelSmall,
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
@@ -218,7 +218,7 @@ fun CommandPalette(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
                                     .padding(horizontal = 8.dp, vertical = 4.dp),
                             ) {
                                 Text(

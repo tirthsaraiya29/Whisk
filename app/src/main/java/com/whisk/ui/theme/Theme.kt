@@ -11,9 +11,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Refined Charcoal Dark Scheme (Obsidian & Linear Inspired)
+// Obsidian Charcoal Dark Scheme
 private val DarkColorScheme = darkColorScheme(
-    primary = WhiskBlue,
+    primary = WhiskPurple,
     onPrimary = TrueWhite,
     primaryContainer = DarkSurfaceElevated,
     onPrimaryContainer = DarkTextPrimary,
@@ -29,10 +29,10 @@ private val DarkColorScheme = darkColorScheme(
     onError = TrueWhite,
 )
 
-// Refined Warm Light Scheme (Craft & Notion Inspired Paper Light)
+// Obsidian Paper Light Scheme
 private val LightColorScheme = lightColorScheme(
-    primary = LightTextPrimary,
-    onPrimary = LightSurface,
+    primary = WhiskPurple,
+    onPrimary = TrueWhite,
     primaryContainer = LightSurfaceVariant,
     onPrimaryContainer = LightTextPrimary,
     background = LightSurface,

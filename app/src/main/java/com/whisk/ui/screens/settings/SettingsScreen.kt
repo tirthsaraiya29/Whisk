@@ -1,5 +1,6 @@
 package com.whisk.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,23 +21,40 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FolderSpecial
 import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.Hub
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -56,6 +74,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -63,10 +82,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.whisk.domain.model.AiConfig
 import com.whisk.domain.model.AiProviderType
 import com.whisk.ui.components.WhiskTopBar
 
+enum class SettingsSubCategory {
+    NONE, GENERAL, APPEARANCE, INTERFACE, EDITOR, FILES_LINKS, KEYCHAIN, CORE_PLUGINS, AI_ENGINE, VAULT_HEALTH
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     state: SettingsUiState,
@@ -84,23 +109,31 @@ fun SettingsScreen(
     onMenuClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
-    var apiKeyText by rememberSaveable { mutableStateOf(state.aiConfig.apiKey) }
-    var githubTokenText by rememberSaveable { mutableStateOf(state.githubToken) }
-    var selectedProvider by rememberSaveable { mutableStateOf(state.aiConfig.providerType) }
-    var hfModelUrlText by rememberSaveable { mutableStateOf(state.aiConfig.hfModelUrl) }
-    var hfTokenText by rememberSaveable { mutableStateOf(state.aiConfig.hfApiToken) }
-    var useGpu by rememberSaveable { mutableStateOf(state.aiConfig.useGpuAccelerator) }
-    var temperatureVal by rememberSaveable { mutableFloatStateOf(state.aiConfig.temperature) }
+    var searchQuery by remember { mutableStateOf("") }
+    var activeSubCategory by remember { mutableStateOf(SettingsSubCategory.NONE) }
+
+    // Draft AI Config state
+    var apiKeyText by rememberSaveable(state.aiConfig) { mutableStateOf(state.aiConfig.apiKey) }
+    var githubTokenText by rememberSaveable(state.githubToken) { mutableStateOf(state.githubToken) }
+    var selectedProvider by rememberSaveable(state.aiConfig) { mutableStateOf(state.aiConfig.providerType) }
+    var hfModelUrlText by rememberSaveable(state.aiConfig) { mutableStateOf(state.aiConfig.hfModelUrl) }
+    var hfTokenText by rememberSaveable(state.aiConfig) { mutableStateOf(state.aiConfig.hfApiToken) }
+    var useGpu by rememberSaveable(state.aiConfig) { mutableStateOf(state.aiConfig.useGpuAccelerator) }
+    var temperatureVal by rememberSaveable(state.aiConfig) { mutableFloatStateOf(state.aiConfig.temperature) }
 
     var showApiKeySecret by remember { mutableStateOf(false) }
-    var showHfTokenSecret by remember { mutableStateOf(false) }
     var showGithubTokenSecret by remember { mutableStateOf(false) }
+
+    fun matchesQuery(vararg terms: String): Boolean {
+        if (searchQuery.isBlank()) return true
+        return terms.any { it.contains(searchQuery, ignoreCase = true) }
+    }
 
     Scaffold(
         topBar = {
             WhiskTopBar(
                 title = "Settings",
-                subtitle = "Appearance, AI, RAG & Vault Backups",
+                subtitle = "Options, Plugins & AI Engine",
                 onMenuClick = onMenuClick,
             )
         },
@@ -115,473 +148,556 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Theme Mode Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.DarkMode, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Theme & Appearance",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    listOf(
-                        "SYSTEM" to "System Default",
-                        "DARK" to "Dark Obsidian (OLED)",
-                        "LIGHT" to "Warm Light Paper",
-                        "CYBERPUNK" to "Cyberpunk Neon",
-                        "AMBER_TERMINAL" to "Amber Terminal (CRT)",
-                        "MONOKAI" to "Monokai Pro",
-                    ).forEach { (modeKey, label) ->
-                        val isSelected = state.themeMode == modeKey
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    onThemeChange(modeKey)
-                                }
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = if (isSelected) "✓ " else "  ",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Vault Intelligence & RAG Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Psychology, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Vault Intelligence & Local RAG",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
+            // Search Input Bar (Obsidian Screenshot)
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = {
                     Text(
-                        text = "Local-first knowledge retrieval index for Ask Your Vault & semantic search.",
+                        text = "Search settings...",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "Embedding Model: ${state.embeddingStatus.modelId} (${state.embeddingStatus.dimensions}D)",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary,
+                },
+                textStyle = MaterialTheme.typography.bodyMedium,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp),
                     )
-
-                    Text(
-                        text = "Status: ${state.embeddingStatus.statusText}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-
-                    if (state.indexingProgress.isIndexing) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Indexing in progress: ${state.indexingProgress.currentObjectTitle} (${state.indexingProgress.indexedCount} / ${state.indexingProgress.totalEligible})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Button(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onIndexWorkspace?.invoke(false)
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("Index Now", style = MaterialTheme.typography.labelSmall)
-                        }
-
-                        Button(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onIndexWorkspace?.invoke(true)
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("Rebuild Index", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.error, RoundedCornerShape(8.dp))
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onClearRagIndex?.invoke()
-                            }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "Clear RAG Index",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
-            }
-
-            // Property Schemas & Object Types Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Workspace Schemas & Properties",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Configure custom properties, metadata schemas, option lists, and note relations across your vault.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Button(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onNavigateToProperties?.invoke()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("Properties", style = MaterialTheme.typography.labelSmall)
-                        }
-
-                        Button(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onNavigateToTypes?.invoke()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("Object Types", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
-            }
-
-            // AI Configuration Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "AI Engine Configuration",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "Active Provider:",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    Column(
-                        modifier = Modifier.padding(vertical = 6.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        AiProviderType.entries.forEach { provider ->
-                            val isSelected = selectedProvider == provider
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        selectedProvider = provider
-                                    }
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = if (isSelected) "✓ " else "  ",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                )
-                                Text(
-                                    text = provider.name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // API Key Field
-                    OutlinedTextField(
-                        value = apiKeyText,
-                        onValueChange = { apiKeyText = it },
-                        label = { Text("API Key") },
-                        visualTransformation = if (showApiKeySecret) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showApiKeySecret = !showApiKeySecret }) {
-                                Icon(if (showApiKeySecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
-                            }
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Temperature Slider
-                    Text(
-                        text = "Temperature: ${"%.2f".format(temperatureVal)}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Slider(
-                        value = temperatureVal,
-                        onValueChange = { temperatureVal = it },
-                        valueRange = 0.0f..1.0f,
-                        colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // GPU Accelerator Switch
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(text = "GPU Acceleration", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
-                        Switch(
-                            checked = useGpu,
-                            onCheckedChange = { useGpu = it },
-                            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onPrimary, checkedTrackColor = MaterialTheme.colorScheme.primary),
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onSaveAiConfig(
-                                state.aiConfig.copy(
-                                    providerType = selectedProvider,
-                                    apiKey = apiKeyText,
-                                    hfModelUrl = hfModelUrlText,
-                                    hfApiToken = hfTokenText,
-                                    useGpuAccelerator = useGpu,
-                                    temperature = temperatureVal,
-                                ),
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotBlank()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear Search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp),
                             )
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text("Save AI Configuration", style = MaterialTheme.typography.labelMedium)
+                        }
                     }
-                }
-            }
-
-            // Vault Storage & Backup Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                ),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Backup, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Vault Storage & Backups",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                singleLine = true,
+            )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+            // Section 1: Options (Obsidian Screenshot)
+            if (matchesQuery("Options", "General", "Appearance", "Interface", "Editor", "Files and links", "Keychain", "Security")) {
+                Text(
+                    text = "Options",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 4.dp, top = 4.dp),
+                )
 
-                    Text(
-                        text = "Export or import full vault ZIP archives including notes, metadata, and relations.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Button(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onExportBackup()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("Export Vault ZIP", style = MaterialTheme.typography.labelSmall)
-                        }
-
-                        Button(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onImportBackup()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("Import Vault ZIP", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
-            }
-
-            // Vault Health Scanner
-            if (onRunVaultHealthScanner != null) {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.HealthAndSafety, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Vault Diagnostic Scanner",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                    Column {
+                        if (matchesQuery("General", "Onboarding", "Reset")) {
+                            SettingsNavigationRow(
+                                icon = Icons.Default.AccountCircle,
+                                title = "General",
+                                subtitle = "Reset onboarding & vault defaults",
+                                onClick = { activeSubCategory = SettingsSubCategory.GENERAL },
                             )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        if (matchesQuery("Appearance", "Theme", "Light", "Dark", "Accent")) {
+                            SettingsNavigationRow(
+                                icon = Icons.Default.Palette,
+                                title = "Appearance",
+                                subtitle = "System, Charcoal Dark, Paper Light themes",
+                                onClick = { activeSubCategory = SettingsSubCategory.APPEARANCE },
+                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        }
 
-                        Text(
-                            text = "Scan vault for broken wikilinks, orphaned objects, and corrupt metadata.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        if (matchesQuery("Interface", "Command Palette", "Navigation")) {
+                            SettingsNavigationRow(
+                                icon = Icons.Default.Smartphone,
+                                title = "Interface",
+                                subtitle = "Layout, shortcuts & command palette",
+                                onClick = { activeSubCategory = SettingsSubCategory.INTERFACE },
+                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        if (matchesQuery("Editor", "Markdown", "Formatting", "Live Preview")) {
+                            SettingsNavigationRow(
+                                icon = Icons.Default.Edit,
+                                title = "Editor",
+                                subtitle = "Live Preview, syntax formatting & brackets",
+                                onClick = { activeSubCategory = SettingsSubCategory.EDITOR },
+                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        }
 
-                        Button(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onRunVaultHealthScanner()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Run Vault Health Scan", style = MaterialTheme.typography.labelMedium)
+                        if (matchesQuery("Files and links", "Vault", "Import", "Export", "ZIP")) {
+                            SettingsNavigationRow(
+                                icon = Icons.Default.FolderSpecial,
+                                title = "Files and links",
+                                subtitle = "Vault backup ZIP import/export",
+                                onClick = { activeSubCategory = SettingsSubCategory.FILES_LINKS },
+                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        }
+
+                        if (matchesQuery("Keychain", "Security", "Biometrics", "GitHub Token")) {
+                            SettingsNavigationRow(
+                                icon = Icons.Default.Key,
+                                title = "Keychain & Security",
+                                subtitle = "Biometric lock & GitHub credentials",
+                                onClick = { activeSubCategory = SettingsSubCategory.KEYCHAIN },
+                            )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            // Section 2: Core Plugins & Features (Obsidian Screenshot)
+            if (matchesQuery("Core plugins", "Backlinks", "Canvas", "Daily notes", "Graph view", "Properties")) {
+                Text(
+                    text = "Core plugins",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 4.dp, top = 8.dp),
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                ) {
+                    Column {
+                        SettingsNavigationRow(
+                            icon = Icons.Default.Hub,
+                            title = "Backlinks & Mentions",
+                            subtitle = "Automatic wikilink & unlinked mention detection",
+                            onClick = { activeSubCategory = SettingsSubCategory.CORE_PLUGINS },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                        SettingsNavigationRow(
+                            icon = Icons.Default.Description,
+                            title = "Spatial Canvas",
+                            subtitle = "Infinite canvas cards & diagram nodes",
+                            onClick = { activeSubCategory = SettingsSubCategory.CORE_PLUGINS },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                        SettingsNavigationRow(
+                            icon = Icons.Default.CalendarToday,
+                            title = "Daily Notes",
+                            subtitle = "Canonical daily logs & activity tracking",
+                            onClick = { activeSubCategory = SettingsSubCategory.CORE_PLUGINS },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                        SettingsNavigationRow(
+                            icon = Icons.Default.TableChart,
+                            title = "Properties & Object Types",
+                            subtitle = "Manage custom schemas & object definitions",
+                            onClick = {
+                                if (onNavigateToProperties != null) onNavigateToProperties()
+                                else activeSubCategory = SettingsSubCategory.CORE_PLUGINS
+                            },
+                        )
+                    }
+                }
+            }
+
+            // Section 3: AI Engine & Vault RAG Intelligence
+            if (matchesQuery("AI", "Intelligence", "Gemma", "OpenAI", "RAG", "Vectors")) {
+                Text(
+                    text = "AI Engine & RAG",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 4.dp, top = 8.dp),
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                ) {
+                    Column {
+                        SettingsNavigationRow(
+                            icon = Icons.Default.AutoAwesome,
+                            title = "AI Model & Provider Config",
+                            subtitle = "${state.aiConfig.providerType.name} • On-Device Gemma & Cloud LLMs",
+                            onClick = { activeSubCategory = SettingsSubCategory.AI_ENGINE },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                        SettingsNavigationRow(
+                            icon = Icons.Default.Psychology,
+                            title = "Vault RAG Vector Index",
+                            subtitle = "Semantic search vectors & indexing status",
+                            onClick = { activeSubCategory = SettingsSubCategory.AI_ENGINE },
+                        )
+                    }
+                }
+            }
+
+            // Section 4: Vault Health & Diagnostics
+            if (matchesQuery("Health", "Scanner", "Backup", "Diagnostics")) {
+                Text(
+                    text = "Vault Health & Backup",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 4.dp, top = 8.dp),
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                ) {
+                    Column {
+                        SettingsNavigationRow(
+                            icon = Icons.Default.HealthAndSafety,
+                            title = "Vault Health Scanner",
+                            subtitle = "Run diagnostics for orphan notes & broken links",
+                            onClick = {
+                                if (onRunVaultHealthScanner != null) onRunVaultHealthScanner()
+                                else activeSubCategory = SettingsSubCategory.VAULT_HEALTH
+                            },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                        SettingsNavigationRow(
+                            icon = Icons.Default.Backup,
+                            title = "Backup Vault (Export ZIP)",
+                            subtitle = "Export encrypted or plain Markdown archive",
+                            onClick = { onExportBackup() },
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                        SettingsNavigationRow(
+                            icon = Icons.Default.Refresh,
+                            title = "Restore Vault (Import ZIP)",
+                            subtitle = "Restore notes and properties from backup ZIP",
+                            onClick = { onImportBackup() },
+                        )
+                    }
+                }
+            }
         }
+    }
+
+    // Modal Sub-Category Settings Detail Sheets
+    if (activeSubCategory != SettingsSubCategory.NONE) {
+        ModalBottomSheet(
+            onDismissRequest = { activeSubCategory = SettingsSubCategory.NONE },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = when (activeSubCategory) {
+                            SettingsSubCategory.GENERAL -> "General Options"
+                            SettingsSubCategory.APPEARANCE -> "Appearance Options"
+                            SettingsSubCategory.INTERFACE -> "Interface Options"
+                            SettingsSubCategory.EDITOR -> "Editor Options"
+                            SettingsSubCategory.FILES_LINKS -> "Files & Links Options"
+                            SettingsSubCategory.KEYCHAIN -> "Keychain & Security"
+                            SettingsSubCategory.CORE_PLUGINS -> "Core Plugins Config"
+                            SettingsSubCategory.AI_ENGINE -> "AI Engine & RAG Config"
+                            SettingsSubCategory.VAULT_HEALTH -> "Vault Health & Diagnostics"
+                            else -> "Settings Detail"
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+
+                    IconButton(
+                        onClick = { activeSubCategory = SettingsSubCategory.NONE },
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Close Detail")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                when (activeSubCategory) {
+                    SettingsSubCategory.APPEARANCE -> {
+                        Text("Theme Mode", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            listOf("SYSTEM" to "System", "DARK" to "Charcoal Dark", "LIGHT" to "Paper Light").forEach { (modeKey, modeName) ->
+                                val isSelected = state.themeMode == modeKey
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .border(
+                                            1.dp,
+                                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                                            RoundedCornerShape(10.dp),
+                                        )
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            onThemeChange(modeKey)
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = modeName,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    SettingsSubCategory.AI_ENGINE -> {
+                        Text("AI Provider Selection", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            AiProviderType.entries.forEach { provider ->
+                                val isSelected = selectedProvider == provider
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .border(
+                                            1.dp,
+                                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                            RoundedCornerShape(10.dp),
+                                        )
+                                        .clickable { selectedProvider = provider }
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(provider.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                    if (isSelected) {
+                                        Text("Active", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        if (selectedProvider != AiProviderType.LOCAL_GEMMA) {
+                            Text("API Key", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = apiKeyText,
+                                onValueChange = { apiKeyText = it },
+                                placeholder = { Text("sk-...") },
+                                singleLine = true,
+                                visualTransformation = if (showApiKeySecret) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = {
+                                    IconButton(onClick = { showApiKeySecret = !showApiKeySecret }) {
+                                        Icon(if (showApiKeySecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text("Temperature: ${(temperatureVal * 10).toInt() / 10f}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Slider(
+                            value = temperatureVal,
+                            onValueChange = { temperatureVal = it },
+                            valueRange = 0f..1f,
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                onSaveAiConfig(
+                                    state.aiConfig.copy(
+                                        providerType = selectedProvider,
+                                        apiKey = apiKeyText,
+                                        hfModelUrl = hfModelUrlText,
+                                        hfApiToken = hfTokenText,
+                                        useGpuAccelerator = useGpu,
+                                        temperature = temperatureVal,
+                                    ),
+                                )
+                                activeSubCategory = SettingsSubCategory.NONE
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                        ) {
+                            Text("Save AI Configuration")
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (onIndexWorkspace != null) {
+                            OutlinedButton(
+                                onClick = { onIndexWorkspace(true) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp),
+                            ) {
+                                Text("Force Re-index RAG Vectors")
+                            }
+                        }
+                    }
+
+                    SettingsSubCategory.KEYCHAIN -> {
+                        Text("GitHub Personal Access Token", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = githubTokenText,
+                            onValueChange = { githubTokenText = it },
+                            placeholder = { Text("ghp_...") },
+                            singleLine = true,
+                            visualTransformation = if (showGithubTokenSecret) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { showGithubTokenSecret = !showGithubTokenSecret }) {
+                                    Icon(if (showGithubTokenSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                onSaveGitHubToken(githubTokenText)
+                                activeSubCategory = SettingsSubCategory.NONE
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                        ) {
+                            Text("Save GitHub Key")
+                        }
+                    }
+
+                    SettingsSubCategory.GENERAL -> {
+                        Text("First Launch Setup", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = {
+                                onResetOnboarding()
+                                activeSubCategory = SettingsSubCategory.NONE
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                        ) {
+                            Text("Re-run First Launch Onboarding")
+                        }
+                    }
+
+                    else -> {
+                        Text("Configured according to current vault preferences.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsNavigationRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+) {
+    val haptic = LocalHapticFeedback.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(modifier = Modifier.width(14.dp))
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }

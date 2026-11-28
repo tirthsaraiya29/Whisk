@@ -19,6 +19,9 @@ local.properties
 **/.gradle/
 app/release
 kotlin/
+unsloth/
 unsloth-tmp/
+**/unsloth/
+**/unsloth-tmp/
 # Release artifacts
 app/release/**unsloth-tmp/

@@ -30,11 +30,11 @@ data class DailyNotesUiState(
     val isSaving: Boolean = false,
 )
 
-class DailyNotesViewModel @Suppress("UNUSED_PARAMETER") constructor(
+class DailyNotesViewModel(
     private val dailyNotesRepository: DailyNotesRepository,
     private val notesRepository: NotesRepository,
-    localGemmaManager: LocalGemmaManager? = null,
-    remoteAiManager: RemoteAiManager? = null,
+    private val localGemmaManager: LocalGemmaManager? = null,
+    private val remoteAiManager: RemoteAiManager? = null,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DailyNotesUiState())
@@ -107,12 +107,27 @@ class DailyNotesViewModel @Suppress("UNUSED_PARAMETER") constructor(
         _uiState.value = state.copy(isAiThinking = true)
 
         viewModelScope.launch {
-            delay(600.milliseconds)
-            val reflection = fallbackReflection(state)
-            _uiState.value = _uiState.value.copy(
-                isAiThinking = false,
-                aiSuggestion = reflection,
-            )
+            if (localGemmaManager?.modelStatus?.value?.isLoaded == true) {
+                var aiResponse = ""
+                val prompt = "Reflect on this day:\nCompleted ${state.tasksToday.count { it.isCompleted }} out of ${state.tasksToday.size} tasks.\nEvents: ${state.activityEvents.size}\nProvide a concise 3-bullet point reflection."
+                try {
+                    localGemmaManager.generateStream(prompt).collect { chunk ->
+                        aiResponse += chunk
+                        _uiState.value = _uiState.value.copy(aiSuggestion = aiResponse)
+                    }
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(aiSuggestion = fallbackReflection(state))
+                } finally {
+                    _uiState.value = _uiState.value.copy(isAiThinking = false)
+                }
+            } else {
+                delay(600.milliseconds)
+                val reflection = fallbackReflection(state)
+                _uiState.value = _uiState.value.copy(
+                    isAiThinking = false,
+                    aiSuggestion = reflection,
+                )
+            }
         }
     }
 

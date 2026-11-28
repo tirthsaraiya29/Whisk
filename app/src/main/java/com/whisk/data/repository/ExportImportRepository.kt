@@ -138,6 +138,7 @@ data class NoteDto(
     val deletedAt: Long? = null,
     val accentColor: String? = null,
     val isLocked: Boolean = false,
+    val vaultId: String? = "vault_personal",
 )
 
 @Serializable
@@ -346,6 +347,7 @@ class ExportImportRepository(
                 deletedAt = it.deletedAt,
                 accentColor = it.accentColor,
                 isLocked = it.isLocked,
+                vaultId = it.vaultId,
             )
         }
         val folders = database.folderDao().getAllFolders().first().map {
@@ -627,6 +629,7 @@ class ExportImportRepository(
                             deletedAt = n.deletedAt,
                             accentColor = n.accentColor,
                             isLocked = n.isLocked,
+                            vaultId = n.vaultId ?: "vault_personal",
                         ),
                     )
                     importedCount++

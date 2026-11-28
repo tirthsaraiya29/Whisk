@@ -33,10 +33,10 @@ class NotesRepository(
     private val vectorRepository: VectorRepository? = null,
     private val indexingRepository: IndexingRepository? = null,
     private val taskSchedulerManager: com.whisk.tasks.TaskSchedulerManager? = null,
-    private val multiVaultManager: EnhancedMultiVaultManager,
+    private val multiVaultManager: EnhancedMultiVaultManager? = null,
 ) {
 
-    private val activeVaultId: Flow<String> = multiVaultManager.activeVault.map { it?.id ?: "vault_personal" }
+    private val activeVaultId: Flow<String> = multiVaultManager?.activeVault?.map { it?.id ?: "vault_personal" } ?: kotlinx.coroutines.flow.flowOf("vault_personal")
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val allNotes: Flow<List<Note>> = activeVaultId.flatMapLatest { vaultId ->
@@ -105,7 +105,7 @@ class NotesRepository(
     }
 
     suspend fun saveNote(note: Note) {
-        val vaultId = multiVaultManager.activeVault.value?.id ?: "vault_personal"
+        val vaultId = multiVaultManager?.activeVault?.value?.id ?: "vault_personal"
         val entity = NoteEntity.fromDomain(note.copy(updatedAt = System.currentTimeMillis(), vaultId = vaultId))
         noteDao.insertNote(entity)
         syncTasksForNote(note)
@@ -290,7 +290,7 @@ class NotesRepository(
     }
 
     suspend fun addFolder(name: String) {
-        val vaultId = multiVaultManager.activeVault.value?.id ?: "vault_personal"
+        val vaultId = multiVaultManager?.activeVault?.value?.id ?: "vault_personal"
         folderDao.insertFolder(FolderEntity(id = java.util.UUID.randomUUID().toString(), name = name, parentId = null, vaultId = vaultId))
     }
 

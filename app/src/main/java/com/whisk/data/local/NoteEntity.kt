@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.whisk.domain.model.Note
+import com.whisk.security.WhiskVaultKeyStore
 
 @Entity(
     tableName = "notes",
@@ -42,7 +43,7 @@ data class NoteEntity(
         return Note(
             id = id,
             title = title,
-            body = body,
+            body = if (isLocked) WhiskVaultKeyStore.decryptLockedContent(body) else body,
             createdAt = createdAt,
             updatedAt = updatedAt,
             folder = folder,
@@ -70,7 +71,7 @@ data class NoteEntity(
             return NoteEntity(
                 id = note.id,
                 title = note.title,
-                body = note.body,
+                body = if (note.isLocked) WhiskVaultKeyStore.encryptLockedContent(note.body) else note.body,
                 createdAt = note.createdAt,
                 updatedAt = note.updatedAt,
                 folder = note.folder,
